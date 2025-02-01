@@ -262,9 +262,8 @@ const Index = () => {
           <div className="row justify-content-center text-center">
             <div className="col-lg-8 col-12">
               <h3 className="font-70 font-500 cocon" style={{ color: "white" }}>
-                Find the <span className="colororing"> Business </span> of{" "}
-                <br />
-                your <span className="colororing">Dreams</span>{" "}
+                Find the <span className="colororing"> Business </span>
+                of your <span className="colororing">Dreams</span>{" "}
               </h3>
               <p className=" font-18 text-white poppins">
                 Find You New Job Today! New Job Postings Everyday just for you,
