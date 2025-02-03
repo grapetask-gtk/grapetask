@@ -206,7 +206,7 @@ export default function MultiStep() {
   const handleResponsePublish = (data) => {
     if (data?.status) {
       setIsLoading(false);
-      Navigate("/"+UserData?.username);
+      Navigate("/" + UserData?.username);
     } else {
       setIsLoading(false);
     }
@@ -301,30 +301,34 @@ export default function MultiStep() {
       // ======Update--images
       function addImagesFromPaths(imagePaths) {
         if (uploadedImages.length < 3) {
-            const newFiles = [];
-            imagePaths.forEach((path, index) => {
-                if (uploadedImages.length + index < 3) {
-                    fetch(path)
-                        .then((response) => response.blob())
-                        .then((blob) => {
-                            const newFile = new File([blob], `image${index + 1}.jpg`, { type: 'image/jpeg' });
-                            newFiles.push(newFile);
-                            if (newFiles.length === imagePaths.length) {
-                                setUploadedImages([...uploadedImages, ...newFiles]);
-                            }
-                        })
-                        .catch((error) => {
-                            console.error('Error fetching image:', error);
-                        });
-                }
-            });
+          const newFiles = [];
+          imagePaths.forEach((path, index) => {
+            if (uploadedImages.length + index < 3) {
+              fetch(path)
+                .then((response) => response.blob())
+                .then((blob) => {
+                  const newFile = new File([blob], `image${index + 1}.jpg`, {
+                    type: "image/jpeg",
+                  });
+                  newFiles.push(newFile);
+                  if (newFiles.length === imagePaths.length) {
+                    setUploadedImages([...uploadedImages, ...newFiles]);
+                  }
+                })
+                .catch((error) => {
+                  console.error("Error fetching image:", error);
+                });
+            }
+          });
         }
-    }
-    
-    const imagePaths = [gigData.media.image1, gigData.media.image2, gigData.media.image3];
-    addImagesFromPaths(imagePaths);
-    
-    
+      }
+
+      const imagePaths = [
+        gigData.media.image1,
+        gigData.media.image2,
+        gigData.media.image3,
+      ];
+      addImagesFromPaths(imagePaths);
     }
   }, []);
   const handleNext = (e) => {
@@ -569,19 +573,17 @@ export default function MultiStep() {
               requirmentStatus = false;
             }
           });
-          if(requirmentStatus){
-
+          if (requirmentStatus) {
             let data = {
               gig_id: gigData.id,
               requirement: requirmentfields,
             };
-  
+
             dispatch(GigRequirmentUpdate(data, handleResponseRequirment));
             setIsErrorShowRequirment("");
             setIsErrorRequirment(false);
             setIsLoading(true);
-          }
-          else {
+          } else {
             setIsErrorShowRequirment("Requirment Field is required");
             setIsErrorRequirment(true);
             setIsLoading(false);
@@ -591,8 +593,7 @@ export default function MultiStep() {
           setIsErrorRequirment(true);
           setIsLoading(false);
         }
-      } 
-      else {
+      } else {
         if (requirmentfields.length > 0) {
           let requirmentStatus = true;
           requirmentfields.map((value) => {

@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "../redux/store/store";
 import { userOtp } from "../redux/slices/userSlice";
 import { Spinner } from "reactstrap";
+import axios from "axios";
+
 const Otp = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -13,49 +15,45 @@ const Otp = () => {
   const [otp, setOtp] = useState("");
   const [isError, setIsError] = useState(false);
   const [isErrorShow, setIsErrorShow] = useState("");
-  // console.log(otp);
-  const renderInput = (inputProps, index) => {
-    const isFilled = otp.length > index; // Check if OTP value is present
 
-    // Apply different background colors based on whether OTP value is present or not
-    const backgroundColor = isFilled
-      ? "rgba(241, 99, 54, 1)"
-      : "rgba(245, 245, 255, 1)";
-    const color = isFilled ? "white" : "rgba(0, 0, 0, 1)";
-
-    return (
-      <input
-        {...inputProps}
-        style={{ backgroundColor, color }}
-        maxLength={1} // Set max length to 1 to allow only one character
-      />
-    );
-  };
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    let data = {
+
+    // Validate OTP
+    if (otp.length !== 6) {
+      setIsError(true);
+      setIsErrorShow("Please enter a valid 6-digit OTP.");
+      return;
+    }
+
+    // Prepare data for API
+    const data = {
       token: otp,
       is_wm: 1,
     };
-    dispatch(userOtp(data, handleResponse));
-  };
-  const handleResponse = (data) => {
-    if (data?.status) {
-      localStorage.setItem("accessToken", data?.access_token);
-      localStorage.setItem("UserData", JSON.stringify(data?.data));
-      navigate("/dashboard");
-      if (data?.status == true) {
-        setIsErrorShow("");
-        setIsError(false);
-      }
-    } else {
-      // console.log(data?.message)
-      if (data?.status == false) {
-        setIsErrorShow(data?.message);
+
+    try {
+      // Verify OTP using the API
+      const response = await axios.post(
+        "https://portal.grapetask.co/api/verify-otp",
+        data
+      );
+
+      if (response.data.status) {
+        // Store access token and user data in localStorage
+        localStorage.setItem("accessToken", response.data.access_token);
+        localStorage.setItem("userData", JSON.stringify(response.data.data));
+        navigate("/dashboard"); // Navigate to the dashboard after successful verification
+      } else {
         setIsError(true);
+        setIsErrorShow(response.data.message || "OTP verification failed.");
       }
+    } catch (error) {
+      setIsError(true);
+      setIsErrorShow("OTP verification failed. Please try again.");
     }
   };
+
   return (
     <>
       <div className="container-fluid min-100vh">
@@ -80,7 +78,19 @@ const Otp = () => {
                         onChange={setOtp}
                         numInputs={6}
                         renderSeparator={<span>&nbsp;&nbsp;</span>}
-                        renderInput={renderInput}
+                        renderInput={(props) => (
+                          <input
+                            {...props}
+                            style={{
+                              backgroundColor:
+                                otp.length > props.index
+                                  ? "rgba(241, 99, 54, 1)"
+                                  : "rgba(245, 245, 255, 1)",
+                              color:
+                                otp.length > props.index ? "white" : "black",
+                            }}
+                          />
+                        )}
                       />
                     </div>
 
@@ -91,10 +101,9 @@ const Otp = () => {
                     )}
 
                     <button
-                      type="submit "
-                      loading={true}
+                      type="submit"
                       disabled={isLoading}
-                      className={` mt-4 ms-2 ${
+                      className={`mt-4 ms-2 ${
                         otp ? "otp-btn" : "otp-btn-border"
                       }`}
                     >
