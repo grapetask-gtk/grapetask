@@ -1,94 +1,153 @@
-import React, { useState } from 'react';
-import '../style/chat.scss'
-import UsersChat from '../components/Chat/UsersChat';
-import Chating from '../components/Chat/Chating';
-import ChatUserProfile from '../components/Chat/ChatUserProfile';
-import Navbar from '../components/Navbar';
-import client from '../assets/client-video-call.png'
-import callEnd from '../assets/call-end.png'
-import videoStop from '../assets/videoStop.png'
-import mute from '../assets/callVoiceMute.png'
-import MicroStop from '../assets/callMicrophone.png'
-import Slider from '@mui/material/Slider';
-import VolumeUp from '@mui/icons-material/VolumeUp';
-import { Box } from '@mui/material';
-const Chat = () => {
-  const [video, setvideo] = useState(null);
-  const handlevideo = () => {
-    setvideo(!video)
-    console.log(video, '=============================video');
-  }
-  const handleCallEnd = () => {
-    setvideo(null);
+import React, { useState } from "react";
+import "../style/chat.scss";
+import UsersChat from "../components/Chat/UsersChat";
+import Chating from "../components/Chat/Chating";
+import ChatUserProfile from "../components/Chat/ChatUserProfile";
+import Navbar from "../components/Navbar";
+import client from "../assets/client-video-call.png";
+import callEnd from "../assets/call-end.png";
+import videoStop from "../assets/videoStop.png";
+import mute from "../assets/callVoiceMute.png";
+import MicroStop from "../assets/callMicrophone.png";
+import Slider from "@mui/material/Slider";
+import VolumeUp from "@mui/icons-material/VolumeUp";
+import { Box } from "@mui/material";
 
-  }
-  function preventHorizontalKeyboardNavigation(event) {
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+const Chat = () => {
+  const [video, setVideo] = useState(false); // State to manage video call visibility
+  const [isMuted, setIsMuted] = useState(false); // State to manage mute status
+  const [isVideoStopped, setIsVideoStopped] = useState(false); // State to manage video stop status
+
+  // Toggle video call
+  const handleVideo = () => {
+    setVideo(!video);
+  };
+
+  // End video call
+  const handleCallEnd = () => {
+    setVideo(false);
+    setIsMuted(false);
+    setIsVideoStopped(false);
+  };
+
+  // Toggle mute
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+  };
+
+  // Toggle video stop
+  const toggleVideoStop = () => {
+    setIsVideoStopped(!isVideoStopped);
+  };
+
+  // Prevent horizontal keyboard navigation for the volume slider
+  const preventHorizontalKeyboardNavigation = (event) => {
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
       event.preventDefault();
     }
-  }
+  };
+
   return (
     <>
-      <Navbar FirstNav='none' />
+      <Navbar FirstNav="none" />
 
       <div className="container-fluid mt-4 poppins">
         <div className="row px-lg-3 px-md-3 mt-3 mb-3 justify-content-center">
-          {video &&
-            <>
-              <div className="video-call col-10 rounded-3 p-4 position-relative d-flex justify-content-between flex-column">
-                <div className="d-flex justify-content-end">
-                  <div>
-                    <div className='position-relative' style={{ width: '90px', height: '85px' }}>
-
-                      <img src={client} className='rounded-3 w-100 h-100' alt="w8" />
-                      <img src={mute} className='callMuteMicero' width={30} height={30} alt="w8" />
-                    </div>
-                  </div>
-                </div>
-                <div>
-
-                  <div className='text-center'>
-                    <div>
-
-                    </div>
-                    <img src={videoStop} width={50} height={50} alt="w8" />
-                    <img src={callEnd} className='mx-3' style={{ cursor: 'pointer' }} onClick={handleCallEnd} width={80} height={70} alt="w8" />
-                    <img src={MicroStop} width={50} height={50} alt="w8" />
-                  </div>
-                </div>
-
-                <Box className='video-call-volume' sx={{ height: 200 }}>
-                  <Slider
-                    sx={{
-                      '& input[type="range"]': {
-                        WebkitAppearance: 'slider-vertical',
-                      },
-                    }}
-                    orientation="vertical"
-                    defaultValue={30}
-                    aria-label="Temperature"
-                    valueLabelDisplay="auto"
-                    onKeyDown={preventHorizontalKeyboardNavigation}
+          {/* Video Call Section */}
+          {video && (
+            <div className="video-call col-10 rounded-3 p-4 position-relative d-flex justify-content-between flex-column">
+              {/* Top Section: Client Video and Mute Icon */}
+              <div className="d-flex justify-content-end">
+                <div
+                  className="position-relative"
+                  style={{ width: "90px", height: "85px" }}
+                >
+                  <img
+                    src={client}
+                    className="rounded-3 w-100 h-100"
+                    alt="Client"
                   />
-                  <VolumeUp className='mt-3' />
-                </Box>
+                  {isMuted && (
+                    <img
+                      src={mute}
+                      className="callMuteMicero"
+                      width={30}
+                      height={30}
+                      alt="Mute"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Bottom Section: Call Controls */}
+              <div className="text-center">
+                <div>
+                  <img
+                    src={isVideoStopped ? videoStop : client}
+                    width={50}
+                    height={50}
+                    alt="Video Stop"
+                    onClick={toggleVideoStop}
+                    style={{ cursor: "pointer" }}
+                  />
+                  <img
+                    src={callEnd}
+                    className="mx-3"
+                    style={{ cursor: "pointer" }}
+                    onClick={handleCallEnd}
+                    width={80}
+                    height={70}
+                    alt="Call End"
+                  />
+                  <img
+                    src={isMuted ? MicroStop : mute}
+                    width={50}
+                    height={50}
+                    alt="Microphone"
+                    onClick={toggleMute}
+                    style={{ cursor: "pointer" }}
+                  />
+                </div>
+              </div>
+
+              {/* Volume Slider */}
+              <Box className="video-call-volume" sx={{ height: 200 }}>
+                <Slider
+                  sx={{
+                    '& input[type="range"]': {
+                      WebkitAppearance: "slider-vertical",
+                    },
+                  }}
+                  orientation="vertical"
+                  defaultValue={30}
+                  aria-label="Volume"
+                  valueLabelDisplay="auto"
+                  onKeyDown={preventHorizontalKeyboardNavigation}
+                />
+                <VolumeUp className="mt-3" />
+              </Box>
+            </div>
+          )}
+
+          {/* Chat Section */}
+          {!video && (
+            <>
+              <div className="col-lg-3 col-12">
+                <UsersChat />
+              </div>
+              <div className="col-lg-6 col-12 mt-lg-0 mt-3">
+                <Chating video={video} handlevideo={handleVideo} />
+              </div>
+              {/* Uncomment if ChatUserProfile is needed */}
+              <div className="col-lg-3 col-12 mt-lg-0 mt-3">
+                <ChatUserProfile />
               </div>
             </>
-          }
-
-
-          {!video &&
-            <>
-              <div className="col-lg-3 col-12"><UsersChat /></div>
-              <div className="col-lg-6 col-12 mt-lg-0 mt-3"><Chating video={video} handlevideo={handlevideo} /></div>
-              {/* <div className="col-lg-3 col-12 mt-lg-0 mt-3"><ChatUserProfile /></div> */}
-            </>
-          }
+          )}
         </div>
       </div>
-
     </>
   );
-}
+};
 
 export default Chat;
