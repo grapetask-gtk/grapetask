@@ -113,7 +113,7 @@ const Loginright = () => {
 
   return (
     <>
-      <div className="col-lg-8 col-md-8 col-12 d-flex flex-column justify-content-between pt-lg-5 pt-md-5 pt-3 px-0">
+      <div className="col-lg-6 col-md-6 col-12 d-flex flex-column justify-content-between pt-lg-5 pt-md-5 pt-3 px-0">
         <div className="container-fluid">
           <div className="row justify-content-center me-lg-5 me-md-5 login-right-side">
             <div className="col-lg-8 col-md-8 col-12">
@@ -148,16 +148,23 @@ const Loginright = () => {
                 </div>
 
                 {/* Role */}
-                <div className="col-lg-6 col-md-6 col-sm-12 col-12 mt-3">
-                  <input
-                    type="text"
+                <div className="col-12 mt-4">
+                  <select
                     required
                     className="form-control input-field p-3"
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    placeholder="Enter your role"
-                    aria-label="Enter your role"
-                  />
+                    aria-label="Select your role"
+                  >
+                    <option value="" disabled>
+                      Select your role
+                    </option>
+                    <option value="expert/freelancer">Expert/Freelancer</option>
+                    <option value="client">Client</option>
+                    <option value="bidder/company representative/middleman">
+                      Bidder/Company Representative/Middleman
+                    </option>
+                  </select>
                 </div>
 
                 {/* Email */}

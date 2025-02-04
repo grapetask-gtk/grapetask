@@ -17,6 +17,7 @@
     "date-fns": "^2.30.0",
     "file-type": "^18.5.0",
     "firebase": "^10.3.1",
+    "laravel-echo": "^1.19.0",
     "pusher-js": "^8.4.0",
     "react": "^18.2.0",
     "react-avatar-edit": "^1.2.0",
@@ -46,6 +47,7 @@
     "redux-persist": "^6.0.0",
     "sass": "^1.64.1",
     "scss": "^0.2.4",
+    "simple-peer": "^9.11.1",
     "slick-carousel": "^1.8.1",
     "sweetalert": "^2.1.2",
     "web-vitals": "^2.1.4"

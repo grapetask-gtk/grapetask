@@ -126,26 +126,34 @@ export function userRegister(data, handleClose) {
   };
 }
 
-//User Forgot Password
 export function userForgot(data, handleClose) {
-  return async () => {
+  return async (dispatch) => {
     dispatch(userSlice.actions.startLoading());
+
     try {
-      const response = await axios.post("forgot-password", data, {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      });
-      handleClose(response.data);
-      if (!response.data.status) {
-        dispatch(userSlice.actions.hasGetError(response?.data?.message));
+      const response = await axios.post(
+        "https://portal.grapetask.co/api/forgot-password",
+        data,
+        {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data?.status) {
+        console.log("Response Data:", response.data.data);
+        dispatch(userSlice.actions.getUserDetailsSuccess(response.data.data));
+        handleClose(response.data);
+      } else {
+        dispatch(userSlice.actions.hasGetError(response.data?.message || "Unknown error"));
+        handleClose(null, response.data?.message || "Unknown error");
       }
-      console.log(JSON.stringify(response?.data?.data));
-      dispatch(userSlice.actions.getUserDetailsSuccess(response.data.data));
     } catch (error) {
-      handleClose(error);
-      dispatch(userSlice.actions.hasGetError(error?.message));
+      const errorMessage = error.response?.data?.message || "Something went wrong";
+      dispatch(userSlice.actions.hasGetError(errorMessage));
+      handleClose(null, errorMessage);
     }
   };
 }
