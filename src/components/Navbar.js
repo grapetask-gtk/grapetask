@@ -110,7 +110,7 @@
 //                   style={{ display: props.FirstNav }}
 //                 >
 //                   <li class="nav-item ms-3 mt-lg-0 mt-2">
-//                     <NavLink class="nav-link " to="/whygraoetask">
+//                     <NavLink class="nav-link " to="/whygrapetask">
 //                       Why GrapeTask
 //                     </NavLink>
 //                   </li>
@@ -609,7 +609,7 @@ const Navbar = (props) => {
                   style={{ display: props.FirstNav }}
                 >
                   <li class="nav-item ms-3 mt-lg-0 mt-2">
-                    <NavLink class="nav-link " to="/whygraoetask">
+                    <NavLink class="nav-link " to="/whygrapetask">
                       Why GrapeTask
                     </NavLink>
                   </li>
