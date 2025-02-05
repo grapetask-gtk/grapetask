@@ -12,7 +12,7 @@ import hire from "../assets/hire.webp";
 import get from "../assets/getwork.webp";
 import make from "../assets/make.webp";
 import line from "../assets/line.webp";
-import client from "../assets/client.webp";
+import client from "../assets/client.png";
 import cheack from "../assets/cheack.webp";
 import goodcmpny from "../assets/goodcmpny.svg";
 import choose from "../assets/choose.webp";
