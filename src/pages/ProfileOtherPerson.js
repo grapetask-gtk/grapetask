@@ -16,7 +16,7 @@ import Card from "../components/Card";
 import { AiFillStar } from "react-icons/ai";
 import { UserRating, sellerRating } from "../redux/slices/ratingSlice";
 import { formatDistanceToNow } from "date-fns";
-import timepes from "../assets/time.svg";
+import timepes from "../assets/time.webp";
 
 const ProfileOtherPerson = () => {
   const location = useLocation();

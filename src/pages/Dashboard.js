@@ -1,12 +1,12 @@
 import React from "react";
 import { useDispatch, useSelector } from "../redux/store/store";
-import star6 from "../assets/5star.svg";
+import star6 from "../assets/5star.webp";
 import user from "../assets/gigsRatingComments.webp";
 import "react-circular-progressbar/dist/styles.css";
 import Dashboardright from "../components/Dashboardright";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import timepes from "../assets/time.svg";
+import timepes from "../assets/time.webp";
 import bannerimg from "../assets/bannerimg.webp";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";

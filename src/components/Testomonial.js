@@ -1,6 +1,6 @@
 import React from "react";
 import whysey from "../assets/WhySay.webp";
-import star from "../assets/Star.svg";
+import star from "../assets/Star.webp";
 import Slider from "react-slick";
 import { BsArrowRight } from "react-icons/bs";
 const Testomonial = () => {
