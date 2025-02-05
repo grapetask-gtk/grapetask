@@ -808,7 +808,7 @@ marquee .freelancer-image {
   height: 70vh;
 }
 .gigsbackgroundimages {
-  background-image: url("../src/assets/Mask.webp");
+  background-image: url("../src/assets/Mask.svg");
   color: #ffffff;
   background-repeat: no-repeat;
   background-size: cover;

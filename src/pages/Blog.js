@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import busnis from "../assets/busnis.webp";
-import loptop from "../assets/laptop.webp";
+import busnis from "../assets/busnis.svg";
+import loptop from "../assets/laptop.svg";
 import img1 from "../assets/Client-logo1.webp";
 import img2 from "../assets/Client-logo2.webp";
 import img3 from "../assets/Client-logo3.webp";

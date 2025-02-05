@@ -1,5 +1,5 @@
 import React from "react";
-import figma from "../assets/figma.webp";
+import figma from "../assets/figma.svg";
 import animation from "../assets/baner.webp";
 import CardImg from "../assets/GigCradImg.webp";
 import Dashboardright from "./Dashboardright";
