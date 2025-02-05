@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "../redux/store/store";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.webp";
 import { useNavigate } from "react-router-dom";
 import { userForgot } from "../redux/slices/userSlice";
 import { Spinner } from "reactstrap";
@@ -28,7 +28,7 @@ function Forgot1() {
         autoClose: 2000,
       });
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      navigate("/otp");
+      navigate("/otp-reset-password");
       // console.log(data?.message)
       if (data?.status == true) {
         setIsErrorShow("");

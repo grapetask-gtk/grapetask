@@ -1,10 +1,10 @@
-import React from 'react';
-import mainimg from '../assets/mainbig.png'
-import recent from '../assets/ffff.png'
-import recent1 from '../assets/rectan.png'
-import recent2 from '../assets/recran.png'
-import { Carousel } from 'react-responsive-carousel';
-import 'react-responsive-carousel/lib/styles/carousel.min.css';
+import React from "react";
+import mainimg from "../assets/mainbig.webp";
+import recent from "../assets/ffff.webp";
+import recent1 from "../assets/rectan.webp";
+import recent2 from "../assets/recran.webp";
+import { Carousel } from "react-responsive-carousel";
+import "react-responsive-carousel/lib/styles/carousel.min.css";
 
 const ImageSlider = () => {
   const data = [
@@ -28,7 +28,6 @@ const ImageSlider = () => {
 
   return (
     <div className="imgSlider">
-
       <Carousel
         showThumbs={true}
         infiniteLoop={true}
@@ -39,7 +38,7 @@ const ImageSlider = () => {
       >
         {data.map((item, index) => (
           <div key={index}>
-            <img src={item.image} className='w-100' alt={item.caption} />
+            <img src={item.image} className="w-100" alt={item.caption} />
           </div>
         ))}
       </Carousel>

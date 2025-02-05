@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "../../redux/store/store";
-import icone from "../../assets/icone.png";
+import icone from "../../assets/icone.webp";
 import ster from "../../assets/Frame.svg";
 import star6 from "../../assets/5star.svg";
 import timepes from "../../assets/time.svg";
@@ -23,16 +23,16 @@ import { geAllGigs, getGigDetail } from "../../redux/slices/allGigsSlice";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import CardImg from "../../assets/GigCradImg.png";
+import CardImg from "../../assets/GigCradImg.webp";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import Loader from "../../assets/LoaderImg.gif";
 import { OrderCreate } from "../../redux/slices/allOrderSlice";
 import Footer from "../../components/Footer";
 
-const FreelancersGigs = ({onSelectPkg}) => {
-  const UserDetail = JSON.parse(localStorage.getItem('UserData'))
-// 
+const FreelancersGigs = ({ onSelectPkg }) => {
+  const UserDetail = JSON.parse(localStorage.getItem("UserData"));
+  //
   const navigate = useNavigate();
 
   // ---------- fetching --------------
@@ -42,14 +42,16 @@ const FreelancersGigs = ({onSelectPkg}) => {
   // console.log(gigDetail,'================================on');
   // ---------- fetching --------------
   const dispatch = useDispatch();
-  const { gigsDetail,singleGigDetail, isPreLoading } = useSelector((state) => state.allGigs);
+  const { gigsDetail, singleGigDetail, isPreLoading } = useSelector(
+    (state) => state.allGigs
+  );
 
   console.log(singleGigDetail, "====================freelancerGig");
 
   useEffect(() => {
     dispatch(getGigDetail(gigId));
   }, [dispatch, gigId]);
-  
+
   // ============FILTRT PACKEGS ================
   // debugger
   const filterByType = (array, targetType) => {
@@ -97,7 +99,7 @@ const FreelancersGigs = ({onSelectPkg}) => {
   const overallAverageThree =
     (filterRatingThree?.length / ratings?.length) * 100;
   // console.log(overallAverageThree, "=====filter 3 Gig");
- 
+
   onMessageListener()
     .then((payload) => {
       console.log(payload?.notification?.title, "haschxavsva");
@@ -170,7 +172,7 @@ const FreelancersGigs = ({onSelectPkg}) => {
   // ==========find Seller Detail ============
   const [joinedTime, setJoinedTime] = useState({ hours: 0 });
   const createdAtDate = new Date(singleGigDetail?.user?.created_at);
-  
+
   const UserRegister = new Date(UserDetail?.created_at);
   const currentTime = new Date();
 
@@ -191,75 +193,92 @@ const FreelancersGigs = ({onSelectPkg}) => {
     setJoinedTime({ hours });
   }, []);
 
-// ------------- Order Active ----------------
+  // ------------- Order Active ----------------
 
+  const handleResponse = (data) => {
+    if (data?.status) {
+      navigate("/frelancerPaymentViaCard");
+      //   alert(data?.message)
+    } else {
+      //   alert(data?.message)
+    }
+  };
+  const basicId = filteredBasic.map((value) => value.id);
+  const standardId = filteredStandard.map((value) => value.id);
+  const premiumId = filteredPremium.map((value) => value.id);
+  const handleBasic = () => {
+    let data = {
+      seller_id: singleGigDetail?.user?.id,
+      gig_id: singleGigDetail?.id,
+      package_id: basicId[0],
+      status: "Active",
+    };
+    navigate(
+      "/order/payment?seller_id=" +
+        singleGigDetail?.user?.id +
+        "&gig_id=" +
+        singleGigDetail?.id +
+        "&package_id=" +
+        basicId[0]
+    );
+    // dispatch(OrderCreate(data, handleResponse))
+  };
+  const handleStandard = () => {
+    let data = {
+      seller_id: singleGigDetail?.user?.id,
+      gig_id: singleGigDetail?.id,
+      package_id: standardId[0],
+      status: "Active",
+    };
+    navigate(
+      "/order/payment?seller_id=" +
+        singleGigDetail?.user?.id +
+        "&gig_id=" +
+        singleGigDetail?.id +
+        "&package_id=" +
+        standardId[0]
+    );
 
-const handleResponse = (data) => {
-  if (data?.status) {
-    navigate("/frelancerPaymentViaCard")
-    //   alert(data?.message)
-  } else {
-    //   alert(data?.message)
-  }
-}      
-const basicId = filteredBasic.map((value)=> value.id)    
-const standardId = filteredStandard.map((value)=> value.id)    
-const premiumId = filteredPremium.map((value)=> value.id)    
- const handleBasic =()=>{
-  let data = {
-    "seller_id":singleGigDetail?.user?.id,
-    "gig_id":singleGigDetail?.id,
-    "package_id":basicId[0],
-    "status":"Active"
-  }
-  navigate("/order/payment?seller_id="+singleGigDetail?.user?.id+"&gig_id="+singleGigDetail?.id+"&package_id="+basicId[0])
-  // dispatch(OrderCreate(data, handleResponse))
+    // dispatch(OrderCreate(data, handleResponse))
+  };
+  const handlePremium = () => {
+    let data = {
+      seller_id: singleGigDetail?.user?.id,
+      gig_id: singleGigDetail?.id,
+      package_id: premiumId[0],
+      status: "Active",
+    };
+    navigate(
+      "/order/payment?seller_id=" +
+        singleGigDetail?.user?.id +
+        "&gig_id=" +
+        singleGigDetail?.id +
+        "&package_id=" +
+        premiumId[0]
+    );
 
-  }
-  const handleStandard =()=>{
-  let data = {
-       "seller_id":singleGigDetail?.user?.id,
-       "gig_id":singleGigDetail?.id,
-       "package_id":standardId[0],
-       "status":"Active"
-  }
-  navigate("/order/payment?seller_id="+singleGigDetail?.user?.id+"&gig_id="+singleGigDetail?.id+"&package_id="+standardId[0])
-
-  // dispatch(OrderCreate(data, handleResponse))
-
-  }
-  const handlePremium =()=>{
-  let data = {
-       "seller_id":singleGigDetail?.user?.id,
-       "gig_id":singleGigDetail?.id,
-       "package_id":premiumId[0],
-    "status":"Active"
-  }
-  navigate("/order/payment?seller_id="+singleGigDetail?.user?.id+"&gig_id="+singleGigDetail?.id+"&package_id="+premiumId[0])
-
-  // dispatch(OrderCreate(data, handleResponse))
-
-  }
+    // dispatch(OrderCreate(data, handleResponse))
+  };
 
   // ============ Recomended for you ================
   useEffect(() => {
     dispatch(geAllGigs());
   }, [dispatch]);
-  console.log(gigsDetail,'=====================recommended gig');
+  console.log(gigsDetail, "=====================recommended gig");
   function stripHtmlTags(html) {
     const tempElement = document.createElement("div");
     tempElement.innerHTML = html;
     return tempElement.textContent || tempElement.innerText || "";
   }
   // const RecomendedGigs = gigsDetail.map((category) => category.gigs.filter((innerValue)=> innerValue.category_id === singleGigDetail.category_id))
- 
-const RecomendedGigsArray = gigsDetail.flatMap(function(object) {
-  return object.gigs.filter(function(gig) {
+
+  const RecomendedGigsArray = gigsDetail.flatMap(function (object) {
+    return object.gigs.filter(function (gig) {
       // Yahan aap apni filtering logic add kar sakte hain, jaise category_id ke adhar par filter karna.
       return gig.category_id === singleGigDetail.category_id; // Is example mein, category_id 2 ke liye filter kiya gaya hai.
+    });
   });
-});
-console.log(RecomendedGigsArray);
+  console.log(RecomendedGigsArray);
   const settings = {
     dots: false,
     autoplay: true,
@@ -313,12 +332,16 @@ console.log(RecomendedGigsArray);
               <div className="col-lg-8 col-12">
                 <div className="d-flex justify-content-between flex-wrap poppins align-items-center">
                   <div className="colororing d-flex align-items-center">
-                    <p className="mb-0 font-16">{singleGigDetail?.category?.name}</p>
+                    <p className="mb-0 font-16">
+                      {singleGigDetail?.category?.name}
+                    </p>
                     <span>
                       {" "}
                       <img src={icone} className="mx-3" alt="" />
                     </span>
-                    <p className=" mb-0 font-16">{singleGigDetail?.subcategory?.name}</p>
+                    <p className=" mb-0 font-16">
+                      {singleGigDetail?.subcategory?.name}
+                    </p>
                   </div>
                   {/* <div className="text-end">
                     <Button className="btn-stepper poppins px-3 mt-lg-0 mt-md-0 mt-sm-0 mt-3  font-16">
@@ -346,11 +369,16 @@ console.log(RecomendedGigsArray);
                     />
                     <div className="d-flex ms-2 align-items-center flex-wrap">
                       <div>
-                        <h6 className="ms-2 font-14 mb-0 inter cursor-pointer"
-                        onClick={()=>navigate(`/profileOtherPerson/${singleGigDetail.user?.fname}`,
-                         { state: { userId: singleGigDetail.user_id } })}>
+                        <h6
+                          className="ms-2 font-14 mb-0 inter cursor-pointer"
+                          onClick={() =>
+                            navigate(
+                              `/profileOtherPerson/${singleGigDetail.user?.fname}`,
+                              { state: { userId: singleGigDetail.user_id } }
+                            )
+                          }
+                        >
                           {singleGigDetail?.user?.fname}
-                          
                         </h6>
                       </div>
                       <div>
@@ -395,11 +423,9 @@ console.log(RecomendedGigsArray);
                           className="ms-2"
                           alt=""
                         />
-                        <p className="ms-2 font-14 colororing  mb-0">
-                          0
-                        </p>
+                        <p className="ms-2 font-14 colororing  mb-0">0</p>
                         <p className="ms-2 font-14  graycolor mb-0">
-                         {/* <span>3 Orders in Queue</span> */}
+                          {/* <span>3 Orders in Queue</span> */}
                         </p>
                       </div>
                     </div>
@@ -1611,121 +1637,121 @@ console.log(RecomendedGigsArray);
                   </div>
                 </div>
               </div>
-             {RecomendedGigsArray.length >= 3 && <div>
-
-              <h3 className="font-28 takegraycolor cocon mt-5">
-                Recomended for you
-              </h3>
-              <div className="container position-relative  mb-5 gigs-slider mt-4">
-                <div className="row">
-
-                <div className="gigs-slider-bg"></div>
-                <Slider {...settings}>
-                {RecomendedGigsArray.map((innerValue, index)=>(
-
-                <div className="  mt-4" key={index}>
-                  <div className="cursor-pointer h-100" >
-                    <div className="h-100">
-                      <Card
-                        gigsImg={
-                          innerValue.media &&
-                          (innerValue.media.image1 == null
-                            ? innerValue.media.image2 == null
-                              ? innerValue.media.image3
-                              : innerValue.media.image2
-                            : innerValue.media.image1)
-                        }
-                        minHeight="50px"
-                        heading={innerValue.title.substring(0,50) + '...'}
-                        phara={stripHtmlTags(innerValue.description.substring(0,100) + '...')}
-                        star1={
-                          parseInt(
-                            innerValue?.rating
-                              .map((value) => value.ratings)
-                              .filter((value) => !isNaN(value))
-                              .reduce(
-                                (acc, rating, index, array) =>
-                                  acc + rating / array.length,
-                                0
-                              )
-                          ) >= 1
-                            ? "#F16336"
-                            : "#D4D4D4"
-                        }
-                        star2={
-                          parseInt(
-                            innerValue?.rating
-                              .map((value) => value.ratings)
-                              .filter((value) => !isNaN(value))
-                              .reduce(
-                                (acc, rating, index, array) =>
-                                  acc + rating / array.length,
-                                0
-                              )
-                          ) >= 2
-                            ? "#F16336"
-                            : "#D4D4D4"
-                        }
-                        star3={
-                          parseInt(
-                            innerValue?.rating
-                              .map((value) => value.ratings)
-                              .filter((value) => !isNaN(value))
-                              .reduce(
-                                (acc, rating, index, array) =>
-                                  acc + rating / array.length,
-                                0
-                              )
-                          ) >= 3
-                            ? "#F16336"
-                            : "#D4D4D4"
-                        }
-                        star4={
-                          parseInt(
-                            innerValue?.rating
-                              .map((value) => value.ratings)
-                              .filter((value) => !isNaN(value))
-                              .reduce(
-                                (acc, rating, index, array) =>
-                                  acc + rating / array.length,
-                                0
-                              )
-                          ) >= 4
-                            ? "#F16336"
-                            : "#D4D4D4"
-                        }
-                        star5={
-                          parseInt(
-                            innerValue?.rating
-                              .map((value) => value.ratings)
-                              .filter((value) => !isNaN(value))
-                              .reduce(
-                                (acc, rating, index, array) =>
-                                  acc + rating / array.length,
-                                0
-                              )
-                          ) >= 5
-                            ? "#F16336"
-                            : "#D4D4D4"
-                        }
-                        projectNumber="0"
-                        price={innerValue.package[0]?.total}
-                      />
+              {RecomendedGigsArray.length >= 3 && (
+                <div>
+                  <h3 className="font-28 takegraycolor cocon mt-5">
+                    Recomended for you
+                  </h3>
+                  <div className="container position-relative  mb-5 gigs-slider mt-4">
+                    <div className="row">
+                      <div className="gigs-slider-bg"></div>
+                      <Slider {...settings}>
+                        {RecomendedGigsArray.map((innerValue, index) => (
+                          <div className="  mt-4" key={index}>
+                            <div className="cursor-pointer h-100">
+                              <div className="h-100">
+                                <Card
+                                  gigsImg={
+                                    innerValue.media &&
+                                    (innerValue.media.image1 == null
+                                      ? innerValue.media.image2 == null
+                                        ? innerValue.media.image3
+                                        : innerValue.media.image2
+                                      : innerValue.media.image1)
+                                  }
+                                  minHeight="50px"
+                                  heading={
+                                    innerValue.title.substring(0, 50) + "..."
+                                  }
+                                  phara={stripHtmlTags(
+                                    innerValue.description.substring(0, 100) +
+                                      "..."
+                                  )}
+                                  star1={
+                                    parseInt(
+                                      innerValue?.rating
+                                        .map((value) => value.ratings)
+                                        .filter((value) => !isNaN(value))
+                                        .reduce(
+                                          (acc, rating, index, array) =>
+                                            acc + rating / array.length,
+                                          0
+                                        )
+                                    ) >= 1
+                                      ? "#F16336"
+                                      : "#D4D4D4"
+                                  }
+                                  star2={
+                                    parseInt(
+                                      innerValue?.rating
+                                        .map((value) => value.ratings)
+                                        .filter((value) => !isNaN(value))
+                                        .reduce(
+                                          (acc, rating, index, array) =>
+                                            acc + rating / array.length,
+                                          0
+                                        )
+                                    ) >= 2
+                                      ? "#F16336"
+                                      : "#D4D4D4"
+                                  }
+                                  star3={
+                                    parseInt(
+                                      innerValue?.rating
+                                        .map((value) => value.ratings)
+                                        .filter((value) => !isNaN(value))
+                                        .reduce(
+                                          (acc, rating, index, array) =>
+                                            acc + rating / array.length,
+                                          0
+                                        )
+                                    ) >= 3
+                                      ? "#F16336"
+                                      : "#D4D4D4"
+                                  }
+                                  star4={
+                                    parseInt(
+                                      innerValue?.rating
+                                        .map((value) => value.ratings)
+                                        .filter((value) => !isNaN(value))
+                                        .reduce(
+                                          (acc, rating, index, array) =>
+                                            acc + rating / array.length,
+                                          0
+                                        )
+                                    ) >= 4
+                                      ? "#F16336"
+                                      : "#D4D4D4"
+                                  }
+                                  star5={
+                                    parseInt(
+                                      innerValue?.rating
+                                        .map((value) => value.ratings)
+                                        .filter((value) => !isNaN(value))
+                                        .reduce(
+                                          (acc, rating, index, array) =>
+                                            acc + rating / array.length,
+                                          0
+                                        )
+                                    ) >= 5
+                                      ? "#F16336"
+                                      : "#D4D4D4"
+                                  }
+                                  projectNumber="0"
+                                  price={innerValue.package[0]?.total}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </Slider>
                     </div>
                   </div>
                 </div>
-                  )
-                 
               )}
-                
-             
-                </Slider>
-                </div>
-              </div>
-              </div>}
             </div>
           </div>
-            <Footer/>
+          <Footer />
         </>
       )}
 

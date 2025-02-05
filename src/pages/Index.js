@@ -1,26 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "../redux/store/store";
 import Navbar from "../components/Navbar";
-import heroImg1 from "../assets/heroSlider-img-1.png";
+import heroImg1 from "../assets/heroSlider-img-1.webp";
 import img from "../assets/img.svg";
 import img1 from "../assets/img1.svg";
 import img2 from "../assets/img2.svg";
 import img3 from "../assets/img3.svg";
-import post from "../assets/post.png";
-import done from "../assets/done.png";
-import hire from "../assets/hire.png";
-import get from "../assets/getwork.png";
-import make from "../assets/make.png";
-import line from "../assets/line.png";
-import client from "../assets/client.png";
-import cheack from "../assets/cheack.png";
+import post from "../assets/post.webp";
+import done from "../assets/done.webp";
+import hire from "../assets/hire.webp";
+import get from "../assets/getwork.webp";
+import make from "../assets/make.webp";
+import line from "../assets/line.webp";
+import client from "../assets/client.webp";
+import cheack from "../assets/cheack.webp";
 import goodcmpny from "../assets/goodcmpny.svg";
-import choose from "../assets/choose.png";
+import choose from "../assets/choose.webp";
 import pic1 from "../assets/people.svg";
 import pic2 from "../assets/heand.svg";
 import pic3 from "../assets/massage.svg";
 import vocter from "../assets/Vector.svg";
-import real from "../assets/real.png";
+import real from "../assets/real.webp";
 import Grapetask from "../components/Grapetask";
 import Freelancer from "../components/Freelancer";
 import "slick-carousel/slick/slick.css";
@@ -31,7 +31,7 @@ import Highest from "../components/Highest";
 import Treusted from "../components/Treusted";
 import { RiSearchLine } from "react-icons/ri";
 import { GoLocation } from "react-icons/go";
-import Line from "../assets/hero-search-line.png";
+import Line from "../assets/hero-search-line.webp";
 import {
   FaFolderOpen,
   FaPenNib,
@@ -43,18 +43,18 @@ import {
 } from "react-icons/fa";
 import { AiFillNotification, AiFillDollarCircle } from "react-icons/ai";
 import { MdOutlineWeb, MdVideoLibrary } from "react-icons/md";
-import quality from "../assets/quality.png";
-import cost from "../assets/Cost.png";
-import Secure from "../assets/Secure.png";
-import UserCheck from "../assets/UserCheck.png";
+import quality from "../assets/quality.webp";
+import cost from "../assets/Cost.webp";
+import Secure from "../assets/Secure.webp";
+import UserCheck from "../assets/UserCheck.webp";
 import videoHerosection from "../assets/video/Freelance1.mp4";
 import video1 from "../assets/video/Freelance5.mp4";
 import video2 from "../assets/video/Freelance2.mp4";
 import video3 from "../assets/video/Freelance4.mp4";
 import { Button } from "@mui/material";
 import TopRatedSaller from "../components/TopRatedSaller";
-import videoPlay from "../assets/VideoPlay.png";
-import videoImg from "../assets/VideiImgMbl.png";
+import videoPlay from "../assets/VideoPlay.webp";
+import videoImg from "../assets/VideiImgMbl.webp";
 import { useNavigate } from "react-router-dom";
 import { geAllGigs } from "../redux/slices/allGigsSlice";
 import Slider from "react-slick";
@@ -262,7 +262,8 @@ const Index = () => {
           <div className="row justify-content-center text-center">
             <div className="col-lg-8 col-12">
               <h3 className="font-70 font-500 cocon" style={{ color: "white" }}>
-                Find the <span className="colororing"> Business </span><br/>
+                Find the <span className="colororing"> Business </span>
+                <br />
                 of your <span className="colororing">Dreams</span>{" "}
               </h3>
               <p className=" font-18 text-white poppins">

@@ -1,9 +1,9 @@
 import React from "react";
-import search from "../assets/searchbar.png";
+import search from "../assets/searchbar.webp";
 import Navbar from "../components/Navbar";
 import "../style/userByer.scss";
 import SentOffer from "../components/SentOffer";
-import activimg from "../assets/activpic.png";
+import activimg from "../assets/activpic.webp";
 import {
   Box,
   Button,
@@ -33,8 +33,7 @@ const style = {
   borderRadius: "12px",
   boxShadow: 24,
   overflowY: "auto",
-  height: "95vh"
-
+  height: "95vh",
 };
 const UserBuyerRequest = () => {
   const [open, setOpen] = React.useState(false);
@@ -42,7 +41,9 @@ const UserBuyerRequest = () => {
 
   const dispatch = useDispatch();
   const { requestDetail, isLoading } = useSelector((state) => state.buyer);
-  const { personalGigs, offerDetail,offerIsLoading } = useSelector((state) => state.offers);
+  const { personalGigs, offerDetail, offerIsLoading } = useSelector(
+    (state) => state.offers
+  );
   const UserData = JSON.parse(localStorage.getItem("UserData"));
   const [searchKeyword, setSearchKeyword] = useState("");
 
@@ -60,7 +61,7 @@ const UserBuyerRequest = () => {
   const handleSubmitOffer = (e) => {
     e.preventDefault();
     let data = {
-      buyer_request_id:buyerId,
+      buyer_request_id: buyerId,
       buyer_id: buyerId,
       gig_id: gigRadio,
       description: description,
@@ -77,7 +78,7 @@ const UserBuyerRequest = () => {
         setOfferLoader(false);
 
         setOpen(false);
-            }
+      }
     } else {
       setOfferLoader(false);
 
@@ -207,7 +208,7 @@ const UserBuyerRequest = () => {
                 >
                   <div className="container-fluid">
                     <div className="row">
-                     <div className="col-12 ">
+                      <div className="col-12 ">
                         {isLoading
                           ? "isLoading"
                           : visibleData2
@@ -256,7 +257,6 @@ const UserBuyerRequest = () => {
                                   <div className="d-flex justify-content-between mt-3 flex-wrap align-items-center ">
                                     <Button
                                       className="btn-stepper poppins px-4 fw-normal font-16 w-auto"
-                               
                                       onClick={() => {
                                         setBuyerId(value?.id);
                                         setOpen(true);
@@ -326,10 +326,9 @@ const UserBuyerRequest = () => {
                                       </span>
                                     </div>
                                   </div>
-                                 
                                 </div>
                               ))}
-                      </div> 
+                      </div>
                     </div>
                     <div className="d-flex justify-content-end hireexpert mt-3 mb-3">
                       <Stack spacing={4}>
@@ -356,9 +355,8 @@ const UserBuyerRequest = () => {
                   {/* <SentOffer /> */}
                   <div className="container-fluid">
                     <div className="row">
-
                       <h6 className=" font-20 font-500 cocon">Offers</h6>
-                    {offerIsLoading && <h5 className="cocon">Loading...`</h5>}
+                      {offerIsLoading && <h5 className="cocon">Loading...`</h5>}
                       {visibleData
                         .filter(
                           (value) =>
@@ -481,180 +479,134 @@ const UserBuyerRequest = () => {
                   setOfferPrice("");
                   setOfferDate("");
                   setGigRadio("");
-                  setOpen(false)
+                  setOpen(false);
                 }}
                 className="btn-close"
-          
               />
             </div>
             <div className="container-fluid profileSetting">
-                                            <form
-                                              onSubmit={handleSubmitOffer}
-                                              className="row"
-                                            >
-                                              <div className=" col-12 prof-fields">
-                                                <label
-                                                  for="Price"
-                                                  class="form-label font-18 poppins blackcolor"
-                                                >
-                                                  Description
-                                                </label>
-                                                <textarea
-                                                  value={description}
-                                                  onChange={(e) =>
-                                                    setDescription(
-                                                      e.target.value
-                                                    )
-                                                  }
-                                                  maxLength={200}
-                                                  className="form-control p-3 textArea border-0  font-16 poppins"
-                                                  required
-                                                ></textarea>
-                                                <p className="font-12 text-secondary text-end mt-2">
-                                                  {description.length}/80
-                                                </p>
-                                              </div>
-                                              <div className="col-lg-6 col-md-6 col-12 prof-fields mt-4">
-                                                <label
-                                                  for="Price"
-                                                  class="form-label font-18 poppins blackcolor"
-                                                >
-                                                  Price
-                                                </label>
-                                                <input
-                                                  type="text"
-                                                  value={offerPrice}
-                                                  onChange={(e) => {
-                                                    let value = e.target.value;
+              <form onSubmit={handleSubmitOffer} className="row">
+                <div className=" col-12 prof-fields">
+                  <label
+                    for="Price"
+                    class="form-label font-18 poppins blackcolor"
+                  >
+                    Description
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    maxLength={200}
+                    className="form-control p-3 textArea border-0  font-16 poppins"
+                    required
+                  ></textarea>
+                  <p className="font-12 text-secondary text-end mt-2">
+                    {description.length}/80
+                  </p>
+                </div>
+                <div className="col-lg-6 col-md-6 col-12 prof-fields mt-4">
+                  <label
+                    for="Price"
+                    class="form-label font-18 poppins blackcolor"
+                  >
+                    Price
+                  </label>
+                  <input
+                    type="text"
+                    value={offerPrice}
+                    onChange={(e) => {
+                      let value = e.target.value;
 
-                                                    // Remove dollar sign if it exists
-                                                    value = value.replace(
-                                                      "$",
-                                                      ""
-                                                    );
+                      // Remove dollar sign if it exists
+                      value = value.replace("$", "");
 
-                                                    // Remove non-numeric characters (except the dollar sign)
-                                                    value = value.replace(
-                                                      /[^0-9$]/g,
-                                                      ""
-                                                    );
+                      // Remove non-numeric characters (except the dollar sign)
+                      value = value.replace(/[^0-9$]/g, "");
 
-                                                    // Add dollar sign back
-                                                    setOfferPrice("$" + value);
-                                                  }}
-                                                  placeholder="$0"
-                                                  className="form-control p-3  border-0  font-16 poppins"
-                                                  required
-                                                  id="Price"
-                                                />
-                                              </div>
-                                              <div className="col-lg-6 col-md-6 col-12 prof-fields  mt-4">
-                                                <label
-                                                  for="date"
-                                                  class="form-label font-18 poppins blackcolor"
-                                                >
-                                                  Date
-                                                </label>
-                                                <input
-                                                  type="date"
-                                                  value={offerDate}
-                                                  onChange={(e) =>
-                                                    setOfferDate(e.target.value)
-                                                  }
-                                                  className="form-control p-3  border-0  font-16 poppins"
-                                                  required
-                                                  id="date"
-                                                />
-                                              </div>
-                                              <div className="container-fluid">
-                                                <div className="row">
-                                                  {personalGigs.map(
-                                                    (innerValue, idx) => (
-                                                      <div
-                                                        className="col-lg-3 mt-3"
-                                                        key={idx}
-                                                      >
-                                                        <div
-                                                          className="rounded-4 px-2 h-100"
-                                                          style={{
-                                                            backgroundColor:
-                                                              "#f5f5ff",
-                                                          }}
-                                                        >
-                                                          <input
-                                                            required
-                                                            checked={
-                                                              gigRadio ===
-                                                              innerValue.id
-                                                            } // Compare the checked value to the innerValue.id
-                                                            type="radio"
-                                                            value={gigRadio}
-                                                            onChange={() =>
-                                                              setGigRadio(
-                                                                innerValue.id
-                                                              )
-                                                            }
-                                                            name="gigCheck"
-                                                            id={`radio${idx}`}
-                                                          />
-                                                          <label
-                                                            htmlFor={`radio${idx}`}
-                                                          >
-                                                            {" "}
-                                                            {/* Use htmlFor instead of for */}
-                                                            <img
-                                                              height={150}
-                                                              src={
-                                                                innerValue.media
-                                                                  ?.image1 ==
-                                                                null
-                                                                  ? innerValue
-                                                                      .media
-                                                                      ?.image2 ==
-                                                                    null
-                                                                    ? innerValue
-                                                                        .media
-                                                                        ?.image3
-                                                                    : innerValue
-                                                                        ?.media
-                                                                        .image2
-                                                                  : innerValue
-                                                                      .media
-                                                                      ?.image1
-                                                              }
-                                                              alt="w9"
-                                                              className="w-100 object-fit-cover shadow rounded-4"
-                                                            />
-                                                            <p className="text-secondary font-12 mt-2">
-                                                              {innerValue.title}
-                                                            </p>
-                                                          </label>
-                                                        </div>
-                                                      </div>
-                                                    )
-                                                  )}
-                                                </div>
-                                              </div>
-                                              <div className="mt-4 text-end">
-                                                <Button
-                                                  type="submit"
-                                                  loading={true}
-                                                  disabled={offerLoader}
-
-                                                  className="btn-stepper poppins px-4 fw-normal font-16 w-auto"
-                                                >
-                                                  {offerLoader ? (
-                                                    <Spinner
-                                                      size="sm"
-                                                      color="light"
-                                                    />
-                                                  ) : (
-                                                    "Save Offer"
-                                                  )}
-                                                </Button>
-                                              </div>
-                                            </form>
-                                          </div>
+                      // Add dollar sign back
+                      setOfferPrice("$" + value);
+                    }}
+                    placeholder="$0"
+                    className="form-control p-3  border-0  font-16 poppins"
+                    required
+                    id="Price"
+                  />
+                </div>
+                <div className="col-lg-6 col-md-6 col-12 prof-fields  mt-4">
+                  <label
+                    for="date"
+                    class="form-label font-18 poppins blackcolor"
+                  >
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={offerDate}
+                    onChange={(e) => setOfferDate(e.target.value)}
+                    className="form-control p-3  border-0  font-16 poppins"
+                    required
+                    id="date"
+                  />
+                </div>
+                <div className="container-fluid">
+                  <div className="row">
+                    {personalGigs.map((innerValue, idx) => (
+                      <div className="col-lg-3 mt-3" key={idx}>
+                        <div
+                          className="rounded-4 px-2 h-100"
+                          style={{
+                            backgroundColor: "#f5f5ff",
+                          }}
+                        >
+                          <input
+                            required
+                            checked={gigRadio === innerValue.id} // Compare the checked value to the innerValue.id
+                            type="radio"
+                            value={gigRadio}
+                            onChange={() => setGigRadio(innerValue.id)}
+                            name="gigCheck"
+                            id={`radio${idx}`}
+                          />
+                          <label htmlFor={`radio${idx}`}>
+                            {" "}
+                            {/* Use htmlFor instead of for */}
+                            <img
+                              height={150}
+                              src={
+                                innerValue.media?.image1 == null
+                                  ? innerValue.media?.image2 == null
+                                    ? innerValue.media?.image3
+                                    : innerValue?.media.image2
+                                  : innerValue.media?.image1
+                              }
+                              alt="w9"
+                              className="w-100 object-fit-cover shadow rounded-4"
+                            />
+                            <p className="text-secondary font-12 mt-2">
+                              {innerValue.title}
+                            </p>
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-4 text-end">
+                  <Button
+                    type="submit"
+                    loading={true}
+                    disabled={offerLoader}
+                    className="btn-stepper poppins px-4 fw-normal font-16 w-auto"
+                  >
+                    {offerLoader ? (
+                      <Spinner size="sm" color="light" />
+                    ) : (
+                      "Save Offer"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </div>
           </Box>
         </Modal>
       </div>

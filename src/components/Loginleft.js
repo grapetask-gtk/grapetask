@@ -1,5 +1,5 @@
 import React from "react";
-import angle from "../assets/LoginAngle.png";
+import angle from "../assets/LoginAngle.webp";
 function Loginleft() {
   return (
     <>

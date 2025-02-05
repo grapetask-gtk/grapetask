@@ -281,7 +281,7 @@ export default function MultiStep() {
 
       // const imageFiles = imageUrls.map((imageUrl, index) => {
       //   if (imageUrl) {
-      //     return new File([imageUrl], `image${index + 1}.jpg`, { type: 'image/jpeg' });
+      //     return new File([imageUrl], `image${index + 1}.webp`, { type: 'image/jpeg' });
       //   }
       //   return null;
       // });
@@ -307,7 +307,7 @@ export default function MultiStep() {
               fetch(path)
                 .then((response) => response.blob())
                 .then((blob) => {
-                  const newFile = new File([blob], `image${index + 1}.jpg`, {
+                  const newFile = new File([blob], `image${index + 1}.webp`, {
                     type: "image/jpeg",
                   });
                   newFiles.push(newFile);

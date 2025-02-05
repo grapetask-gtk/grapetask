@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "../../redux/store/store";
-import search from "../../assets/searchbar.png";
-import NewWay from "../../assets/NewWay.png";
+import search from "../../assets/searchbar.webp";
+import NewWay from "../../assets/NewWay.webp";
 import Card from "../../components/Card";
 import Navbar from "../../components/Navbar";
 import { useNavigate } from "react-router-dom";
@@ -9,11 +9,11 @@ import { geAllGigs } from "../../redux/slices/allGigsSlice";
 import { useEffect } from "react";
 import { getCategory } from "../../redux/slices/gigsSlice";
 import Loader from "../../assets/LoaderImg.gif";
-import video1 from '../../assets/video/Freelance9.mp4'
-import video2 from '../../assets/video/Freelance3.mp4'
-import video3 from '../../assets/video/Freelance8.mp4'
-import videoImg from '../../assets/blogVideoImg.png'
-import videoPlay from '../../assets/VideoPlay.png'
+import video1 from "../../assets/video/Freelance9.mp4";
+import video2 from "../../assets/video/Freelance3.mp4";
+import video3 from "../../assets/video/Freelance8.mp4";
+import videoImg from "../../assets/blogVideoImg.webp";
+import videoPlay from "../../assets/VideoPlay.webp";
 import GigCard from "../../components/GigCard";
 const Freelancers = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -61,67 +61,132 @@ const Freelancers = () => {
       }}>
           <source src={videoHerosection} type="video/mp4" />
         </video> */}
-          <div id="carouselExampleFade" className="carousel slide carousel-fade w-100 h-100 d-lg-block d-md-block d-none" style={{ objectFit: 'cover', position: 'absolute', zIndex: '-1', objectPosition: 'center', height: 'inherit' }}>
+          <div
+            id="carouselExampleFade"
+            className="carousel slide carousel-fade w-100 h-100 d-lg-block d-md-block d-none"
+            style={{
+              objectFit: "cover",
+              position: "absolute",
+              zIndex: "-1",
+              objectPosition: "center",
+              height: "inherit",
+            }}
+          >
             <div className="carousel-inner h-100">
               <div className="carousel-item active h-100">
                 <div className="container-fluid p-0 poppins h-100">
-                  <video width={'100%'} height={'100%'} style={{ objectFit: 'cover', objectPosition: 'center' }} muted loop autoPlay >
+                  <video
+                    width={"100%"}
+                    height={"100%"}
+                    style={{ objectFit: "cover", objectPosition: "center" }}
+                    muted
+                    loop
+                    autoPlay
+                  >
                     <source src={video1} type="video/mp4" />
                   </video>
                 </div>
               </div>
               <div className="carousel-item h-100">
                 <div className="container-fluid p-0 poppins h-100">
-                  <video width={'100%'} height={'100%'} style={{ objectFit: 'cover', objectPosition: 'center' }} muted loop autoPlay >
+                  <video
+                    width={"100%"}
+                    height={"100%"}
+                    style={{ objectFit: "cover", objectPosition: "center" }}
+                    muted
+                    loop
+                    autoPlay
+                  >
                     <source src={video2} type="video/mp4" />
                   </video>
                 </div>
               </div>
               <div className="carousel-item h-100">
                 <div className="container-fluid p-0 poppins h-100">
-                  <video width={'100%'} height={'100%'} style={{ objectFit: 'cover', objectPosition: 'center' }} muted loop autoPlay >
+                  <video
+                    width={"100%"}
+                    height={"100%"}
+                    style={{ objectFit: "cover", objectPosition: "center" }}
+                    muted
+                    loop
+                    autoPlay
+                  >
                     <source src={video3} type="video/mp4" />
                   </video>
                 </div>
               </div>
-
             </div>
-            <button className="carousel-control-prev d-none" type="button" data-bs-target="#carouselExampleFade" data-bs-slide="prev">
+            <button
+              className="carousel-control-prev d-none"
+              type="button"
+              data-bs-target="#carouselExampleFade"
+              data-bs-slide="prev"
+            >
               <span className="carousel-control-prev-icon" aria-hidden="true" />
               <span className="visually-hidden">Previous</span>
             </button>
-            <button className="carousel-control-next d-none" type="button" data-bs-target="#carouselExampleFade" data-bs-slide="next">
+            <button
+              className="carousel-control-next d-none"
+              type="button"
+              data-bs-target="#carouselExampleFade"
+              data-bs-slide="next"
+            >
               <span className="carousel-control-next-icon" aria-hidden="true" />
               <span className="visually-hidden">Next</span>
             </button>
           </div>
-          <h3 className='text-center fw-semibold font-38 poppins'>Empowering Business to thrive through
-            <br /> Innovative Solutions.</h3>
+          <h3 className="text-center fw-semibold font-38 poppins">
+            Empowering Business to thrive through
+            <br /> Innovative Solutions.
+          </h3>
         </div>
       </div>
       {/* ================== MOBILE VERSION VIDEO SLIDER =============== */}
       <div className="container-fluid mt-4 d-lg-none d-md-none d-block">
         <div className="row justify-content-center ">
-          <div className="col-sm-10 col-12 mbl-videoModal position-relative mb-4 " data-bs-toggle="modal" data-bs-target="#videoModal">
-            <img src={videoPlay} className='video-play' width={80} height={80} alt="w8" />
-            <img src={videoImg} alt="w8" className='w-100 rounded-4' />
+          <div
+            className="col-sm-10 col-12 mbl-videoModal position-relative mb-4 "
+            data-bs-toggle="modal"
+            data-bs-target="#videoModal"
+          >
+            <img
+              src={videoPlay}
+              className="video-play"
+              width={80}
+              height={80}
+              alt="w8"
+            />
+            <img src={videoImg} alt="w8" className="w-100 rounded-4" />
           </div>
 
           {/* Modal */}
-          <div className="modal fade" id="videoModal" tabIndex={-1} aria-labelledby="videoModalLabel" aria-hidden="true">
+          <div
+            className="modal fade"
+            id="videoModal"
+            tabIndex={-1}
+            aria-labelledby="videoModalLabel"
+            aria-hidden="true"
+          >
             <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content" style={{ background: 'bg-transparent ' }}>
-
+              <div
+                className="modal-content"
+                style={{ background: "bg-transparent " }}
+              >
                 <div className="modal-body">
-                  <video width={'100%'} height={'100%'} style={{ objectFit: 'cover' }} controls loop autoPlay >
+                  <video
+                    width={"100%"}
+                    height={"100%"}
+                    style={{ objectFit: "cover" }}
+                    controls
+                    loop
+                    autoPlay
+                  >
                     <source src={video1} type="video/mp4" />
                   </video>
                 </div>
               </div>
-
             </div>
           </div>
-
         </div>
       </div>
       {/* ================== MOBILE VERSION VIDEO SLIDER END =============== */}

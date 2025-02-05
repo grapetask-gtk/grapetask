@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "../redux/store/store";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.webp";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "reactstrap";
 import { userResetPassword } from "../redux/slices/userSlice";

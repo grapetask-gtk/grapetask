@@ -263,7 +263,7 @@ marquee .freelancer-image {
 } */
 
 .backgroundimges {
-  background-image: url("../src/assets/heyback.png");
+  background-image: url("../src/assets/heyback.webp");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -302,7 +302,7 @@ marquee .freelancer-image {
 }
 
 /* .worldimge {
-  background-image: url("../src/assets/wholo.png");
+  background-image: url("../src/assets/wholo.webp");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: right;
@@ -649,7 +649,7 @@ marquee .freelancer-image {
 }
 
 .whiteimges {
-  background-image: url("../src/assets/whiteimg.png");
+  background-image: url("../src/assets/whiteimg.webp");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: bottom;
@@ -671,7 +671,7 @@ marquee .freelancer-image {
 }
 
 .footerimage {
-  background-image: url("../src/assets/footerpic.png");
+  background-image: url("../src/assets/footerpic.webp");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -710,7 +710,7 @@ marquee .freelancer-image {
 }
 
 .Innovativesection {
-  /* background-image: url("../src/assets/Innovative.png"); */
+  /* background-image: url("../src/assets/Innovative.webp"); */
   /* background-repeat: no-repeat; */
   /* background-size: cover; */
   /* background-position: center; */
@@ -751,7 +751,7 @@ marquee .freelancer-image {
 }
 
 .subrib {
-  background-image: url("../src/assets/MissAnyJobe.png");
+  background-image: url("../src/assets/MissAnyJobe.webp");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -797,7 +797,7 @@ marquee .freelancer-image {
 /* blog-pages-css */
 
 .imagesbackground {
-  background-image: url("../src/assets/blog.png");
+  background-image: url("../src/assets/blog.webp");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -1665,7 +1665,7 @@ span {
 }
 .top-rated-saler {
   background: linear-gradient(180deg, #222 0%, rgba(0, 0, 0, 0) 100%),
-    url(./assets/top-rated-saller.png);
+    url(./assets/top-rated-saller.webp);
   background-position: 100% 100%;
   background-size: cover;
   background-repeat: no-repeat;

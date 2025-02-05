@@ -1,24 +1,27 @@
-import React from 'react';
-import Navbar from '../components/Navbar'
+import React from "react";
+import Navbar from "../components/Navbar";
 import Loader from "../assets/LoaderImg.gif";
-import { useDispatch, useSelector } from '../redux/store/store';
-import { geAllGigs } from '../redux/slices/allGigsSlice';
-import { useEffect } from 'react';
-import search from "../assets/searchbar.png";
-import { useState } from 'react';
-import Card from '../components/Card';
-import { useLocation, useNavigate } from 'react-router-dom';
-import Footer from '../components/Footer';
-import GigCard from '../components/GigCard';
+import { useDispatch, useSelector } from "../redux/store/store";
+import { geAllGigs } from "../redux/slices/allGigsSlice";
+import { useEffect } from "react";
+import search from "../assets/searchbar.webp";
+import { useState } from "react";
+import Card from "../components/Card";
+import { useLocation, useNavigate } from "react-router-dom";
+import Footer from "../components/Footer";
+import GigCard from "../components/GigCard";
 
 const SearchGigsMainBanner = () => {
   const location = useLocation();
-  // const receivedData = location.state.data || 'No data received'; 
-  const receivedData = location.state && location.state.data ? location.state.data : { search: '' }; // Ensure 'search' property exists
+  // const receivedData = location.state.data || 'No data received';
+  const receivedData =
+    location.state && location.state.data
+      ? location.state.data
+      : { search: "" }; // Ensure 'search' property exists
 
   console.log(receivedData);
   useEffect(() => {
-    setSearchKeyword(receivedData?.search)
+    setSearchKeyword(receivedData?.search);
   }, []);
   const token = localStorage.getItem("accessToken");
   const navigate = useNavigate();
@@ -55,11 +58,7 @@ const SearchGigsMainBanner = () => {
         </div>
       ) : (
         <>
-
-          {token ?
-            <Navbar FirstNav='none' /> :
-            <Navbar SecondNav='none' />
-          }
+          {token ? <Navbar FirstNav="none" /> : <Navbar SecondNav="none" />}
           <div className="container my-3 allgigs-field poppins">
             <div className="row ">
               <div className="col-lg-6 col-md-6 col-sm-6 col-12 mt-lg-0 mt-md-0 mt-sm-0 mt-4 pe-lg-0">
@@ -79,9 +78,14 @@ const SearchGigsMainBanner = () => {
               </div>
             </div>
             <div className="row">
-              <h3 className="mt-4">Results for <span className='colororing'>{searchKeyword ? searchKeyword : "All "} Gigs</span></h3>
-              {SearchGigs.length > 0 ? SearchGigs
-                .filter(
+              <h3 className="mt-4">
+                Results for{" "}
+                <span className="colororing">
+                  {searchKeyword ? searchKeyword : "All "} Gigs
+                </span>
+              </h3>
+              {SearchGigs.length > 0 ? (
+                SearchGigs.filter(
                   (innerValue) =>
                     (innerValue.title &&
                       innerValue.title
@@ -91,10 +95,10 @@ const SearchGigsMainBanner = () => {
                       innerValue.description
                         .toLowerCase()
                         .includes(searchKeyword.toLowerCase()))
-                )
-                .map((innerValue) => (
-                  <GigCard gig={innerValue} />
-                )) : <h3 className='cocon'>Not Found</h3>}
+                ).map((innerValue) => <GigCard gig={innerValue} />)
+              ) : (
+                <h3 className="cocon">Not Found</h3>
+              )}
             </div>
           </div>
           <Footer />
@@ -102,6 +106,6 @@ const SearchGigsMainBanner = () => {
       )}
     </>
   );
-}
+};
 
 export default SearchGigsMainBanner;

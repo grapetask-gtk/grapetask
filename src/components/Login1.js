@@ -1,8 +1,8 @@
 import React from "react";
 import { useDispatch, useSelector } from "../redux/store/store";
-import logo from "../assets/logo.png";
-import line from "../assets/line.png";
-import join from "../assets/join.png";
+import logo from "../assets/logo.webp";
+import line from "../assets/line.webp";
+import join from "../assets/join.webp";
 import Button from "../components/Button";
 import { userLogin } from "../redux/slices/userSlice";
 import { Link, useNavigate } from "react-router-dom";

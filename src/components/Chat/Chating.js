@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { IoCheckmarkDoneOutline } from "react-icons/io5";
-import user from "../../assets/chatImg.png";
-import videos from "../../assets/VideoCall.png";
-import voice from "../../assets/VoiceCall.png";
+import user from "../../assets/chatImg.webp";
+import videos from "../../assets/VideoCall.webp";
+import voice from "../../assets/VoiceCall.webp";
 import { AiOutlineLink } from "react-icons/ai";
 import { GrGallery } from "react-icons/gr";
 import { BsEmojiSmile, BsThreeDotsVertical } from "react-icons/bs";

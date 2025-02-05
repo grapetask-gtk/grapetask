@@ -1,5 +1,5 @@
 // import React from 'react';
-// import search from '../../assets/searchbar.png'
+// import search from '../../assets/searchbar.webp'
 // import ReadChat from './ReadChat';
 // import UnRead from './UnRead';
 
@@ -28,7 +28,7 @@
 
 // export default UsersChat;
 import React, { useEffect, useState } from "react";
-import search from "../../assets/searchbar.png";
+import search from "../../assets/searchbar.webp";
 import ReadChat from "./ReadChat";
 import UnRead from "./UnRead";
 

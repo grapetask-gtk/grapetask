@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "../redux/store/store";
 import Button from "../components/Button";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.webp";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { userRegister } from "../redux/slices/userSlice";
 import { Spinner } from "reactstrap";

@@ -1,13 +1,13 @@
 import React from "react";
 import { useDispatch, useSelector } from "../redux/store/store";
 import star6 from "../assets/5star.svg";
-import user from "../assets/gigsRatingComments.png";
+import user from "../assets/gigsRatingComments.webp";
 import "react-circular-progressbar/dist/styles.css";
 import Dashboardright from "../components/Dashboardright";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import timepes from "../assets/time.svg";
-import bannerimg from "../assets/bannerimg.png";
+import bannerimg from "../assets/bannerimg.webp";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { sellerRating } from "../redux/slices/ratingSlice";
@@ -33,11 +33,13 @@ const Dashboard = () => {
   // console.log(overallAverageRating,'========alllRating with out Null Rating');
   // Average value 5
   const filterRatingFive = allRating.filter((value) => value == 5);
-  const overallAverageFive = (filterRatingFive?.length / allRating?.length) * 100;
+  const overallAverageFive =
+    (filterRatingFive?.length / allRating?.length) * 100;
   // console.log(overallAverageFive,'=====filter 5');
   // Average value 4
   const filterRatingFour = allRating.filter((value) => value == 4);
-  const overallAverageFour = (filterRatingFour?.length / allRating?.length) * 100;
+  const overallAverageFour =
+    (filterRatingFour?.length / allRating?.length) * 100;
   // console.log(overallAverageFour,'=====filter 4');
   const filterRatingThree = allRating.filter((value) => value == 3);
   const overallAverageThree =
@@ -458,14 +460,14 @@ const Dashboard = () => {
                             <div>
                               <img
                                 className="rounded-circle"
-                                src={value.user ? value.user.image : ''}
+                                src={value.user ? value.user.image : ""}
                                 width={50}
                                 height={50}
                                 alt="W8"
                               />
                             </div>
                             <p className="ms-2 font-16 fw-medium">
-                              {value.user ? value.user.fname : 'Name not found'}
+                              {value.user ? value.user.fname : "Name not found"}
                             </p>
                           </div>
                         </div>

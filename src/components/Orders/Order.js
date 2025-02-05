@@ -3,7 +3,7 @@ import Active from "./Active";
 import { FiSearch } from "react-icons/fi";
 import Navbar from "../Navbar";
 import OrderTabel from "./OrderTabel";
-import search from "../../assets/searchbar.png";
+import search from "../../assets/searchbar.webp";
 import { useDispatch, useSelector } from "../../redux/store/store";
 import { useEffect } from "react";
 import { AllOrders } from "../../redux/slices/allOrderSlice";
@@ -230,7 +230,7 @@ const Order = () => {
                 aria-labelledby="pills-profile-tab"
                 tabIndex={0}
               >
-               <div className="container-fluid ProfileVisit order-table my-42">
+                <div className="container-fluid ProfileVisit order-table my-42">
                   <div className="row justify-content-center">
                     <div className="col-12 bg-white rounded-3 px-0">
                       <TableContainer
@@ -291,7 +291,6 @@ const Order = () => {
                                 ).getFullYear()}`}
                                 price={value.price ? value.price : "Not Found"}
                                 btn="Delivered"
-
                               />
                             ))}
                           </TableBody>
@@ -308,7 +307,7 @@ const Order = () => {
                 aria-labelledby="pills-contact-tab"
                 tabIndex={0}
               >
- <div className="container-fluid ProfileVisit order-table my-42">
+                <div className="container-fluid ProfileVisit order-table my-42">
                   <div className="row justify-content-center">
                     <div className="col-12 bg-white rounded-3 px-0">
                       <TableContainer
@@ -369,7 +368,6 @@ const Order = () => {
                                 ).getFullYear()}`}
                                 price={value.price ? value.price : "Not Found"}
                                 btn="Completed"
-
                               />
                             ))}
                           </TableBody>
@@ -377,7 +375,8 @@ const Order = () => {
                       </TableContainer>
                     </div>
                   </div>
-                </div>              </div>
+                </div>{" "}
+              </div>
               <div
                 className="tab-pane fade"
                 id="pills-disabled"
@@ -385,7 +384,7 @@ const Order = () => {
                 aria-labelledby="pills-disabled-tab"
                 tabIndex={0}
               >
-                 <div className="container-fluid ProfileVisit order-table my-42">
+                <div className="container-fluid ProfileVisit order-table my-42">
                   <div className="row justify-content-center">
                     <div className="col-12 bg-white rounded-3 px-0">
                       <TableContainer
@@ -446,7 +445,6 @@ const Order = () => {
                                 ).getFullYear()}`}
                                 price={value.price ? value.price : "Not Found"}
                                 btn="Late"
-
                               />
                             ))}
                           </TableBody>
@@ -463,7 +461,7 @@ const Order = () => {
                 aria-labelledby="pills-order-tab"
                 tabIndex={0}
               >
-               <div className="container-fluid ProfileVisit order-table my-42">
+                <div className="container-fluid ProfileVisit order-table my-42">
                   <div className="row justify-content-center">
                     <div className="col-12 bg-white rounded-3 px-0">
                       <TableContainer
@@ -524,7 +522,6 @@ const Order = () => {
                                 ).getFullYear()}`}
                                 price={value.price ? value.price : "Not Found"}
                                 btn="Cancelled"
-
                               />
                             ))}
                           </TableBody>

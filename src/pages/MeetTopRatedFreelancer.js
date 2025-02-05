@@ -4,7 +4,7 @@ import Loader from "../assets/LoaderImg.gif";
 import { useDispatch, useSelector } from "../redux/store/store";
 import { geAllGigs } from "../redux/slices/allGigsSlice";
 import { useEffect } from "react";
-import search from "../assets/searchbar.png";
+import search from "../assets/searchbar.webp";
 import { useState } from "react";
 import Card from "../components/Card";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -67,7 +67,12 @@ const MeetTopRatedFreelancer = () => {
               </div>
             </div>
             <div className="row">
-              <h3 className="mt-4">Results for <span className='colororing'>{searchKeyword? searchKeyword: "All "} Profile</span></h3>
+              <h3 className="mt-4">
+                Results for{" "}
+                <span className="colororing">
+                  {searchKeyword ? searchKeyword : "All "} Profile
+                </span>
+              </h3>
               {userDetail.length > 0 ? (
                 userDetail
                   .filter(
@@ -78,52 +83,49 @@ const MeetTopRatedFreelancer = () => {
                         .includes(searchKeyword.toLowerCase())
                   )
                   .map((value, index) => (
-                    <div className="col-3"  key={index}>
+                    <div className="col-3" key={index}>
+                      <div className="bg-white shadow rounded-4 my-4 py-4 px-lg-0 px-4 mx-lg-0 mx-3">
+                        <div className=" text-center">
+                          <img
+                            src={value?.seller?.image}
+                            alt="w8"
+                            className="rounded-circle  "
+                            width={150}
+                            height={150}
+                          />
+                        </div>
+                        <div className="text-center poppins px-2 mt-2 pb-2">
+                          <p className="font-16 mb-0  fw-medium blackcolor">
+                            {value?.seller?.fname}
+                          </p>
+                          <p className="font-14 mb-1 takegraycolor">
+                            {value?.seller?.role}
+                          </p>
 
-                    <div
-                      className="bg-white shadow rounded-4 my-4 py-4 px-lg-0 px-4 mx-lg-0 mx-3"
-                     
-                    >
-                      <div className=" text-center">
-                        <img
-                          src={value?.seller?.image}
-                          alt="w8"
-                          className="rounded-circle  "
-                          width={150}
-                          height={150}
-                        />
-                      </div>
-                      <div className="text-center poppins px-2 mt-2 pb-2">
-                        <p className="font-16 mb-0  fw-medium blackcolor">
-                          {value?.seller?.fname}
-                        </p>
-                        <p className="font-14 mb-1 takegraycolor">
-                          {value?.seller?.role}
-                        </p>
-
-                        <div className="text-ceenter mt-1">
-                          <Button
-                            className="btn-stepper-border rounded-5 poppins px-3  font-16"
-                            onClick={() =>
-                              navigate(`/profileOtherPerson/${value.user_id}`, {
-                                state: { userId: value.user_id },
-                              })
-                            }
-                          >
-                            View Profile
-                          </Button>
+                          <div className="text-ceenter mt-1">
+                            <Button
+                              className="btn-stepper-border rounded-5 poppins px-3  font-16"
+                              onClick={() =>
+                                navigate(
+                                  `/profileOtherPerson/${value.user_id}`,
+                                  {
+                                    state: { userId: value.user_id },
+                                  }
+                                )
+                              }
+                            >
+                              View Profile
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
                     </div>
                   ))
               ) : (
                 <h3 className="cocon">Not Found</h3>
               )}
             </div>
-            <div>
-             
-            </div>
+            <div></div>
           </div>
           <Footer />
         </>

@@ -1,13 +1,13 @@
 // import React, { useState } from "react";
 // import { useDispatch, useSelector } from "../redux/store/store";
-// import logo1 from "../assets/logo.png";
-// import line from "../assets/line.png";
-// import join from "../assets/join.png";
+// import logo1 from "../assets/logo.webp";
+// import line from "../assets/line.webp";
+// import join from "../assets/join.webp";
 // import "../App.css";
-// import dropdownimg from "../assets/grapetask.png";
+// import dropdownimg from "../assets/grapetask.webp";
 // import { Link, NavLink, json, useNavigate } from "react-router-dom";
-// import notifaction from "../assets/Autolayout.png";
-// import profil from "../assets/profil.png";
+// import notifaction from "../assets/Autolayout.webp";
+// import profil from "../assets/profil.webp";
 // import { AiOutlineQuestionCircle } from "react-icons/ai";
 // import {
 //   FaAngleDown,
@@ -19,7 +19,7 @@
 //   FaUserCircle,
 // } from "react-icons/fa";
 // // import { SetRole } from '../redux/slices/roleSlice'
-// import search from "../assets/searchbar.png";
+// import search from "../assets/searchbar.webp";
 // import { IoNotificationsOutline } from "react-icons/io5";
 
 // const Navbar = (props) => {
@@ -509,15 +509,15 @@
 import React, { useState } from "react";
 import { FaPowerOff } from "react-icons/fa";
 import { useDispatch, useSelector } from "../redux/store/store";
-import logo1 from "../assets/logo.png";
-import line from "../assets/line.png";
-import join from "../assets/join.png";
+import logo1 from "../assets/logo.webp";
+import line from "../assets/line.webp";
+import join from "../assets/join.webp";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
-import dropdownimg from "../assets/grapetask.png";
+import dropdownimg from "../assets/grapetask.webp";
 import { Link, NavLink, json } from "react-router-dom";
-import notifaction from "../assets/Autolayout.png";
-import profil from "../assets/profil.png";
+import notifaction from "../assets/Autolayout.webp";
+import profil from "../assets/profil.webp";
 import { AiOutlineQuestionCircle } from "react-icons/ai";
 import {
   FaAngleDown,
@@ -528,7 +528,7 @@ import {
   FaUserAlt,
   FaUserCircle,
 } from "react-icons/fa";
-import search from "../assets/searchbar.png";
+import search from "../assets/searchbar.webp";
 import { IoNotificationsOutline } from "react-icons/io5";
 
 const Navbar = (props) => {
