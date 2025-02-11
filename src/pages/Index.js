@@ -264,7 +264,7 @@ const Index = () => {
               <h3 className="font-70 font-500 cocon" style={{ color: "white" }}>
                 Find Work.<span className="colororing"> Get Paid. </span>
                 <br />
-                Grow Your <span className="colororing">Career! </span>{" "}
+                Grow Your <span className="colororing">Career </span>{" "}
               </h3>
               <p className=" font-18 text-white poppins">
               Join a top freelance marketplace and connect with clients worldwide. New job postings every day—browse, apply, and start earning. Work from anytime, anywhere.
@@ -418,7 +418,7 @@ const Index = () => {
 
         <div className="d-flex justify-content-center flex-column mt-5">
           <h3 className="text-center font-28 cocon">
-            GrapeTask simplifies the process of task completion.
+           Complete tasks effortlessly with GrapeTask
           </h3>
           <div className="d-flex justify-content-center">
             <img src={line} className="text-center" alt="" />
@@ -428,17 +428,15 @@ const Index = () => {
           <div className="col-lg-4 col-md-4 col-sm-6 col-12">
             <Grapetask
               imges={post}
-              heading="Make a Job Posting"
-              para="There are many variations of 
-            passagesof Lorem Ipsum,"
+              heading="Post a Job & Hire Top Talent"
+              para="GrapeTask connects you with top freelancers. Post your job, review proposals, and hire the best in minutes"
             />
           </div>
           <div className="col-lg-4 col-md-4 col-sm-6 col-12 mt-lg-5 mt-md-5 mt-4">
             <Grapetask
               imges={hire}
-              heading="Hire FreeLancers"
-              para="There are many variations of 
-           passagesof Lorem Ipsum,"
+              heading="Find Experts, Get Work Done"
+              para="Connect with skilled freelancers across various industries. Hire experts who deliver quality work on time"
             />
           </div>
         </div>
@@ -447,15 +445,14 @@ const Index = () => {
             <Grapetask
               imges={get}
               heading="Accomplish Tasks"
-              para="There are many variations of 
-            passagesof Lorem Ipsum,"
+              para="Browse skilled freelancers, place an order, and get your work delivered on time guaranteed"
             />
           </div>
           <div className="col-lg-4 col-md-4 col-sm-6 col-12  mt-lg-5 mt-md-5 mt-4">
             <Grapetask
               imges={make}
               heading="Payment Assurance"
-              para="There are many variations of passagesof Lorem Ipsum,"
+              para="Pay confidently with our secure payment system and enjoy risk-free transactions every time"
             />
           </div>
         </div>
@@ -472,10 +469,10 @@ const Index = () => {
           </div>
           <div className="col-lg-6 col-md-6 col-12 align-self-center">
             <h1 className="fw-normal font-38">
-              This is How{" "}
+             Success Happens{" "}
               <span className="colororing">
                 {" "}
-                Good Companies Find Good Company.
+                When the Right People Connect
               </span>
             </h1>
             <div className="container-fluid">
@@ -491,7 +488,7 @@ const Index = () => {
                         className="font-18 mb-0"
                         style={{ color: "rgba(102, 112, 133, 1)" }}
                       >
-                        Access expert talent to fill your skill gaps
+                        Connect with skilled professionals ready to take on your next big project
                       </p>
                     </div>
                   </div>
@@ -505,8 +502,7 @@ const Index = () => {
                         className="font-18 mb-0"
                         style={{ color: "rgba(102, 112, 133, 1)" }}
                       >
-                        Control your workflow: hire, classify and pay your
-                        talent
+                        Manage contracts, track progress, and pay securely all in one simple platform
                       </p>
                     </div>
                   </div>
@@ -519,7 +515,7 @@ const Index = () => {
                         className="font-18 mb-0"
                         style={{ color: "rgba(102, 112, 133, 1)" }}
                       >
-                        Partner with Companies for end-to-end support
+                        A reliable outsourcing website to find skilled experts and scale your business
                       </p>
                     </div>
                   </div>
@@ -580,7 +576,7 @@ const Index = () => {
           className=" position-absolute chooseimg end-0"
           alt=""
         />
-        <h3 className="font-28 text-center cocon ">Choose Categories</h3>
+        <h3 className="font-28 text-center cocon ">Browse & Choose Categories</h3>
         {/* =========== DESKTOP VERSION CATEGORY SLIDER ============= */}
 
         <div className="row justify-content-center poppins d-lg-flex d-md-flex d-sm-flex d-none">
@@ -891,7 +887,7 @@ const Index = () => {
       <div className="container-fluid p-lg-5 p-md-5 p-sm-4 p-3 mt-4 position-relative overflow-hidden">
         <img src={real} className=" position-absolute realimg start-0" alt="" />
         <h3 className="text-center font-28 font-500 cocon">
-          Make it Real with Freelancer.
+          Get It Done with Expert Freelancers
         </h3>
         <div className="d-flex justify-content-center">
           <img src={line} className="text-center" alt="" />
@@ -926,18 +922,17 @@ const Index = () => {
             <div className="col-lg-6 col-md-6 col-12 d-flex align-items-center">
               <div>
                 <h3 className="font-28 font-500 cocon">
-                  A whole world of freelance talent at your fingertips
+                   Why Businesses Trust Grapetask
                 </h3>
                 <div className="mt-3">
                   <div className="mt-4 d-flex ">
                     <img src={quality} width={30} height={39} alt="" />
                     <div className="ms-3">
                       <h5 className="font-20">
-                        <span></span>Proof of Quality
+                        <span></span>Verified Professionals
                       </h5>
                       <p className="font-16">
-                        Check any pro’s work samples, client reviews, and
-                        identity verification.
+                       Review expert portfolios, client feedback, and credentials before hiring.
                       </p>
                     </div>
                   </div>
@@ -945,11 +940,10 @@ const Index = () => {
                     <img src={cost} width={30} height={30} alt="" />
                     <div className="ms-3">
                       <h5 className="font-20">
-                        <span></span>No cost until you hire
+                        <span></span>No start-up costs
                       </h5>
                       <p className="font-16">
-                        Check any pro’s work samples, client reviews, and
-                        identity verification.
+                      Post your job, interview candidates, and only pay when you're satisfied.
                       </p>
                     </div>
                   </div>
@@ -957,11 +951,10 @@ const Index = () => {
                     <img src={Secure} width={30} height={30} alt="" />
                     <div className="ms-3">
                       <h5 className="font-20">
-                        <span></span>Safe and secure
+                        <span></span>Secure Transactions
                       </h5>
                       <p className="font-16">
-                        Check any pro’s work samples, client reviews, and
-                        identity verification.
+                      We protect your payments and data with trusted security measures.
                       </p>
                     </div>
                   </div>
@@ -969,11 +962,10 @@ const Index = () => {
                     <img src={UserCheck} width={30} height={30} alt="" />
                     <div className="ms-3">
                       <h5 className="font-20">
-                        <span></span>Freelancer-friendly interface
+                        <span></span>Hassle-Free Hiring
                       </h5>
                       <p className="font-16">
-                        Check any pro’s work samples, client reviews, and
-                        identity verification.
+                      A simple, intuitive platform designed for smooth collaboration.
                       </p>
                     </div>
                   </div>
