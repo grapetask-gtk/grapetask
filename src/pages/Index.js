@@ -262,13 +262,12 @@ const Index = () => {
           <div className="row justify-content-center text-center">
             <div className="col-lg-8 col-12">
               <h3 className="font-70 font-500 cocon" style={{ color: "white" }}>
-                Find the <span className="colororing"> Business </span>
+                Find Work.<span className="colororing"> Get Paid. </span>
                 <br />
-                of your <span className="colororing">Dreams</span>{" "}
+                Grow Your <span className="colororing">Career! </span>{" "}
               </h3>
               <p className=" font-18 text-white poppins">
-                Find You New Job Today! New Job Postings Everyday just for you,
-                browse the job you want and apply wherever you want
+              Join a top freelance marketplace and connect with clients worldwide. New job postings every day—browse, apply, and start earning. Work from anytime, anywhere.
               </p>
               <div
                 className="row  justify-conten-center mt-2 poppins position-relative "
