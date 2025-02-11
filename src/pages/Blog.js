@@ -113,8 +113,8 @@ const Blog = () => {
             </button>
           </div>
           <h3 className="text-center fw-semibold font-38 poppins">
-            Empowering Business to thrive through
-            <br /> Innovative Solutions.
+             Freelance Marketplace Blog!
+            <br /> Insights, Tips & Trends from GrapeTask
           </h3>
         </div>
       </div>
