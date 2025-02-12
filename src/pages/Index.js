@@ -472,7 +472,7 @@ const Index = () => {
              Success Happens{" "}
               <span className="colororing">
                 {" "}
-                When the Right People Connect
+                When The Right People Connect
               </span>
             </h1>
             <div className="container-fluid">
@@ -922,7 +922,7 @@ const Index = () => {
             <div className="col-lg-6 col-md-6 col-12 d-flex align-items-center">
               <div>
                 <h3 className="font-28 font-500 cocon">
-                   Why Businesses Trust Grapetask
+                   Why Businesses Trust GrapeTask
                 </h3>
                 <div className="mt-3">
                   <div className="mt-4 d-flex ">
