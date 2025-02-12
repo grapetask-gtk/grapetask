@@ -9,6 +9,12 @@ html {
   overflow-x: hidden;
 }
 
+@media (max-width: 770px) {
+  video {
+    display: none;
+  }
+}
+
 /* font-family */
 @font-face {
   font-family: CoconRegularFont;
