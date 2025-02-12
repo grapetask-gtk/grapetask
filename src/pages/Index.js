@@ -261,11 +261,11 @@ const Index = () => {
           {/* hero-section */}
           <div className="row justify-content-center text-center">
             <div className="col-lg-8 col-12">
-              <h3 className="font-70 font-500 cocon" style={{ color: "white" }}>
+              <h2 className="font-70 font-500 cocon" style={{ color: "white" }}>
                 Find Work,<span className="colororing"> Get Paid, </span>
                 <br />
                 Grow Your <span className="colororing">Career </span>{" "}
-              </h3>
+              </h2>
               <p className=" font-18 text-white poppins">
               Join a top freelance marketplace and connect with clients worldwide. New job postings every day—browse, apply, and start earning. Work from anytime, anywhere.
               </p>
@@ -417,9 +417,9 @@ const Index = () => {
         <img src={done} className="w-100 position-absolute doneimg" alt="" />
 
         <div className="d-flex justify-content-center flex-column mt-5">
-          <h3 className="text-center font-28 cocon">
-           Complete tasks effortlessly with GrapeTask
-          </h3>
+          <h1 className="text-center font-28 cocon">
+           Complete Tasks Effortlessly With GrapeTask
+          </h1>
           <div className="d-flex justify-content-center">
             <img src={line} className="text-center" alt="" />
           </div>
@@ -468,13 +468,13 @@ const Index = () => {
             <img src={goodcmpny} className="w-75" alt="" />
           </div>
           <div className="col-lg-6 col-md-6 col-12 align-self-center">
-            <h1 className="fw-normal font-38">
+            <h2 className="fw-normal font-38">
              Success Happens{" "}
               <span className="colororing">
                 {" "}
                 When The Right People Connect
               </span>
-            </h1>
+            </h2>
             <div className="container-fluid">
               <div className="row">
                 <div className="col-lg-10 col-12 mt-4">
@@ -538,10 +538,10 @@ const Index = () => {
           <div className="row justify-content-between  h-100 ">
             <div className="col-lg-6 mt-lg-0 mt-4 col-12 d-flex align-items-center h-100">
               <div className="w-100">
-                <h1 className="cocon font-30  fw-semibold text-white">
+                <h5 className="cocon font-30  fw-semibold text-white">
                   Meet Our <span className="colororing"> Top-Rated</span>{" "}
                   Freelancers
-                </h1>
+                </h5>
                 <form className="border-box px-3 pt-3 align-items-center d-flex justify-content-between pb-3  hero-input">
                   <input
                     type="text"
@@ -591,10 +591,10 @@ const Index = () => {
                   <AiFillNotification size={30} />
                 </div>
                 <div className="col-9">
-                  <h6 className="font-20">
+                  <h4 className="font-20">
                     Marketing &<br />
                     Communication
-                  </h6>
+                  </h4>
                   <p className="mb-0 font-14">58 Jobs Available</p>
                 </div>
               </div>
@@ -607,10 +607,10 @@ const Index = () => {
                   <FaPenNib size={35} />
                 </div>
                 <div className="col-9 ">
-                  <h6 className="font-20">
+                  <h4 className="font-20">
                     UI / UX <br />
                     Design
-                  </h6>
+                  </h4>
                   <p className="mb-0 font-14">120 Jobs Available</p>
                 </div>
               </div>
@@ -623,10 +623,10 @@ const Index = () => {
                   <AiFillDollarCircle size={35} />
                 </div>
                 <div className="col-9 ">
-                  <h6 className="font-20">
+                  <h4 className="font-20">
                     Finance <br />
                     Management
-                  </h6>
+                  </h4>
                   <p className="mb-0 font-14">230 Jobs Available</p>
                 </div>
               </div>
@@ -639,11 +639,11 @@ const Index = () => {
                   <MdOutlineWeb size={35} />
                 </div>
                 <div className="col-9   ">
-                  <h6 className="font-20">
+                  <h4 className="font-20">
                     Web
                     <br />
                     Development
-                  </h6>
+                  </h4>
                   <p className="mb-0 font-14">100 Jobs Available</p>
                 </div>
               </div>
@@ -656,12 +656,12 @@ const Index = () => {
                   <FaFolderOpen size={35} />
                 </div>
                 <div className="col-9">
-                  <h6 className="font-20">
+                  <h4 className="font-20">
                     {" "}
                     Project
                     <br />
                     Management
-                  </h6>
+                  </h4>
                   <p className="mb-0 font-14">87 Jobs Available</p>
                 </div>
               </div>
@@ -674,11 +674,11 @@ const Index = () => {
                   <FaHandshake size={35} />
                 </div>
                 <div className="col-9">
-                  <h6 className="font-20">
+                  <h4 className="font-20">
                     Business &
                     <br />
                     Consulting
-                  </h6>
+                  </h4>
                   <p className="mb-0 font-14">23 Jobs Available</p>
                 </div>
               </div>
@@ -691,11 +691,11 @@ const Index = () => {
                   <FaPalette size={35} />
                 </div>
                 <div className="col-9">
-                  <h6 className="font-20">
+                  <h4 className="font-20">
                     Graphic
                     <br />
                     Designer
-                  </h6>
+                  </h4>
                   <p className="mb-0 font-14">65 Jobs Available</p>
                 </div>
               </div>
@@ -708,11 +708,11 @@ const Index = () => {
                   <MdVideoLibrary size={35} />
                 </div>
                 <div className="col-9">
-                  <h6 className="font-20">
+                  <h4 className="font-20">
                     Video
                     <br />
                     Editor
-                  </h6>
+                  </h4>
                   <p className="mb-0 font-14">120 Jobs Available</p>
                 </div>
               </div>
@@ -730,10 +730,10 @@ const Index = () => {
                     <AiFillNotification size={30} />
                   </div>
                   <div className="col-9">
-                    <h6 className="font-20">
+                    <h4 className="font-20">
                       Marketing &<br />
                       Communication
-                    </h6>
+                    </h4>
                     <p className="mb-0 font-14">58 Jobs Available</p>
                   </div>
                 </div>
@@ -746,10 +746,10 @@ const Index = () => {
                     <FaPenNib size={35} />
                   </div>
                   <div className="col-9 ">
-                    <h6 className="font-20">
+                    <h4 className="font-20">
                       UI / UX <br />
                       Design
-                    </h6>
+                    </h4>
                     <p className="mb-0 font-14">120 Jobs Available</p>
                   </div>
                 </div>
@@ -762,10 +762,10 @@ const Index = () => {
                     <AiFillDollarCircle size={35} />
                   </div>
                   <div className="col-9 ">
-                    <h6 className="font-20">
+                    <h4 className="font-20">
                       Finance <br />
                       Management
-                    </h6>
+                    </h4>
                     <p className="mb-0 font-14">230 Jobs Available</p>
                   </div>
                 </div>
@@ -782,11 +782,11 @@ const Index = () => {
                     <MdOutlineWeb size={35} />
                   </div>
                   <div className="col-9   ">
-                    <h6 className="font-20">
+                    <h4 className="font-20">
                       Web
                       <br />
                       Development
-                    </h6>
+                    </h4>
                     <p className="mb-0 font-14">100 Jobs Available</p>
                   </div>
                 </div>
@@ -802,12 +802,12 @@ const Index = () => {
                     <FaFolderOpen size={35} />
                   </div>
                   <div className="col-9">
-                    <h6 className="font-20">
+                    <h4 className="font-20">
                       {" "}
                       Project
                       <br />
                       Management
-                    </h6>
+                    </h4>
                     <p className="mb-0 font-14">87 Jobs Available</p>
                   </div>
                 </div>
@@ -823,11 +823,11 @@ const Index = () => {
                     <FaHandshake size={35} />
                   </div>
                   <div className="col-9">
-                    <h6 className="font-20">
+                    <h4 className="font-20">
                       Business &
                       <br />
                       Consulting
-                    </h6>
+                    </h4>
                     <p className="mb-0 font-14">23 Jobs Available</p>
                   </div>
                 </div>
@@ -843,11 +843,11 @@ const Index = () => {
                     <FaPalette size={35} />
                   </div>
                   <div className="col-9">
-                    <h6 className="font-20">
+                    <h4 className="font-20">
                       Graphic
                       <br />
                       Designer
-                    </h6>
+                    </h4>
                     <p className="mb-0 font-14">65 Jobs Available</p>
                   </div>
                 </div>
@@ -863,11 +863,11 @@ const Index = () => {
                     <MdVideoLibrary size={35} />
                   </div>
                   <div className="col-9">
-                    <h6 className="font-20">
+                    <h4 className="font-20">
                       Video
                       <br />
                       Editor
-                    </h6>
+                    </h4>
                     <p className="mb-0 font-14">120 Jobs Available</p>
                   </div>
                 </div>
@@ -1037,9 +1037,9 @@ const Index = () => {
       >
         <div className="row px-4">
           <div className="col-lg-6 col-md-6 col-12 px-lg-4 px-3">
-            <h1 className="poppins font-40 text-white fw-semibold">
+            <h6 className="poppins font-40 text-white fw-semibold">
               Never Want to Miss Any Job News?
-            </h1>
+            </h6>
           </div>
           <div className="col-lg-6 col-md-6 col-12 px-3">
             <div className="row justify-conten-center mt-2 poppins position-relative ">
