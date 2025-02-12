@@ -1,6 +1,6 @@
 import React from "react";
 import whysey from "../assets/WhySay.webp";
-import star from "../assets/star.webp";
+import star from "../assets/Star.webp";
 import Slider from "react-slick";
 import { BsArrowRight } from "react-icons/bs";
 const Testomonial = () => {
@@ -49,18 +49,16 @@ const Testomonial = () => {
               TESTIMONIAL
             </p>
             <h3 className="colororing font-28 font-500 cocon">
-              What They Say?
+            Success speaks for itself?
             </h3>
             <div></div>
             <div className="" style={{ color: "rgba(102, 112, 133, 1)" }}>
               <p className="font-16">
-                TOTC has got more than 100k positive ratings from our users
-                around the world.{" "}
+              Join the thousands of users that trust our platform for high-quality freelance services. We help businesses connect with qualified experts to bring their imaginative concepts to reality. {" "}
               </p>
 
               <p className="font-16">
-                Some of the students and teachers were greatly helped by the
-                Skilline.
+              Whether you require experienced assistance or a creative mind, we have the ideal solution for you.
               </p>
 
               <p className="font-16">
