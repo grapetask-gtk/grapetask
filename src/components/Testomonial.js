@@ -48,9 +48,9 @@ const Testomonial = () => {
             <p className="colororing line-befor d-flex align-items-center font-16">
               TESTIMONIAL
             </p>
-            <h3 className="colororing font-28 font-500 cocon">
+            <h4 className="colororing font-28 font-500 cocon">
             Success speaks for itself?
-            </h3>
+            </h4>
             <div></div>
             <div className="" style={{ color: "rgba(102, 112, 133, 1)" }}>
               <p className="font-16">
@@ -86,7 +86,7 @@ const Testomonial = () => {
           <div className="col-lg-6 mt-lg-0 mt-4 col-12 className='d-flex justify-content-center'">
             <Slider {...settings3}>
               <div className="position-relative testi-slider-cards">
-                <img src={whysey} className="w-75 ceo-img rounded-5 " alt="" />
+                <img src={whysey} className="w-75 ceo-img rounded-5 " alt="freelance marketplace" />
                 <div className="treslent">
                   <p className=" ps-4 mb-0 font-16">
                     "Thank you so much for your help. It's exactly what I've
