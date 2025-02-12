@@ -112,10 +112,10 @@ const Blog = () => {
               <span className="visually-hidden">Next</span>
             </button>
           </div>
-          <h3 className="text-center fw-semibold font-38 poppins">
+          <h1 className="text-center fw-semibold font-38 poppins">
              Freelance Marketplace Blog!
             <br /> Insights, Tips & Trends from GrapeTask
-          </h3>
+          </h1>
         </div>
       </div>
       {/* ================== MOBILE VERSION VIDEO SLIDER =============== */}
