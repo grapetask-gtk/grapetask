@@ -465,7 +465,7 @@ const Index = () => {
       <div className="container-fluid p-lg-5 p-md-5 p-sm-4 p-3 ">
         <div className="row poppins justify-content-center ">
           <div className="col-lg-6 col-md-6 col-12 d-flex justify-content-lg-start justify-content-md-center justify-content-center">
-            <img src={goodcmpny} className="w-75" alt="" />
+            <img src={goodcmpny} className="w-75" alt="hire freelancers" />
           </div>
           <div className="col-lg-6 col-md-6 col-12 align-self-center">
             <h2 className="fw-normal font-38">
