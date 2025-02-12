@@ -1,9 +1,9 @@
 import React from "react";
 import icone from "../assets/icone.webp";
 import studio from "../assets/studio.webp";
-import ster from "../assets/Frame.svg";
-import star6 from "../assets/5star.svg";
-import timepes from "../assets/time.svg";
+import ster from "../assets/Frame.webp";
+import star6 from "../assets/5star.webp";
+import timepes from "../assets/time (1).webp";
 import user from "../assets/gigsRatingComments.webp";
 import amazing from "../assets/amazon.webp";
 import "../style/imgSlider.scss";

@@ -1,7 +1,7 @@
 import React from "react";
 import Footer from "./Footer";
 import Navbar from "./Navbar";
-import openblog from "../assets/blogopen.svg";
+import openblog from "../assets/blogopen.webp";
 
 const Blogopen = () => {
   return (

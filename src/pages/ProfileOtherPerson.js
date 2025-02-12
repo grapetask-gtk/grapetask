@@ -1,7 +1,7 @@
 import React from "react";
 import { useDispatch, useSelector } from "../redux/store/store";
 import Navbar from "../components/Navbar";
-import pen from "../assets/pen.webp";
+// import pen from "../assets/pen.webp";
 import { CircularProgressbar } from "react-circular-progressbar";
 import doubl from "../assets/doubletick.webp";
 import doube from "../assets/duble.webp";
@@ -14,9 +14,9 @@ import { useEffect } from "react";
 import { BsInstagram } from "react-icons/bs";
 import Card from "../components/Card";
 import { AiFillStar } from "react-icons/ai";
-import { UserRating, sellerRating } from "../redux/slices/ratingSlice";
+import { UserRating } from "../redux/slices/ratingSlice";
 import { formatDistanceToNow } from "date-fns";
-import timepes from "../assets/time.svg";
+import timepes from "../assets/time (1).webp";
 
 const ProfileOtherPerson = () => {
   const location = useLocation();
@@ -64,16 +64,16 @@ const ProfileOtherPerson = () => {
   );
   // console.log(overallAverageRating,'========alllRating with out Null Rating');
   // Average value 5
-  const filterRatingFive = userallRating.filter((value) => value == 5);
+  const filterRatingFive = userallRating.filter((value) => value === 5);
   const overallAverageFive =
     (filterRatingFive?.length / userallRating?.length) * 100;
   // console.log(overallAverageFive,'=====filter 5');
   // Average value 4
-  const filterRatingFour = userallRating.filter((value) => value == 4);
+  const filterRatingFour = userallRating.filter((value) => value === 4);
   const overallAverageFour =
     (filterRatingFour?.length / userallRating?.length) * 100;
   // console.log(overallAverageFour,'=====filter 4');
-  const filterRatingThree = userallRating.filter((value) => value == 3);
+  const filterRatingThree = userallRating.filter((value) => value === 3);
   const overallAverageThree =
     (filterRatingThree?.length / userallRating?.length) * 100;
   // console.log(overallAverageThree,'=====filter 3');
@@ -96,7 +96,7 @@ const ProfileOtherPerson = () => {
                     />
 
                     <div>
-                      <a>
+                      <a href={userGigs?.fname}>
                         <h6 className="font-22 font-500 poppins mt-3">
                           {userGigs?.fname}
                         </h6>

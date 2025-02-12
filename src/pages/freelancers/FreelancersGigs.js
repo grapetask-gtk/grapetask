@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "../../redux/store/store";
 import icone from "../../assets/icone.webp";
-import ster from "../../assets/Frame.svg";
+import ster from "../../assets/Frame.webp";
 import star6 from "../../assets/5star.webp";
-import timepes from "../../assets/time.svg";
+import timepes from "../../assets/time (1).webp";
 import "../../style/imgSlider.scss";
 import "../../style/frelancer.scss";
 import { BiTime } from "react-icons/bi";

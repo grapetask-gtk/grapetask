@@ -1,6 +1,6 @@
 import React, { PureComponent, useState } from "react";
 import star6 from "../assets/5star.webp";
-import timepes from "../assets/time.svg";
+import timepes from "../assets/time (1).webp";
 import imagarrow from "../assets/imgarrow2.webp";
 import imagarrow1 from "../assets/imgarrow.webp";
 import imagarrow2 from "../assets/imgarrow1.webp";

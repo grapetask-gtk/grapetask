@@ -1,12 +1,12 @@
 import React from "react";
-import imges1 from "../assets/imge4.svg";
-import imges2 from "../assets/imge5.svg";
-import imges3 from "../assets/imge6.svg";
+import imges1 from "../assets/imge4.webp";
+import imges2 from "../assets/imge5.webp";
+import imges3 from "../assets/imge6.webp";
 import line from "../assets/line.webp";
 import { FiInstagram } from "react-icons/fi";
 import { BsPinterest } from "react-icons/bs";
 import { FaFacebook, FaTwitter } from "react-icons/fa";
-import lines from "../assets/line.webp";
+// import lines from "../assets/line.webp";
 
 const Client = () => {
   return (

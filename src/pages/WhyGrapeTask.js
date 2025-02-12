@@ -11,8 +11,8 @@ import { Link } from "react-router-dom";
 import { SiFuturelearn } from "react-icons/si";
 import { FaChevronRight, FaCode, FaProjectDiagram } from "react-icons/fa";
 import { MdOutlineAccountBalanceWallet } from "react-icons/md";
-import Flexibility from "../assets/flexible.svg";
-import Independence from "../assets/Independence.svg";
+import Flexibility from "../assets/flexible.webp";
+import Independence from "../assets/Independence.webp";
 const WhyGrapeTask = () => {
   return (
     <>
