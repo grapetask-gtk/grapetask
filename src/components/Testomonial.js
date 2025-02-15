@@ -1,6 +1,6 @@
 import React from "react";
 import whysey from "../assets/WhySay.webp";
-import star from "../assets/Star.webp";
+import star from "../assets/star.webp";
 import Slider from "react-slick";
 import { BsArrowRight } from "react-icons/bs";
 const Testomonial = () => {
@@ -10,7 +10,6 @@ const Testomonial = () => {
     autoplay: false,
     autoplaySpeed: 1500,
     infinite: true,
-    speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
     responsive: [

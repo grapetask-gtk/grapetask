@@ -262,7 +262,7 @@ const Index = () => {
           <div className="row justify-content-center text-center">
             <div className="col-lg-8 col-12">
               <h2 className="font-70 font-500 cocon" style={{ color: "white" }}>
-                Find Work,<span className="colororing"> Get Paid, </span>
+                Find the Business,<span className="colororing"> Get Paid, </span>
                 <br />
                 Grow Your <span className="colororing">Career </span>{" "}
               </h2>

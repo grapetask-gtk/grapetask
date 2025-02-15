@@ -9,6 +9,7 @@ import ratingSlice from './slices/ratingSlice';
 import allOrderSlice from './slices/allOrderSlice';
 import buyerRequestSlice from './slices/buyerRequestSlice';
 import offersSlice from './slices/offersSlice';
+import usersSlice from './slices/usersSlice';
 
 
 const rootReducer = combineReducers({
@@ -22,6 +23,7 @@ const rootReducer = combineReducers({
   allOrder : allOrderSlice,
   buyer : buyerRequestSlice,
   offers: offersSlice,
+  users: usersSlice,
 
 
 });

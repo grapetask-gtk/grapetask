@@ -73,7 +73,7 @@ const Gigs2 = () => {
   // =================Personal Gigs===========
   useEffect(() => {
     let data = {
-      user_id: UserData.id,
+      user_id: UserData?.id,
     };
     dispatch(getPersonalGigs(data));
     console.log(personalGigs);

@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./protectedRoute";
 import Index from "../pages/Index";
 import WhyGrapeTask from "../pages/WhyGrapeTask";
