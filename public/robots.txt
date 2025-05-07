@@ -1,0 +1,8 @@
+User-agent: *
+<<<<<<< HEAD
+Disallow: /Blogopen
+
+Sitemap: https://www.grapetask.co/sitemap.xml
+=======
+Disallow:
+>>>>>>> d918fe2 (cahnges by abdul qavi)

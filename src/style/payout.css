@@ -1,0 +1,24 @@
+.textearning{
+    color: #667085;
+}
+.Earnings{
+    background: #FFFFFF;
+    box-shadow: 0px -2px 31px 0px #0000001A;
+}
+.Paymentwhite{
+ background-color: #FFFFFF;   
+ box-shadow: 0px -2px 31px 0px #0000001A;
+}
+.paynowbutton{
+    background: linear-gradient(0deg, #F16336, #F16336),
+    linear-gradient(0deg, #F16336, #F16336);    
+    border: 2px solid #F16336;
+    color:#FFFFFF;
+    width: 20%;
+}
+.methodbutton{
+    background:transparent;
+    color: #F16336;
+    border: 2px solid #F16336;
+    width: 30%;
+}

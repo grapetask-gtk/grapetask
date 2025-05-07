@@ -1,0 +1,63 @@
+.byerRequest {
+    div[data-gramm=false] {
+        min-height: 100px;
+        background-color: white;
+        font-family: "Poppins", sans-serif !important;
+    }
+    .buyercards{
+        border-left: 1.5px solid #D4D4D4;
+    }
+    input {
+        border: none;
+        color: #333333 !important;
+
+        &:focus {
+            box-shadow: none;
+            border: none;
+            outline: none !important;
+        }
+
+        &::placeholder {
+            color: #333333;
+        }
+    }
+
+    textarea {
+        border: none;
+        color: #333333 !important;
+
+        &:focus {
+            box-shadow: none;
+            border: none;
+            outline: none !important;
+        }
+
+        &::placeholder {
+            color: #333333;
+        }
+    }
+
+    select {
+        border: none;
+        color: #667085 !important;
+        text-transform: uppercase;
+
+        &:focus {
+            box-shadow: none;
+            border: none;
+            outline: none !important;
+        }
+
+    }
+ 
+}
+
+@media (max-width:768px){
+    .byerRequest {
+      
+        .buyercards{
+            border-left: none;
+            border-top: 1.5px solid #D4D4D4;
+        }
+    }
+}
