@@ -1,0 +1,39 @@
+.payment-cards { 
+    input,select{
+        padding: 12px !important;
+    }
+    .nav-pills .nav-link.active {
+        color: #303030 !important;
+        background-color: transparent !important;
+
+        .payment-span {
+            div {
+             
+                border: 3px solid #F5F5FF;
+
+                background-color: #F16336 !important;
+               
+
+            }
+        }
+    }
+    .nav-pills .nav-link {
+        color: #303030 !important;
+        background-color: transparent !important;
+
+        .payment-span {
+            border: 1px solid #F16336;
+            border-radius: 50%;
+
+
+            div {
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+
+                border: 3px solid #F5F5FF;
+                background-color: #F5F5FF !important;
+            }
+        }
+    }
+}
