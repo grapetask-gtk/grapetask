@@ -188,6 +188,9 @@ import { useDispatch, useSelector } from "../redux/store/store";
 import { userOtp } from "../redux/slices/userSlice";
 import { Spinner } from "reactstrap";
 import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 const Otp = ({ formType }) => {
   const dispatch = useDispatch();
@@ -221,36 +224,62 @@ const Otp = ({ formType }) => {
     const data = {
       token: otp,
     };
+ dispatch(userOtp(data, handleResponse));
+ 
+    // try {
+    //   // Verify OTP using the API
+    //   const response = await axios.post(
+    //     "https://portal.grapetask.co/api/otp-verify",
+    //     data,
+    //     {
+    //       headers: {
+    //         Accept: "application/json",
+    //         "Content-Type": "application/json",
+    //       },
+    //     }
+    //   );
 
-    try {
-      // Verify OTP using the API
-      const response = await axios.post(
-        "https://portal.grapetask.co/api/otp-verify",
-        data,
-        {
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-        }
-      );
+    //   if (response.data.status) {
+    //     // Store user data securely
+    //     localStorage.setItem("userData", JSON.stringify(response.data.data));
 
-      if (response.data.status) {
-        // Store user data securely
-        localStorage.setItem("userData", JSON.stringify(response.data.data));
+    //     // Redirect to dashboard after successful verification
+    //     navigate("/dashboard");
+    //   } else {
+    //     setIsError(true);
+    //     setIsErrorShow(response.data.message || "OTP verification failed.");
+    //   }
+    // } catch (error) {
+    //   setIsError(true);
+    //   setIsErrorShow(
+    //     error.response?.data?.message ||
+    //       "OTP verification failed. Please try again."
+    //   );
+    // }
+  };
+ const handleResponse = async (data) => {
+  console.log('response data in otpResetPassword file:',data);
+    if (data?.status) {
+            localStorage.setItem("accessToken", data?.access_token);
+      localStorage.setItem("UserData", JSON.stringify(data?.data));
+      localStorage.setItem("Role", data?.data.role);
 
-        // Redirect to dashboard after successful verification
-        navigate("/dashboard");
-      } else {
-        setIsError(true);
-        setIsErrorShow(response.data.message || "OTP verification failed.");
+      toast.success("otp verified", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      navigate("/resetPassword");
+      if (data?.status == true) {
+        setIsErrorShow("");
+        setIsError(false);
       }
-    } catch (error) {
-      setIsError(true);
-      setIsErrorShow(
-        error.response?.data?.message ||
-          "OTP verification failed. Please try again."
-      );
+    } else {
+      // console.log(data?.message)
+      if (data?.status == false) {
+        setIsErrorShow(data?.message);
+        setIsError(true);
+      }
     }
   };
 

@@ -1,9 +1,9 @@
-import React from "react";
 import { Col, Container, Nav, Row } from "react-bootstrap";
 import {
   FaCog,
   FaFolderOpen,
   FaMoneyCheckAlt,
+  FaRocketchat,
   FaSignOutAlt,
   FaTachometerAlt,
   FaUserCircle,
@@ -22,6 +22,7 @@ const SidebarLayout = ({ children }) => {
     
     { path: "/admin/projects", label: "Projects", icon: <FaFolderOpen /> },
     { path: "/admin/payments", label: "Payments", icon: <FaMoneyCheckAlt /> },
+    { path: "/adminInbox", label: "Inbox", icon: <FaRocketchat /> },
     { path: "/admin/settings", label: "Settings", icon: <FaCog /> },
   ];
 

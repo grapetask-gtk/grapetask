@@ -1,44 +1,51 @@
-import React from "react";
+import { Link } from "react-router-dom";
 import fbook from "../assets/Facebook.webp";
+import insta from "../assets/Instagram.webp";
 import lindin from "../assets/Linkedin.webp";
 import tewter from "../assets/Twitter.webp";
-import insta from "../assets/Instagram.webp";
 import youtub from "../assets/Youtube.webp";
 import apple from "../assets/apple.webp";
 import foter from "../assets/foter.webp";
 import mobil from "../assets/mobileapp.webp";
-import { Link } from "react-router-dom";
 const Footer = () => {
   return (
     <>
       <footer>
-        <div class="curved-div"></div>
+        <div className="curved-div"></div>
         <div
           className="container-fluid pt-5  position-relative poppins"
           style={{ backgroundColor: "#F5F5FF" }}
         >
-          <img
-            src={foter}
-            className=" position-absolute fotereimg w-100"
-            alt=""
-          />
+         <img
+  src={foter}
+  className="position-absolute fotereimg w-100"
+  style={{ zIndex: -1, pointerEvents: "none" }}
+  alt=""
+/>
+
           <div className="container-fluid p-lg-5 p-md-5 p-sm-4 p-3">
             <div className="row justify-content-center">
               <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="row h-100">
                   <div className="col-lg-6 col-md-6 col-12 mt-lg-5 mt-md-4 mt-3 d-flex justify-content-between flex-column">
                     <div>
-                      <h5 className="font-20">For Clients</h5>
-                      <p className="font-16">How to Hire</p>
-                      <p className="font-16">Talent Marketplace</p>
-                      <p className="font-16">Project Catalog</p>
-                      <p className="font-16">Talent Scout</p>
-                      <p className="font-16">Hire an Agency</p>
-                      <p className="font-16">Enterprise</p>
-                      <p className="font-16"> Payroll Services</p>
-                      <p className="font-16">Direct Contracts</p>
-                      <p className="font-16">Hire Worldwide</p>
-                      <p className="font-16">Hire in the USA</p>
+<h5 className="font-20">For Clients</h5>
+<Link to="/how-to-hire" >
+     {" "}
+                 
+       
+How to Hire{" "}
+</Link>
+<Link to="/talent-marketplace" className="font-16 d-block">Talent Marketplace</Link>
+<Link to="/project-catalog" className="font-16 d-block">Project Catalog</Link>
+<Link to="/talent-scout" className="font-16 d-block">Talent Scout</Link>
+<Link to="/hire-an-agency" className="font-16 d-block">Hire an Agency</Link>
+<Link to="/enterprise" className="font-16 d-block">Enterprise</Link>
+<Link to="/payroll-services" className="font-16 d-block">Payroll Services</Link>
+<Link to="/direct-contracts" className="font-16 d-block">Direct Contracts</Link>
+<Link to="/hire-worldwide" className="font-16 d-block">Hire Worldwide</Link>
+<Link to="/hire-in-usa" className="font-16 d-block">Hire in the USA</Link>
+
                     </div>
                     <div className="mt-3">
                       <p className="font-16">Follows Us</p>
@@ -60,39 +67,41 @@ const Footer = () => {
                     </div>
                   </div>
                   <div className="col-lg-6 col-md-6 col-12  mt-lg-5 mt-md-4 mt-3">
-                    <h5 className="font-20">For Talents</h5>
-                    <p className="font-16">How to Find Work</p>
-                    <p className="font-16">Direct Contracts</p>
-                    <p className="font-16">Find Freelance Jobs Worldwide</p>
-                    <p className="font-16">Find Freelance Jobs in the USA</p>
-                  </div>
+                 <h5 className="font-20">For Talents</h5>
+<Link to="/how-to-find-work" className="font-16 d-block">How to Find Work</Link>
+<Link to="/direct-contracts" className="font-16 d-block">Direct Contracts</Link>
+<Link to="/freelance-jobs-worldwide" className="font-16 d-block">Find Freelance Jobs Worldwide</Link>
+<Link to="/freelance-jobs-usa" className="font-16 d-block">Find Freelance Jobs in the USA</Link>
+ </div>
                 </div>
               </div>
               <div className="col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="row h-100">
                   <div className="col-lg-6 col-md-6 col-12 mt-lg-5 mt-md-4 mt-3">
-                    <h5 className="font-20">Resources</h5>
-                    <p className="font-16"> Help & Support</p>
-                    <p className="font-16">Success Stories</p>
-                    <p className="font-16">Upwork Reviews</p>
-                    <p className="font-16">Resources</p>
-                    <p className="font-16">Blog</p>
-                    <p className="font-16"> Community </p>
-                    <p className="font-16">Affiliate Program </p>
-                    <p className="font-16">Free Business tools</p>
+                  <h5 className="font-20">Resources</h5>
+<Link to="/help-support" className="font-16 d-block">Help & Support</Link>
+<Link to="/success-stories" className="font-16 d-block">Success Stories</Link>
+<Link to="/upwork-reviews" className="font-16 d-block">Upwork Reviews</Link>
+<Link to="/resources" className="font-16 d-block">Resources</Link>
+<Link to="/blog" className="font-16 d-block">Blog</Link>
+<Link to="/community" className="font-16 d-block">Community</Link>
+<Link to="/affiliate-program" className="font-16 d-block">Affiliate Program</Link>
+<Link to="/business-tools" className="font-16 d-block">Free Business Tools</Link>
+
                   </div>
                   <div className="col-lg-6 col-md-6 col-12 d-flex justify-content-between flex-column mt-lg-5 mt-md-4 mt-3">
                     <div>
-                      <h5 className="font-20">Company</h5>
-                      <p className="font-16"> About Us</p>
-                      <p className="font-16">Leaderships</p>
-                      <p className="font-16">Investor Relations</p>
-                      <p className="font-16">Careers</p>
-                      <p className="font-16">Our Impact</p>
-                      <p className="font-16">Press</p>
-                      <p className="font-16">Contact Us</p>
-                      <p className="font-16">Trust, Safety, and Security</p>
-                      <p className="font-16">Modern Slavery Statement</p>
+                   <h5 className="font-20">Company</h5>
+<Link to="/about-us" className="font-16 d-block">About Us</Link>
+<Link to="/leadership" className="font-16 d-block">Leadership</Link>
+<Link to="/investor-relations" className="font-16 d-block">Investor Relations</Link>
+<Link to="/careers" className="font-16 d-block">Careers</Link>
+<Link to="/our-impact" className="font-16 d-block">Our Impact</Link>
+<Link to="/press" className="font-16 d-block">Press</Link>
+<Link to="/contact-us" className="font-16 d-block">Contact Us</Link>
+<Link to="/trust-safety" className="font-16 d-block">Trust, Safety, and Security</Link>
+<Link to="/modern-slavery" className="font-16 d-block">Modern Slavery Statement</Link>
+
                     </div>
                     <div className="mt-3">
                       <p className="me-3">Mobile Apps</p>

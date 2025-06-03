@@ -1,17 +1,17 @@
 import { Box, Button, Modal, Pagination, Stack } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TiTick } from "react-icons/ti";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { Spinner } from "reactstrap";
+
 import search from "../assets/searchbar.webp";
 import Navbar from "../components/Navbar";
 import { getBdBuyerRequest, getBuyerRequest } from "../redux/slices/buyerRequestSlice";
 import { CreateOfferRequest, getExperts, getOfferRequest, getPersonalGigs } from "../redux/slices/offersSlice";
 import { useDispatch, useSelector } from "../redux/store/store";
 import "../style/userByer.scss";
-
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 const style = {
   position: "absolute",
@@ -27,92 +27,199 @@ const style = {
 };
 
 const UserBuyerRequest = () => {
+  // State management
   const [open, setOpen] = useState(false);
-  const [inviteModal, setInviteModal] = useState(false); // For inviting an expert
-  // New state for storing full buyer request data
+  const [inviteModal, setInviteModal] = useState(false);
   const [buyerRequestData, setBuyerRequestData] = useState(null);
-  const handleClose = () => {
-    setOpen(false);
-    setInviteModal(false);
-    setBuyerRequestData(null);
-  };
-
-  const dispatch = useDispatch();
-  const { requestDetail, isLoading } = useSelector((state) => state.buyer);
-  const { personalGigs, offerDetail, offerIsLoading, experts } = useSelector((state) => state.offers);
-  const UserData = JSON.parse(localStorage.getItem("UserData"));
-  const UserRole = UserData?.role; // Role of the logged in user
   const [searchKeyword, setSearchKeyword] = useState("");
-
-  useEffect(() => {
-    // console.log('here is user data', UserData);
-  }, [UserData]);
-
-  useEffect(() => {
-    if (!UserRole) return; // Wait until UserRole is available
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   
-    dispatch(getBuyerRequest());
-  
-    // Only dispatch getBdBuyerRequest if user is an expert or freelancer
-    if (UserRole === 'expert/freelancer') {
-      dispatch(getBdBuyerRequest());
-    }
-  }, [dispatch, UserRole]);
-  
-
-  useEffect(() => {
-    if (UserData && UserData.id) {
-      dispatch(getPersonalGigs({ user_id: UserData.id }));
-    }
-  }, [dispatch, UserData]);
-
-  useEffect(() => {
-    dispatch(getOfferRequest());
-  }, [dispatch]);
-
-  useEffect(() => {
-    dispatch(getExperts());
-  }, [dispatch]);
-
-  // Offer creation state variables
+  // Offer creation states
   const [buyerId, setBuyerId] = useState("");
   const [description, setDescription] = useState("");
   const [offerPrice, setOfferPrice] = useState("");
   const [offerDate, setOfferDate] = useState("");
   const [gigRadio, setGigRadio] = useState("");
-  const [expertId, setExpertId] = useState(""); // For inviting an expert
+  const [expertId, setExpertId] = useState("");
   const [offerLoader, setOfferLoader] = useState(false);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage2, setCurrentPage2] = useState(1);
+
+  // Refs
+  const searchTimeoutRef = useRef(null);
+
+  // Hooks
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // When clicking "Create Offer", save the entire buyer request data
-  const handleCreateOfferClick = (buyerRequest) => {
+  // Selectors
+  const { requestDetail, isLoading } = useSelector((state) => state.buyer);
+  const { 
+    personalGigs, 
+    offerDetail, 
+    offerIsLoading, 
+    experts, 
+    isLoadingExperts, 
+    errorExperts 
+  } = useSelector((state) => state.offers);
+
+  // Memoized user data to prevent unnecessary re-renders
+  const UserData = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("UserData")) || {};
+    } catch (error) {
+      console.error("Error parsing UserData:", error);
+      return {};
+    }
+  }, []);
+
+  const UserRole = UserData?.role;
+  const userId = UserData?.id;
+
+  // Constants
+  const itemsPerPage = 4;
+  const itemsPerPage2 = 4;
+
+  // Memoized calculations
+  const calculateRequiredBids = useCallback((price) => {
+    const numericPrice = typeof price === 'string' 
+      ? parseFloat(price.replace(/[^0-9.]/g, '')) 
+      : price;
+    
+    if (numericPrice <= 50) return 5;
+    if (numericPrice <= 100) return 10;
+    if (numericPrice <= 150) return 15;
+    if (numericPrice <= 200) return 20;
+    if (numericPrice <= 250) return 25;
+    if (numericPrice <= 300) return 30;
+    if (numericPrice <= 350) return 35;
+    if (numericPrice <= 400) return 40;
+    if (numericPrice <= 450) return 45;
+    if (numericPrice <= 500) return 50;
+    return 55;
+  }, []);
+
+  // Debounced search handler
+  const handleSearchChange = useCallback((value) => {
+    setSearchKeyword(value);
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearch(value);
+    }, 300);
+  }, []);
+
+  // Pagination calculations
+  const paginationData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return {
+      visibleData: offerDetail.slice(startIndex, endIndex),
+      totalPages: Math.ceil(offerDetail.length / itemsPerPage)
+    };
+  }, [offerDetail, currentPage]);
+
+  const paginationData2 = useMemo(() => {
+    const startIndex = (currentPage2 - 1) * itemsPerPage2;
+    const endIndex = startIndex + itemsPerPage2;
+    return {
+      visibleData: requestDetail.slice(startIndex, endIndex),
+      totalPages: Math.ceil(requestDetail.length / itemsPerPage2)
+    };
+  }, [requestDetail, currentPage2]);
+
+  // Filtered data with memoization
+  const filteredActiveData = useMemo(() => {
+    if (!debouncedSearch) return paginationData2.visibleData;
+    
+    const searchLower = debouncedSearch.toLowerCase();
+    return paginationData2.visibleData.filter((item) => {
+      const titleMatch = item.title?.toLowerCase().includes(searchLower);
+      const descMatch = item.description?.toLowerCase().includes(searchLower);
+      return titleMatch || descMatch;
+    });
+  }, [paginationData2.visibleData, debouncedSearch]);
+
+  const filteredOfferData = useMemo(() => {
+    if (!debouncedSearch) return paginationData.visibleData;
+    
+    const searchLower = debouncedSearch.toLowerCase();
+    return paginationData.visibleData.filter((value) =>
+      value.description?.toLowerCase().includes(searchLower)
+    );
+  }, [paginationData.visibleData, debouncedSearch]);
+
+  // Calculate duration memoized function
+  const calculateDuration = useCallback((createdAt, date) => {
+    const diffInSeconds = Math.floor(
+      (new Date(date) - new Date(createdAt)) / 1000
+    );
+    
+    if (diffInSeconds < 60) return "Duration just now";
+    if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `Duration ${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
+    }
+    if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `Duration ${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+    }
+    if (diffInSeconds < 2592000) {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `Duration ${days} ${days === 1 ? "day" : "days"} ago`;
+    }
+    if (diffInSeconds < 31536000) {
+      const months = Math.floor(diffInSeconds / 2592000);
+      return `Duration ${months} ${months === 1 ? "month" : "months"} ago`;
+    }
+    const years = Math.floor(diffInSeconds / 31536000);
+    return `Duration ${years} ${years === 1 ? "year" : "years"} ago`;
+  }, []);
+
+  // Event handlers with useCallback
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    setInviteModal(false);
+    setBuyerRequestData(null);
+  }, []);
+
+  const handleCreateOfferClick = useCallback((buyerRequest) => {
     setBuyerId(buyerRequest.id);
     setBuyerRequestData(buyerRequest);
     setOpen(true);
-  };
+  }, []);
 
-  const initialOfferData = {
-    expert_id: ""
-  };
+
+
   
-  const handleSubmitOffer = async (e) => {
-    e.preventDefault();
-    // console.log('sending buyer request data', buyerRequestData);
-  
-    // Merge buyerRequestData with initialOfferData
-    const dataToSend = {
-      ...initialOfferData,
-      ...buyerRequestData,
-      // Conditionally add expert_id if the role and expertId are provided
-      expert_id: UserRole === "bidder/company representative/middleman" && expertId ? expertId : buyerRequestData.expert_id || ""
-    };
-  
-    setOfferLoader(true);
-    dispatch(CreateOfferRequest(dataToSend, handleResponseOffer));
-  };
-  
-  const handleResponseOffer = (data) => {
+
+  const handleInviteExpertClick = useCallback((buyerRequest) => {
+    setBuyerId(buyerRequest.id);
+    setBuyerRequestData(buyerRequest);
+    setInviteModal(true);
+  }, []);
+
+  const handlePageChange = useCallback((event, value) => {
+    setCurrentPage(value);
+  }, []);
+
+  const handlePageChange2 = useCallback((event, value) => {
+    setCurrentPage2(value);
+  }, []);
+
+  const handlePriceChange = useCallback((e) => {
+    let value = e.target.value;
+    value = value.replace("$", "");
+    value = value.replace(/[^0-9$]/g, "");
+    setOfferPrice("$" + value);
+  }, []);
+
+  const handleResponseOffer = useCallback((data) => {
     if (data?.status) {
       setOfferLoader(false);
       setOpen(false);
@@ -121,9 +228,8 @@ const UserBuyerRequest = () => {
       toast.success("Offer created successfully!");
     } else {
       setOfferLoader(false);
-      // Define errorMsg from data.message if available, otherwise fallback
       const errorMsg = data?.message || "Offer creation failed: Please try again.";
-      // Optionally, if the message indicates not enough bids, provide a call-to-action
+      
       if (data?.message === "Not enough bids! Please purchase more bids to submit an offer.") {
         toast.error(
           <>
@@ -136,81 +242,96 @@ const UserBuyerRequest = () => {
         toast.error(errorMsg);
       }
     }
-  };
+  }, [navigate]);
+
+
+  // In handleSubmitOffer, ensure gig_id is included in the payload
+const handleSubmitOffer = useCallback(async (e) => {
+  e.preventDefault();
   
-  // const handleSubmitOffer = async (e) => {
-  //   e.preventDefault();
-  //   const dataToSend = {
-  //     ...initialOfferData,
-  //     ...buyerRequestData,
-  //     expert_id: UserRole === "bidder/company representative/middleman" && expertId
-  //       ? expertId
-  //       : buyerRequestData.expert_id || ""
-  //   };
+  // Validate required fields
+  // if (!gigRadio) {
+  //   toast.error("Please select a gig before submitting the offer.");
+  //   return;
+  // }
 
-  //   setOfferLoader(true);
-  //   dispatch(CreateOfferRequest(dataToSend, handleResponseOffer));
-  // };
 
-  // const handleResponseOffer = (data) => {
-  //   if (data?.status) {
-  //     toast.success("Offer created successfully!");
-  //     setOfferLoader(false);
-  //     setOpen(false);
-  //     setInviteModal(false);
-  //     setBuyerRequestData(null);
-  //     setDescription("");
-  //     setOfferPrice("");
-  //     setOfferDate("");
-  //     setGigRadio("");
-  //     setExpertId("");
-  //     dispatch(getOfferRequest());
-  //   } else {
-  //     toast.error("Offer creation failed: " + (data?.error || "Please try again."));
-  //     setOfferLoader(false);
-  //   }
-
-  // Pagination for buyer requests and offers
-  const itemsPerPage = 4;
-  const [currentPage, setCurrentPage] = useState(1);
-  const handlePageChange = (event, value) => {
-    setCurrentPage(value);
-  };
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const visibleData = offerDetail.slice(startIndex, endIndex);
-
-  const itemsPerPage2 = 4;
-  const [currentPage2, setCurrentPage2] = useState(1);
-  const handlePageChange2 = (event, value) => {
-    setCurrentPage2(value);
-  };
-  const startIndex2 = (currentPage2 - 1) * itemsPerPage2;
-  const endIndex2 = startIndex2 + itemsPerPage2;
-  const visibleData2 = requestDetail.slice(startIndex2, endIndex2);
-
-  const stripHtmlTags = (html) => {
-    const tempElement = document.createElement("div");
-    tempElement.innerHTML = html;
-    return tempElement.textContent || tempElement.innerText || "";
-  };
-
-  // Add this function at the top of your component file (outside the component)
-const calculateRequiredBids = (price) => {
-  const numericPrice = typeof price === 'string' ? parseFloat(price.replace(/[^0-9.]/g, '')) : price;
-  
-  if (numericPrice <= 50) return 5;
-  if (numericPrice <= 100) return 10;
-  if (numericPrice <= 150) return 15;
-  if (numericPrice <= 200) return 20;
-  if (numericPrice <= 250) return 25;
-  if (numericPrice <= 300) return 30;
-  if (numericPrice <= 350) return 35;
-  if (numericPrice <= 400) return 40;
-  if (numericPrice <= 450) return 45;
-  if (numericPrice <= 500) return 50;
-  return 55;
+ const offerData = {
+  id: buyerId, // Matches backend's 'id' validation (buyer_request_id)
+  client_id: buyerRequestData.client.id, // From buyer request's client
+  gig_id: gigRadio || null, // Use null instead of empty string
+  description: description.trim(),
+  price: offerPrice.replace('$', ''),
+  date: offerDate, // Matches backend's 'date' field
+  expert_id: UserRole === "bidder/company representative/middleman" 
+    ? (expertId || null) 
+    : (buyerRequestData?.expert_id || null) // Use null instead of empty string
 };
+
+
+  console.log("Submitting offer data:", offerData); // For debugging
+
+  setOfferLoader(true);
+  dispatch(CreateOfferRequest(offerData, handleResponseOffer));
+}, [
+  buyerRequestData, 
+  UserRole, 
+  expertId, 
+  dispatch, 
+  handleResponseOffer,
+  gigRadio, // Add missing dependencies
+  description,
+  offerPrice,
+  offerDate,
+  buyerId
+]);
+
+  const resetForm = useCallback(() => {
+    setDescription("");
+    setOfferPrice("");
+    setOfferDate("");
+    setGigRadio("");
+    setExpertId("");
+    setOpen(false);
+    setInviteModal(false);
+  }, []);
+
+  // Effects - Optimized to run only when necessary
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Batch API calls
+        const promises = [
+          dispatch(getBuyerRequest()),
+          dispatch(getOfferRequest()),
+          dispatch(getExperts())
+        ];
+
+        if (UserRole === 'expert/freelancer') {
+          promises.push(dispatch(getBdBuyerRequest()));
+        }
+
+        if (userId) {
+          promises.push(dispatch(getPersonalGigs({ user_id: userId })));
+        }
+
+        await Promise.all(promises);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [dispatch, UserRole, userId]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <>
@@ -235,7 +356,7 @@ const calculateRequiredBids = (price) => {
                 >
                   Active{" "}
                   <span className="p-1 rounded-2 font-12 font-500 poppins">
-                    {requestDetail?.length}
+                    {requestDetail?.length || 0}
                   </span>
                 </button>
               </li>
@@ -252,7 +373,7 @@ const calculateRequiredBids = (price) => {
                 >
                   Sent Offer{" "}
                   <span className="p-1 rounded-2 font-12 font-500 poppins">
-                    {offerDetail?.length}
+                    {offerDetail?.length || 0}
                   </span>
                 </button>
               </li>
@@ -269,7 +390,7 @@ const calculateRequiredBids = (price) => {
                 id="floatingInputGroup1"
                 placeholder="Search..."
                 value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
               />
             </div>
           </div>
@@ -284,6 +405,7 @@ const calculateRequiredBids = (price) => {
                 }}
               />
               <div className="tab-content" id="pills-tabContent">
+                {/* Active Requests Tab */}
                 <div
                   className="tab-pane fade show active"
                   id="pills-home"
@@ -295,114 +417,75 @@ const calculateRequiredBids = (price) => {
                     <div className="row">
                       <div className="col-12">
                         {isLoading ? (
-                          "Loading..."
+                          <div className="d-flex justify-content-center p-4">
+                            <Spinner color="primary" />
+                          </div>
                         ) : (
-                          visibleData2
-                            .filter((innerValue) =>
-                              (innerValue.title &&
-                                innerValue.title
-                                  .toLowerCase()
-                                  .includes(searchKeyword.toLowerCase())) ||
-                              (innerValue.description &&
-                                innerValue.description
-                                  .toLowerCase()
-                                  .includes(searchKeyword.toLowerCase()))
-                            )
-                            .map((value, index) => (
-                              <div className="p-3 cardrating mt-2" key={index}>
-                                <div className="d-flex flex-wrap">
-                                  <img
-                                    src={value?.client?.image}
-                                    width={60}
-                                    height={60}
-                                    className="rounded-rounded-circle flex-shrink-0"
-                                    alt="client"
-                                  />
-                                  <div className="ms-2">
-                                    <p className="font-18 poppins fw-semibold mb-0">
-                                      {value?.title}
-                                    </p>
-                                    <p className="font-16 poppins takegraycolor mb-0">
-                                      {value?.description}
-                                    </p>
-                                    <p className="mb-0 font-14 poppins">
-                                      {new Date(value?.created_at).toLocaleDateString("en-US", {
-                                        year: "numeric",
-                                        month: "short",
-                                        day: "numeric",
-                                      })}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="d-flex justify-content-between mt-3 flex-wrap align-items-center">
-                                  <Button
-                                    className="btn-stepper poppins px-4 fw-normal font-16 w-auto"
-                                    onClick={() => {
-                                      setBuyerId(value?.id);
-                                      setBuyerRequestData(value);
-                                      setOpen(true);
-                                    }}
-                                  >
-                                    Create Offer
-                                  </Button>
-                                  {UserData?.role === "bidder/company representative/middleman" && (
-                                    <Button
-                                      className="btn-stepper poppins px-4 fw-normal font-16 w-auto ms-2"
-                                      onClick={() => {
-                                        setBuyerId(value?.id);
-                                        setBuyerRequestData(value);
-                                        setInviteModal(true);
-                                      }}
-                                    >
-                                      Invite Expert
-                                    </Button>
-                                  )}
-                                  <div className="userByer d-inline-flex mt-lg-0 mt-2 flex-wrap">
-                                    <span className="rounded-3">
-                                      Offers {value?.offers?.length}
-                                    </span>
-                                    <span className="rounded-3">
-  Budget {value?.price}
-</span>
-<span className="rounded-3">
-  Bids Needed: {calculateRequiredBids(value?.price)}
-</span>
-                                    <span className="rounded-3">
-                                      {(() => {
-                                        const diffInSeconds = Math.floor(
-                                          (new Date(value?.date) - new Date(value?.created_at)) / 1000
-                                        );
-                                        if (diffInSeconds < 60) {
-                                          return "Duration just now";
-                                        } else if (diffInSeconds < 3600) {
-                                          const minutes = Math.floor(diffInSeconds / 60);
-                                          return `Duration ${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
-                                        } else if (diffInSeconds < 86400) {
-                                          const hours = Math.floor(diffInSeconds / 3600);
-                                          return `Duration ${hours} ${hours === 1 ? "hour" : "hours"} ago`;
-                                        } else if (diffInSeconds < 2592000) {
-                                          const days = Math.floor(diffInSeconds / 86400);
-                                          return `Duration ${days} ${days === 1 ? "day" : "days"} ago`;
-                                        } else if (diffInSeconds < 31536000) {
-                                          const months = Math.floor(diffInSeconds / 2592000);
-                                          return `Duration ${months} ${months === 1 ? "month" : "months"} ago`;
-                                        } else {
-                                          const years = Math.floor(diffInSeconds / 31536000);
-                                          return `Duration ${years} ${years === 1 ? "year" : "years"} ago`;
-                                        }
-                                      })()}
-                                    </span>
-                                  </div>
+                          filteredActiveData.map((value, index) => (
+                            <div className="p-3 cardrating mt-2" key={value.id || index}>
+                              <div className="d-flex flex-wrap">
+                                <img
+                                  src={value?.client?.image}
+                                  width={60}
+                                  height={60}
+                                  className="rounded-rounded-circle flex-shrink-0"
+                                  alt="client"
+                                />
+                                <div className="ms-2">
+                                  <p className="font-18 poppins fw-semibold mb-0">
+                                    {value?.title}
+                                  </p>
+                                  <p className="font-16 poppins takegraycolor mb-0">
+                                    {value?.description}
+                                  </p>
+                                  <p className="mb-0 font-14 poppins">
+                                    {new Date(value?.created_at).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    })}
+                                  </p>
                                 </div>
                               </div>
-                            ))
+                              <div className="d-flex justify-content-between mt-3 flex-wrap align-items-center">
+                                <Button
+                                  className="btn-stepper poppins px-4 fw-normal font-16 w-auto"
+                                  onClick={() => handleCreateOfferClick(value)}
+                                >
+                                  Create Offer
+                                </Button>
+                                {UserRole === "bidder/company representative/middleman" && (
+                                  <Button
+                                    className="btn-stepper poppins px-4 fw-normal font-16 w-auto ms-2"
+                                    onClick={() => handleInviteExpertClick(value)}
+                                  >
+                                    Invite Expert
+                                  </Button>
+                                )}
+                                <div className="userByer d-inline-flex mt-lg-0 mt-2 flex-wrap">
+                                  <span className="rounded-3">
+                                    Offers {value?.offers?.length || 0}
+                                  </span>
+                                  <span className="rounded-3">
+                                    Budget {value?.price}
+                                  </span>
+                                  <span className="rounded-3">
+                                    Bids Needed: {calculateRequiredBids(value?.price)}
+                                  </span>
+                                  <span className="rounded-3">
+                                    {calculateDuration(value?.created_at, value?.date)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))
                         )}
                       </div>
                     </div>
                     <div className="d-flex justify-content-end hireexpert mt-3 mb-3">
                       <Stack spacing={4}>
                         <Pagination
-                          count={Math.ceil(requestDetail.length / itemsPerPage2)}
+                          count={paginationData2.totalPages}
                           shape="rounded"
                           page={currentPage2}
                           onChange={handlePageChange2}
@@ -411,6 +494,8 @@ const calculateRequiredBids = (price) => {
                     </div>
                   </div>
                 </div>
+
+                {/* Sent Offers Tab */}
                 <div
                   className="tab-pane fade"
                   id="pills-profile"
@@ -421,14 +506,13 @@ const calculateRequiredBids = (price) => {
                   <div className="container-fluid">
                     <div className="row">
                       <h6 className="font-20 font-500 cocon">Offers</h6>
-                      {offerIsLoading && <h5 className="cocon">Loading...</h5>}
-                      {visibleData
-                        .filter((value) =>
-                          value.description &&
-                          value.description.toLowerCase().includes(searchKeyword.toLowerCase())
-                        )
-                        .map((value, index) => (
-                          <div className="col-12 mt-3" key={index}>
+                      {offerIsLoading ? (
+                        <div className="d-flex justify-content-center p-4">
+                          <Spinner color="primary" />
+                        </div>
+                      ) : (
+                        filteredOfferData.map((value, index) => (
+                          <div className="col-12 mt-3" key={value.id || index}>
                             <div className="cardrating p-3">
                               <h6 className="font-18 font-500 poppins">
                                 {value.title}
@@ -452,38 +536,17 @@ const calculateRequiredBids = (price) => {
                                   Budget {value.price}
                                 </span>
                                 <span className="rounded-3 font-14 poppins">
-                                  {(() => {
-                                    const diffInSeconds = Math.floor(
-                                      (new Date(value?.date) - new Date(value?.created_at)) / 1000
-                                    );
-                                    if (diffInSeconds < 60) {
-                                      return "Duration just now";
-                                    } else if (diffInSeconds < 3600) {
-                                      const minutes = Math.floor(diffInSeconds / 60);
-                                      return `Duration ${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
-                                    } else if (diffInSeconds < 86400) {
-                                      const hours = Math.floor(diffInSeconds / 3600);
-                                      return `Duration ${hours} ${hours === 1 ? "hour" : "hours"} ago`;
-                                    } else if (diffInSeconds < 2592000) {
-                                      const days = Math.floor(diffInSeconds / 86400);
-                                      return `Duration ${days} ${days === 1 ? "day" : "days"} ago`;
-                                    } else if (diffInSeconds < 31536000) {
-                                      const months = Math.floor(diffInSeconds / 2592000);
-                                      return `Duration ${months} ${months === 1 ? "month" : "months"} ago`;
-                                    } else {
-                                      const years = Math.floor(diffInSeconds / 31536000);
-                                      return `Duration ${years} ${years === 1 ? "year" : "years"} ago`;
-                                    }
-                                  })()}
+                                  {calculateDuration(value?.created_at, value?.date)}
                                 </span>
                               </div>
                             </div>
                           </div>
-                        ))}
+                        ))
+                      )}
                       <div className="d-flex justify-content-end hireexpert mt-3 mb-3">
                         <Stack spacing={4}>
                           <Pagination
-                            count={Math.ceil(offerDetail.length / itemsPerPage)}
+                            count={paginationData.totalPages}
                             variant="outlined"
                             shape="rounded"
                             page={currentPage}
@@ -508,27 +571,19 @@ const calculateRequiredBids = (price) => {
         aria-describedby="modal-modal-description"
       >
         <Box className="p-lg-3 p-md-3 p-2" sx={style}>
-          <div className="d-flex justify-content-between ">
+          <div className="d-flex justify-content-between">
             <h1 className="font-20 font-500 cocon blackcolor">
               {inviteModal ? "Invite Expert" : `Offer Request ${buyerId}`}
             </h1>
             <button
               type="button"
-              onClick={() => {
-                setDescription("");
-                setOfferPrice("");
-                setOfferDate("");
-                setGigRadio("");
-                setExpertId("");
-                setOpen(false);
-                setInviteModal(false);
-              }}
+              onClick={resetForm}
               className="btn-close"
+              aria-label="Close"
             />
           </div>
           <div className="container-fluid profileSetting">
             <form onSubmit={handleSubmitOffer} className="row">
-              <ToastContainer />
               <div className="col-12 prof-fields">
                 <label htmlFor="description" className="form-label font-18 poppins blackcolor">
                   Description
@@ -539,9 +594,10 @@ const calculateRequiredBids = (price) => {
                   maxLength={200}
                   className="form-control p-3 textArea border-0 font-16 poppins"
                   required
-                ></textarea>
+                  id="description"
+                />
                 <p className="font-12 text-secondary text-end mt-2">
-                  {description.length}/80
+                  {description.length}/200
                 </p>
               </div>
               <div className="col-lg-6 col-md-6 col-12 prof-fields mt-4">
@@ -551,12 +607,7 @@ const calculateRequiredBids = (price) => {
                 <input
                   type="text"
                   value={offerPrice}
-                  onChange={(e) => {
-                    let value = e.target.value;
-                    value = value.replace("$", "");
-                    value = value.replace(/[^0-9$]/g, "");
-                    setOfferPrice("$" + value);
-                  }}
+                  onChange={handlePriceChange}
                   placeholder="$0"
                   className="form-control p-3 border-0 font-16 poppins"
                   required
@@ -576,7 +627,7 @@ const calculateRequiredBids = (price) => {
                   id="date"
                 />
               </div>
-              {UserData?.role === "bidder/company representative/middleman" && (
+              {UserRole === "bidder/company representative/middleman" && (
                 <div className="col-12 prof-fields mt-4">
                   <label htmlFor="expertId" className="form-label font-18 poppins blackcolor">
                     Select Expert (Optional)
@@ -585,6 +636,7 @@ const calculateRequiredBids = (price) => {
                     className="form-control p-3 border-0 font-16 poppins"
                     value={expertId}
                     onChange={(e) => setExpertId(e.target.value)}
+                    id="expertId"
                   >
                     <option value="">-- Select an Expert --</option>
                     {experts?.length > 0 ? (
@@ -594,7 +646,9 @@ const calculateRequiredBids = (price) => {
                         </option>
                       ))
                     ) : (
-                      <option disabled>No experts available</option>
+                      <option disabled>
+                        {isLoadingExperts ? "Loading experts..." : "No experts available"}
+                      </option>
                     )}
                   </select>
                   <small className="text-muted">
@@ -602,54 +656,70 @@ const calculateRequiredBids = (price) => {
                   </small>
                 </div>
               )}
-              <div className="container-fluid">
-                <div className="row">
-                  {personalGigs.map((innerValue, idx) => (
-                    <div className="col-lg-3 mt-3" key={idx}>
-                      <div
-                        className="rounded-4 px-2 h-100"
-                        style={{ backgroundColor: "#f5f5ff" }}
-                      >
-                        <input
-                          required
-                          checked={gigRadio === innerValue.id}
-                          type="radio"
-                          value={innerValue.id}
-                          onChange={() => setGigRadio(innerValue.id)}
-                          name="gigCheck"
-                          id={`radio${idx}`}
-                        />
-                        <label htmlFor={`radio${idx}`}>
-                          <img
-                            height={150}
-                            src={
-                              innerValue.media?.image1 || innerValue.media?.image2 || innerValue.media?.image3
-                            }
-                            alt="Gig"
-                            className="w-100 object-fit-cover shadow rounded-4"
-                          />
-                          <p className="text-secondary font-12 mt-2">
-                            {innerValue.title}
-                          </p>
-                        </label>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            
+<div className="container-fluid">
+  <div className="row">
+    {personalGigs?.map((innerValue, idx) => (
+      <div className="col-lg-3 mt-3" key={innerValue.id || idx}>
+        <div
+          className="rounded-4 px-2 h-100"
+          style={{ backgroundColor: "#f5f5ff" }}
+        >
+          <input
+            required
+            checked={gigRadio === innerValue.id}
+            type="radio"
+            value={innerValue.id}
+            onChange={() => setGigRadio(innerValue.id)}
+            name="gigCheck"
+            id={`radio${idx}`}
+          />
+          <label htmlFor={`radio${idx}`}>
+            <img
+              height={150}
+              src={
+                innerValue.media?.image1 || 
+                innerValue.media?.image2 || 
+                innerValue.media?.image3
+              }
+              alt="Gig"
+              className="w-100 object-fit-cover shadow rounded-4"
+            />
+            <p className="text-secondary font-12 mt-2">
+              {innerValue.title}
+            </p>
+          </label>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
               <div className="mt-4 text-end">
                 <Button
                   type="submit"
                   disabled={offerLoader}
                   className="btn-stepper poppins px-4 fw-normal font-16 w-auto"
                 >
-                  {offerLoader ? <Spinner size="sm" color="light" /> : "Save Offer"}
+                  {offerLoader ? <Spinner size="sm" color="light" /> : "Send Offer"}
                 </Button>
               </div>
             </form>
           </div>
         </Box>
       </Modal>
+      
+      <ToastContainer 
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </>
   );
 };

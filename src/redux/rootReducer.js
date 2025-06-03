@@ -12,11 +12,11 @@ import notificationsSlice from './slices/notificationsSlice';
 import offersSlice from './slices/offersSlice';
 import orderSlice from './slices/orderSlice';
 import profileSlice from './slices/profileSlice';
+import projectSlice from './slices/projectSlice';
 import ratingSlice from './slices/ratingSlice';
 import skillsSlice from './slices/skillsSlice';
 import userSlice from './slices/userSlice';
 import usersSlice from './slices/usersSlice';
-
 const rootReducer = combineReducers({
   user: userSlice,
   users: usersSlice,
@@ -33,7 +33,7 @@ const rootReducer = combineReducers({
     orders: orderSlice,
     message: messageSlice,
     jobInvitation: jobInvitationSlice,
-
+project: projectSlice,
   bids:getBidPackages,
   notifications: notificationsSlice,
 });

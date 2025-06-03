@@ -1,25 +1,21 @@
-import React, { useEffect, useState } from "react";
-import Natayla from "../assets/Natayla.webp";
-import pen from "../assets/pen.webp";
+import { Autocomplete, Button, TextField } from "@mui/material";
+import { useEffect, useState } from "react";
+import { Badge, ProgressBar } from "react-bootstrap";
 import { CircularProgressbar } from "react-circular-progressbar";
-import doubl from "../assets/doubletick.webp";
-import doube from "../assets/duble.webp";
-import { Button } from "@mui/material";
-import { BsFillPencilFill, BsInstagram } from "react-icons/bs";
-import { FaFacebookSquare } from "react-icons/fa";
+import { BsFillPencilFill } from "react-icons/bs";
 import {
   Modal,
-  ModalHeader,
   ModalBody,
   ModalFooter,
+  ModalHeader,
   Spinner,
 } from "reactstrap";
-import { Autocomplete, TextField } from "@mui/material";
-import { useDispatch, useSelector } from "../redux/store/store";
-import { profileUpdate, userProfile } from "../redux/slices/profileSlice";
-import { TagsAdd, usergetsTags } from "../redux/slices/dashboardSlice";
+import doubl from "../assets/doubletick.webp";
 import emptyProfile from "../assets/emptyProfileModal.webp";
-import { Badge, ProgressBar } from "react-bootstrap";
+import pen from "../assets/pen.webp";
+import { TagsAdd, usergetsTags } from "../redux/slices/dashboardSlice";
+import { profileUpdate, userProfile } from "../redux/slices/profileSlice";
+import { useDispatch, useSelector } from "../redux/store/store";
 
 const Dashboardright = () => {
   const dispatch = useDispatch();
@@ -27,10 +23,36 @@ const Dashboardright = () => {
   const { tagsList, isLoading } = useSelector((state) => state.dashboard);
   const UserData = JSON.parse(localStorage.getItem("UserData"));
 
-  // Dummy percentages for circular progress bars
-  const percentage1 = 0;
-  const percentage2 = 0;
-  const percentage3 = 0;
+  // Get user role from userDetail or UserData
+  const userRole = userDetail?.role || UserData?.role || "client";
+
+  // Role-based dummy percentages for circular progress bars
+  const getProgressData = () => {
+    switch (userRole.toLowerCase()) {
+      case "expert/freelancer":
+        return {
+          percentage1: 85, // Project Success Ratio
+          percentage2: 12, // Total Orders
+          percentage3: 10, // Complete Orders
+        };
+      case "bd":
+      case "bidder/company representative/middleman":
+        return {
+          percentage1: 92, // Client Conversion Rate
+          percentage2: 25, // Total Leads
+          percentage3: 23, // Converted Leads
+        };
+      case "Client":
+      default:
+        return {
+          percentage1: 0, // Projects Posted
+          percentage2: 0, // Active Projects
+          percentage3: 0, // Completed Projects
+        };
+    }
+  };
+
+  const { percentage1, percentage2, percentage3 } = getProgressData();
 
   // ---------- Name Update -----------
   const [firstName, setFirstName] = useState("");
@@ -87,8 +109,10 @@ const Dashboardright = () => {
   };
 
   useEffect(() => {
-    dispatch(usergetsTags());
-  }, [dispatch]);
+    if (userRole.toLowerCase() === "expert/freelancer" || userRole.toLowerCase() === "bidder/company representative/middleman") {
+      dispatch(usergetsTags());
+    }
+  }, [dispatch, userRole]);
 
   useEffect(() => {
     // Extract skill names from tagsList
@@ -99,36 +123,242 @@ const Dashboardright = () => {
   // Current month for "Earned in" section
   const currentMonth = new Date().toLocaleString("default", { month: "long" });
 
-   // ----------- User Level Display Component -----------
-   const UserLevelDisplayComponent = ({ userDetail }) => {
-    // The user's level could be: "New", "Level 1", "Level 2", "Level 3", "Top Rated", etc.
-    const userLevel = userDetail?.level || "New";
+  // ----------- User Level Display Component -----------
+  const UserLevelDisplayComponent = ({ userDetail, userRole }) => {
+    // Different level systems based on role
+    const getLevelData = () => {
+      const role = userRole.toLowerCase();
+      const userLevel = userDetail?.level || "New";
 
-    // Map each level string to a percentage
-    const levelMap = {
-      "New": 0,
-      "Level 1": 25,
-      "Level 2": 50,
-      "Level 3": 75,
-      "Top Rated": 100,
+      switch (role) {
+        case "expert/freelancer":
+          const freelancerLevelMap = {
+            "New": { percent: 0, color: "secondary" },
+            "Level 1": { percent: 25, color: "info" },
+            "Level 2": { percent: 50, color: "primary" },
+            "Level 3": { percent: 75, color: "warning" },
+            "Top Rated": { percent: 100, color: "success" },
+          };
+          return freelancerLevelMap[userLevel] || { percent: 0, color: "secondary" };
+
+        case "bd":
+        case "bidder/company representative/middleman":
+          const bdLevelMap = {
+            "New": { percent: 0, color: "secondary" },
+            "Junior BD": { percent: 30, color: "info" },
+            "Senior BD": { percent: 60, color: "primary" },
+            "BD Manager": { percent: 90, color: "warning" },
+            "BD Director": { percent: 100, color: "success" },
+          };
+          return bdLevelMap[userLevel] || { percent: 0, color: "secondary" };
+
+        case "client":
+        default:
+          const clientLevelMap = {
+            "New": { percent: 0, color: "secondary" },
+            "Verified": { percent: 50, color: "primary" },
+            "Premium": { percent: 100, color: "success" },
+          };
+          return clientLevelMap[userLevel] || { percent: 0, color: "secondary" };
+      }
     };
 
-    // Convert the userLevel string into a numeric percentage
-    const progressPercent = levelMap[userLevel] ?? 0;
+    const { percent, color } = getLevelData();
+    const userLevel = userDetail?.level || "New";
 
     return (
-      <div className="d-flex align-items-center">
-        <Badge bg="primary" className="me-2" style={{ fontSize: "14px" }}>
+      <div className="d-flex align-items-center justify-content-center">
+        <Badge bg={color} className="me-2" style={{ fontSize: "14px" }}>
           {userLevel}
         </Badge>
         <ProgressBar
-          now={progressPercent}
-          label={`${progressPercent}%`}
+          now={percent}
+          label={`${percent}%`}
+          variant={color}
           style={{ width: "200px", height: "10px", fontSize: "10px" }}
         />
       </div>
     );
   };
+
+  // Role-based progress bar labels
+  const getProgressLabels = () => {
+    switch (userRole.toLowerCase()) {
+      case "expert/freelancer":
+        return {
+          label1: "Project Success Ratio",
+          label2: "Total Orders",
+          label3: "Complete Orders"
+        };
+      case "bd":
+      case "bidder/company representative/middleman":
+        return {
+          label1: "Client Conversion Rate",
+          label2: "Total Leads",
+          label3: "Converted Leads"
+        };
+      case "client":
+      default:
+        return {
+          label1: "Projects Posted",
+          label2: "Active Projects",
+          label3: "Completed Projects"
+        };
+    }
+  };
+
+  const { label1, label2, label3 } = getProgressLabels();
+
+  // Role-based orders section
+  const renderOrdersSection = () => {
+    switch (userRole.toLowerCase()) {
+      case "expert/freelancer":
+        return (
+          <div className="mt-lg-5 mt-md-3 mt-2">
+            <h6 className="byerLine font-20 font-500 cocon blackcolor">Orders</h6>
+            <div className="Revie mt-lg-4 mt-md-3 mt-2">
+              <div className="d-flex justify-content-between">
+                <div>
+                  <p className="font-18 font-500 poppins blackcolor">Active orders</p>
+                </div>
+                <div>
+                  <p className="font-18 font-500 poppins">2</p>
+                </div>
+              </div>
+              <hr />
+              <div className="d-flex justify-content-between">
+                <div>
+                  <p className="font-18 font-500 poppins">
+                    Earned in {currentMonth}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-18 font-500 poppins">$1,250</p>
+                </div>
+              </div>
+              <hr />
+              <div className="d-flex justify-content-between">
+                <div>
+                  <p className="font-18 font-500 poppins">Total Earnings</p>
+                </div>
+                <div>
+                  <p className="font-18 font-500 poppins">$8,750</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case "bd":
+      case "bidder/company representative/middleman":
+        return (
+          <div className="mt-lg-5 mt-md-3 mt-2">
+            <h6 className="byerLine font-20 font-500 cocon blackcolor">Performance</h6>
+            <div className="Revie mt-lg-4 mt-md-3 mt-2">
+              <div className="d-flex justify-content-between">
+                <div>
+                  <p className="font-18 font-500 poppins blackcolor">Active Leads</p>
+                </div>
+                <div>
+                  <p className="font-18 font-500 poppins">15</p>
+                </div>
+              </div>
+              <hr />
+              <div className="d-flex justify-content-between">
+                <div>
+                  <p className="font-18 font-500 poppins">
+                    Conversions in {currentMonth}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-18 font-500 poppins">8</p>
+                </div>
+              </div>
+              <hr />
+              <div className="d-flex justify-content-between">
+                <div>
+                  <p className="font-18 font-500 poppins">Revenue Generated</p>
+                </div>
+                <div>
+                  <p className="font-18 font-500 poppins">$25,400</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case "client":
+      default:
+        return (
+          <div className="mt-lg-5 mt-md-3 mt-2">
+            <h6 className="byerLine font-20 font-500 cocon blackcolor">Projects</h6>
+            <div className="Revie mt-lg-4 mt-md-3 mt-2">
+              <div className="d-flex justify-content-between">
+                <div>
+                  <p className="font-18 font-500 poppins blackcolor">Active Projects</p>
+                </div>
+                <div>
+                  <p className="font-18 font-500 poppins">0</p>
+                </div>
+              </div>
+              <hr />
+              <div className="d-flex justify-content-between">
+                <div>
+                  <p className="font-18 font-500 poppins">
+                    Spent in {currentMonth}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-18 font-500 poppins">$0</p>
+                </div>
+              </div>
+              <hr />
+              <div className="d-flex justify-content-between">
+                <div>
+                  <p className="font-18 font-500 poppins">Total Projects</p>
+                </div>
+                <div>
+                  <p className="font-18 font-500 poppins">0</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  // Role-based skills section visibility
+  const shouldShowSkillsSection = () => {
+    return userRole.toLowerCase() === "expert/freelancer" || userRole.toLowerCase() === "bidder/company representative/middleman";
+  };
+
+  // Role-based modal title and placeholder
+  const getModalContent = () => {
+    switch (userRole.toLowerCase()) {
+      case "expert/freelancer":
+        return {
+          title: "Write your professional title",
+          placeholder: "Full Stack Developer",
+          description: "Express your expertise and attract the right clients. Write your professional title here and showcase your skills."
+        };
+      case "bd":
+      case "bidder/company representative/middleman":
+        return {
+          title: "Write your business role",
+          placeholder: "Senior Business Development Manager",
+          description: "Define your business development role and expertise. This helps clients and team members understand your capabilities."
+        };
+      case "client":
+      default:
+        return {
+          title: "Write your display name",
+          placeholder: "Company Name or Your Name",
+          description: "Express your identity and personalize your presence. This name will be visible to freelancers and service providers."
+        };
+    }
+  };
+
+  const { title: modalTitle, placeholder: modalPlaceholder, description: modalDescription } = getModalContent();
 
   return (
     <>
@@ -164,10 +394,11 @@ const Dashboardright = () => {
                 </a>
               </div>
               <p className="font-14 poppins">
-                {userDetail ? userDetail.role : ""}
+                {userDetail ? userDetail.role : userRole}
               </p>
               {/* Enhanced user level display */}
-              <UserLevelDisplayComponent userDetail={userDetail} />
+              <UserLevelDisplayComponent userDetail={userDetail} userRole={userRole} />
+              
               <div className="d-flex mt-5 pb-5 text-center poppins">
                 <div className="loader1">
                   <CircularProgressbar
@@ -176,7 +407,7 @@ const Dashboardright = () => {
                     text={`${percentage1}%`}
                   />
                   <h6 className="mt-3 font-14 poppins blackcolor">
-                    Project Success Ratio
+                    {label1}
                   </h6>
                 </div>
                 <div className="loader2">
@@ -186,7 +417,7 @@ const Dashboardright = () => {
                     text={`${percentage2}%`}
                   />
                   <h6 className="mt-3 font-14 poppins blackcolor">
-                    Total Order
+                    {label2}
                   </h6>
                 </div>
                 <div className="loader3">
@@ -196,15 +427,15 @@ const Dashboardright = () => {
                     text={`${percentage3}%`}
                   />
                   <h6 className="mt-3 font-14 poppins blackcolor">
-                    Complete <br />
-                    Order
+                    {label3}
                   </h6>
                 </div>
               </div>
+              
               <div className="d-flex justify-content-between">
                 <div>
                   <h6 className="font-18 font-500 poppins blackcolor">
-                    Last Activites
+                    Last Activities
                   </h6>
                 </div>
                 <div>
@@ -230,101 +461,88 @@ const Dashboardright = () => {
             </div>
           </div>
         </div>
-        {/* ================== Skills Section ================== */}
-        <div className="mt-lg-5 mt-md-3 mt-2">
-          <h4 className="byerLine font-22 font-500 cocon blackcolor">Skills</h4>
-          <div className="Revie p-3 mt-lg-4 mt-md-3 mt-2">
-            <div className="text-end">
-              <button
-                type="button"
-                className="font-12 poppins colororing border-0"
-                onClick={toggleModal}
-                style={{ backgroundColor: "transparent" }}
-              >
-                <BsFillPencilFill />
-              </button>
-            </div>
-            <Modal className="poppins" isOpen={showModal} toggle={toggleModal}>
-              <ModalHeader toggle={toggleModal}>Add Skills</ModalHeader>
-              <form className="AddFaqs-step-three">
-                <ModalBody>
-                  <div className="form-group">
-                    <div className="devices-tag-add">
-                      <Autocomplete
-                        multiple
-                        id="tags"
-                        options={[]}
-                        freeSolo
-                        value={tags}
-                        onChange={(e, newValue) => {
-                          setTags(newValue.slice(0, 5));
-                        }}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            variant="outlined"
-                            placeholder="Add tags..."
-                          />
-                        )}
-                      />
-                    </div>
-                  </div>
-                </ModalBody>
-                <ModalFooter className="border-0">
-                  <Button
-                    className="btn-stepper poppins px-3 me-2 font-16"
-                    onClick={toggleModal}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleTagsAdd}
-                    disabled={isLoading}
-                    className="btn-stepper poppins px-3 font-16"
-                  >
-                    {isLoading ? <Spinner size="sm" color="light" /> : "Save Skills"}
-                  </Button>
-                </ModalFooter>
-              </form>
-            </Modal>
-            <>
-              {tagsList.map((value, index) => (
-                <span
-                  className="poppins m-1 rounded-4 haifwhite d-inline-flex"
-                  key={index}
+        
+        {/* ================== Skills Section (Only for Freelancers and BD) ================== */}
+        {shouldShowSkillsSection() && (
+          <div className="mt-lg-5 mt-md-3 mt-2">
+            <h4 className="byerLine font-22 font-500 cocon blackcolor">
+              {userRole.toLowerCase() === "expert/freelancer" ? "Skills" : "Expertise Areas"}
+            </h4>
+            <div className="Revie p-3 mt-lg-4 mt-md-3 mt-2">
+              <div className="text-end">
+                <button
+                  type="button"
+                  className="font-12 poppins colororing border-0"
+                  onClick={toggleModal}
+                  style={{ backgroundColor: "transparent" }}
                 >
-                  <span className="mb-0 font-10 colorgray">{value.skill}</span>
-                </span>
-              ))}
-            </>
-          </div>
-        </div>
-        {/* ================== Orders Section ================== */}
-        <div className="mt-lg-5 mt-md-3 mt-2">
-          <h6 className="byerLine font-20 font-500 cocon blackcolor">Orders</h6>
-          <div className="Revie mt-lg-4 mt-md-3 mt-2">
-            <div className="d-flex justify-content-between">
-              <div>
-                <p className="font-18 font-500 poppins blackcolor">Active orders</p>
+                  <BsFillPencilFill />
+                </button>
               </div>
-              <div>
-                <p className="font-18 font-500 poppins">0</p>
-              </div>
+              <Modal className="poppins" isOpen={showModal} toggle={toggleModal}>
+                <ModalHeader toggle={toggleModal}>
+                  {userRole.toLowerCase() === "expert/freelancer" ? "Add Skills" : "Add Expertise Areas"}
+                </ModalHeader>
+                <form className="AddFaqs-step-three">
+                  <ModalBody>
+                    <div className="form-group">
+                      <div className="devices-tag-add">
+                        <Autocomplete
+                          multiple
+                          id="tags"
+                          options={[]}
+                          freeSolo
+                          value={tags}
+                          onChange={(e, newValue) => {
+                            setTags(newValue.slice(0, 5));
+                          }}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              variant="outlined"
+                              placeholder={userRole.toLowerCase() === "expert/freelancer" ? "Add skills..." : "Add expertise areas..."}
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </ModalBody>
+                  <ModalFooter className="border-0">
+                    <Button
+                      className="btn-stepper poppins px-3 me-2 font-16"
+                      onClick={toggleModal}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleTagsAdd}
+                      disabled={isLoading}
+                      className="btn-stepper poppins px-3 font-16"
+                    >
+                      {isLoading ? <Spinner size="sm" color="light" /> : 
+                        `Save ${userRole.toLowerCase() === "expert/freelancer" ? "Skills" : "Expertise"}`}
+                    </Button>
+                  </ModalFooter>
+                </form>
+              </Modal>
+              <>
+                {tagsList.map((value, index) => (
+                  <span
+                    className="poppins m-1 rounded-4 haifwhite d-inline-flex"
+                    key={index}
+                  >
+                    <span className="mb-0 font-10 colorgray">{value.skill}</span>
+                  </span>
+                ))}
+              </>
             </div>
-            <hr />
-            <div className="d-flex justify-content-between">
-              <div>
-                <p className="font-18 font-500 poppins">
-                  Earned in {currentMonth}
-                </p>
-              </div>
-              <div>
-                <p className="font-18 font-500 poppins">$0</p>
-              </div>
-            </div>
           </div>
-        </div>
+        )}
+        
+        {/* ================== Role-based Orders/Performance/Projects Section ================== */}
+        {renderOrdersSection()}
       </div>
+      
       {/* ================== Profile Update Modal ================== */}
       <div
         className="modal fade"
@@ -347,16 +565,15 @@ const Dashboardright = () => {
             </div>
             <div className="modal-body">
               <h6 className="font-20 font-500 poppins blackcolor">
-                Write your display name
+                {modalTitle}
               </h6>
               <p className="font-14 takegraycolor poppins">
-                Express your identity and personalize your presence by leaving
-                your mark. Write your Job Title here and make a lasting impression.
+                {modalDescription}
               </p>
               <input
                 className="form-control model-input p-3"
                 type="text"
-                placeholder="Product Designer"
+                placeholder={modalPlaceholder}
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -25,38 +25,46 @@ const Login1 = () => {
     navigate("/signup");
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const data = { email, password };
-      dispatch(userLogin(data, handleResponse));
-    } catch (err) {
-      toast.error("Something went wrong. Try again later.");
-      console.error("Login error:", err);
-    }
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const payload = {
+    data: { email, password },
+    handleClose: (res) => {
+      handleResponse(res);
+    },
   };
 
-  const handleResponse = async (data) => {
-    if (data?.status) {
-      localStorage.setItem("accessToken", data?.access_token);
-      localStorage.setItem("UserData", JSON.stringify(data?.data));
-      localStorage.setItem("Role", data?.data.role);
+  try {
+    await dispatch(userLogin(payload)).unwrap();
+  } catch (error) {
+    toast.error(error || 'Login failed');
+  }
+};
 
-      toast.success("Successfully Logged In", {
-        position: "top-right",
-        autoClose: 2000,
-      });
+const handleResponse = async (data) => {
+  if (data?.status) {
+    localStorage.setItem("accessToken", data?.access_token);
+    localStorage.setItem("UserData", JSON.stringify(data?.data));
+    localStorage.setItem("Role", data?.data.role);
 
-      setIsError(false);
-      setIsErrorShow("");
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+    toast.success("Successfully Logged In", {
+      position: "top-right",
+      autoClose: 2000,
+    });
 
-      navigate(data?.data?.role === "admin" ? "/admin" : "/freelancers");
-    } else {
-      setIsError(true);
-      setIsErrorShow(data?.message || "Login failed. Try again.");
-    }
-  };
+    setIsError(false);
+    setIsErrorShow("");
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    navigate(data?.data?.role === "admin" ? "/admin" : "/freelancers");
+  } else {
+    setIsError(true);
+    setIsErrorShow(data?.message || "Login failed. Try again.");
+    toast.error(data?.message || "Login failed. Try again.");
+  }
+};
 
   return (
     <>

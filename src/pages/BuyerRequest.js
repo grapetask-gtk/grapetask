@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useDispatch, useSelector } from "../redux/store/store";
-import Navbar from "../components/Navbar";
-import "../style/multistep.scss";
-import "../style/byerRequest.scss";
-import { 
-  Button, 
-  CircularProgress, 
-  FormControl, 
-  InputLabel, 
-  MenuItem, 
-  Select, 
-  TextField, 
-  Typography 
+import {
+  Button,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  Typography
 } from "@mui/material";
-import { CreateBuyerRequest, getClientRequest, getBds } from "../redux/slices/buyerRequestSlice";
-import { getCategory, getSubCategory } from "../redux/slices/gigsSlice";
-import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import { CreateBuyerRequest, getBds, getClientRequest } from "../redux/slices/buyerRequestSlice";
+import { getCategory, getSubCategory } from "../redux/slices/gigsSlice";
+import { useDispatch, useSelector } from "../redux/store/store";
+import "../style/byerRequest.scss";
+import "../style/multistep.scss";
 
 const BuyerRequest = () => {
   const dispatch = useDispatch();
@@ -354,7 +354,7 @@ const BuyerRequest = () => {
                   {isLoadingCreate ? (
                     <CircularProgress size={24} color="inherit" />
                   ) : (
-                    "Save Request"
+                    "Send Request"
                   )}
                 </Button>
               </div>

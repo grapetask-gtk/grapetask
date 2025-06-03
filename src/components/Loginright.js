@@ -1,13 +1,13 @@
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "../redux/store/store";
-import Button from "../components/Button";
-import logo from "../assets/logo.webp";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { userRegister } from "../redux/slices/userSlice";
-import { Spinner } from "reactstrap";
 import axios from "axios";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Spinner } from "reactstrap";
+import logo from "../assets/logo.webp";
+import { userRegister } from "../redux/slices/userSlice";
+
 
 const Loginright = () => {
   const dispatch = useDispatch();
@@ -28,38 +28,40 @@ const Loginright = () => {
   const [isErrorShow, setIsErrorShow] = useState("");
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // Validate all fields
-    if (!firstName || !lastName || !role || !email || !password || !terms) {
-      setIsError(true);
-      setIsErrorShow("All fields are required.");
-      return;
-    }
+  // Validate all fields
+  if (!firstName || !lastName || !role || !email || !password || !terms) {
+    setIsError(true);
+    setIsErrorShow("All fields are required.");
+    return;
+  }
 
-    // Prepare data for API
-    const data = {
-      fname: firstName,
-      lname: lastName,
-      username: email.split("@")[0], // ✅ Generate a basic username
-      email: email,
-      role: role,
-      password: password,
-      agree_with_terms: terms ? 1 : 0,
-      referral_code: referralCode || "0",
-    };
-    console.log("Data being sent:", data); // ✅ Log to check data before sending
-
-    // Dispatch the userRegister action
-    dispatch(userRegister(data, handleResponse));
+  // Prepare data for API
+  const data = {
+    fname: firstName,
+    lname: lastName,
+    username: email.split("@")[0],
+    email: email,
+    role: role,
+    password: password,
+    agree_with_terms: terms ? 1 : 0,
+    referral_code: referralCode || "0",
   };
+  
+  console.log("Data being sent:", data);
+
+  // ✅ UPDATE THIS LINE - wrap in object
+  dispatch(userRegister({ data, handleClose: handleResponse }));
+};
+
   const handleResponse = async (data) => {
     if (data?.status) {
       toast.success("Successfully Registered! Please verify your email.", {
         position: "top-right",
         autoClose: 2000,
       });
-
+ 
       // Store access token in localStorage
       if (data?.access_token) {
         localStorage.setItem("accessToken", data.access_token);
@@ -68,6 +70,11 @@ const Loginright = () => {
       // Store user data in localStorage
       if (data?.data) {
         localStorage.setItem("userData", JSON.stringify(data.data));
+      }
+// store role
+      if (data?.data?.role) {
+
+      localStorage.setItem("Role", data?.data.role);
       }
 
       await new Promise((resolve) => setTimeout(resolve, 2000));

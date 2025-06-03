@@ -1,7 +1,6 @@
-import React, { useState } from 'react'
+import { Button } from '@mui/material';
 import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
-import { Button } from '@mui/material';
 
 function createData(Buyer, Gig, Due, Total, Status) {
     return { Buyer, Gig, Due, Total, Status };

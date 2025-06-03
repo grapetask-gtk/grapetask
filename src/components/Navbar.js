@@ -701,11 +701,17 @@ const Navbar = (props) => {
     <li className="nav-item">
       <NavLink className="nav-link" to="/dashboard">Dashboard</NavLink>
     </li>
-    {UserRole !== "client" && (
+    {UserRole !== "Client" && (
       <li className="nav-item">
         <NavLink className="nav-link" to="/earning">Earning Orders</NavLink>
       </li>
     )}
+    {UserRole === "Client" && (
+      <li className="nav-item">
+        <NavLink className="nav-link" to="/spending">Spending Orders</NavLink>
+      </li>
+    )}
+    
     {UserRole === "bidder/company representative/middleman" && (
       <li className="nav-item">
         <NavLink className="nav-link" to="/hireExpert">Hire Expert</NavLink>
@@ -833,7 +839,7 @@ const Navbar = (props) => {
 
                       </div>
                       <div>
-                        <Link to="/userInbox">
+                        <Link to="/Inbox">
                           <FaRegEnvelope color="#74767E" size={25} className="mx-4" />
                         </Link>
                       </div>

@@ -1,5 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { dispatch } from "../store/store";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "../../utils/axios";
 
 const initialState = {
@@ -7,26 +6,25 @@ const initialState = {
   getError: null,
   orderDetail: [],
   orderCreateDetail: {},
+  expertOrders: [],
+  clientOrders: [],
+  bdOrders: [],
 };
 
 const allOrderSlice = createSlice({
   name: "order",
   initialState,
   reducers: {
-    //START LOADING
     startLoading(state) {
       state.isLoading = true;
     },
-    //STOP LOADING
     stopLoading(state) {
       state.isLoading = false;
     },
-    // HAS UPDATE ERROR
     hasGetError(state, action) {
       state.isLoading = false;
       state.getError = action.payload;
     },
-    // GET User DETAILS
     getOrderDetailsSuccess(state, action) {
       state.isLoading = false;
       state.orderDetail = action.payload;
@@ -35,46 +33,122 @@ const allOrderSlice = createSlice({
       state.isLoading = false;
       state.orderCreateDetail = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Order Create
+      .addCase(OrderCreate.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(OrderCreate.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.orderCreateDetail = action.payload;
+      })
+      .addCase(OrderCreate.rejected, (state, action) => {
+        state.isLoading = false;
+        state.getError = action.payload;
+      })
 
+      // All Orders
+      .addCase(AllOrders.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(AllOrders.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.orderDetail = action.payload;
+      })
+      .addCase(AllOrders.rejected, (state, action) => {
+        state.isLoading = false;
+        state.getError = action.payload;
+      })
+
+      // Expert Orders
+      .addCase(AllExpertOrders.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(AllExpertOrders.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.expertOrders = action.payload;
+      })
+      .addCase(AllExpertOrders.rejected, (state, action) => {
+        state.isLoading = false;
+        state.getError = action.payload;
+      })
+
+      // Client Orders
+      .addCase(AllClientOrders.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(AllClientOrders.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.clientOrders = action.payload;
+      })
+      .addCase(AllClientOrders.rejected, (state, action) => {
+        state.isLoading = false;
+        state.getError = action.payload;
+      })
+
+      // BD Orders
+      .addCase(AllBdOrders.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(AllBdOrders.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.bdOrders = action.payload;
+      })
+      .addCase(AllBdOrders.rejected, (state, action) => {
+        state.isLoading = false;
+        state.getError = action.payload;
+      });
   },
 });
-export const { getOrderDetailsSuccess,getCreateOrderDetails } = allOrderSlice.actions;
+
+export const { 
+  getOrderDetailsSuccess, 
+  getCreateOrderDetails,
+  startLoading,
+  stopLoading,
+  hasGetError 
+} = allOrderSlice.actions;
+
 export default allOrderSlice.reducer;
 
-export function OrderCreate(data, handleClose) {
-  return async () => {
-    let accessToken = localStorage.getItem("accessToken");
-    dispatch(allOrderSlice.actions.startLoading());
-    try {
-      const response = await axios.post('order',
-        data, {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            "Authorization": "Bearer " + accessToken,
 
-          }
+// ✅ Convert to createAsyncThunk
+export const OrderCreate = createAsyncThunk(
+  'order/create',
+  async ({ data, handleClose }, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const response = await axios.post('order', data, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          "Authorization": "Bearer " + accessToken,
+        }
       });
+      
       handleClose(response.data);
+      
       if (!response.data.status) {
-        dispatch(allOrderSlice.actions.hasGetError(response?.data?.message));
-        
+        return rejectWithValue(response?.data?.message);
       }
-      console.log(JSON.stringify(response?.data?.data))
-      dispatch(allOrderSlice.actions.getCreateOrderDetails(response.data.data));
+      
+      console.log(JSON.stringify(response?.data?.data));
+      return response.data.data;
     } catch (error) {
       handleClose(error);
-      dispatch(allOrderSlice.actions.hasGetError(error?.message));
+      return rejectWithValue(error?.message);
     }
-  };
-}
+  }
+);
 
-//Get Order Details
-export function AllOrders() {
-  return async () => {
-    let accessToken = localStorage.getItem("accessToken");
-    dispatch(allOrderSlice.actions.startLoading());
+// Get Order Details
+export const AllOrders = createAsyncThunk(
+  'order/getAllOrders',
+  async (_, { rejectWithValue }) => {
     try {
+      const accessToken = localStorage.getItem("accessToken");
       const response = await axios.get("order", {
         headers: {
           "Accept": "application/json",
@@ -82,13 +156,83 @@ export function AllOrders() {
           "Authorization": "Bearer " + accessToken,
         },
       });
+      
       console.log(response.data.data);
-      dispatch(allOrderSlice.actions.getOrderDetailsSuccess(response.data.data));
- 
+      return response.data.data;
     } catch (error) {
-      // console.log(error.message);
-
-      dispatch(allOrderSlice.actions.hasGetError(error?.message));
+      return rejectWithValue(error?.message);
     }
-  };
-}
+  }
+);
+
+export const AllExpertOrders = createAsyncThunk(
+  'order/getAllExpertOrders',
+  async (_, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const userData = JSON.parse(localStorage.getItem("UserData") || '{}');
+
+      if (!userData?.id) {
+        throw new Error('Missing user ID');
+      }
+
+      const response = await axios.get('seller/order', {
+        params: { seller_id: userData.id },
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      console.log('Expert Orders:', response.data.data);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching expert orders:', error);
+      return rejectWithValue(
+        error?.response?.data?.message || error.message
+      );
+    }
+  }
+);
+
+// Client Orders
+export const AllClientOrders = createAsyncThunk(
+  'order/getAllClientOrders',
+  async (_, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const response = await axios.get("order/client", {
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + accessToken,
+        },
+      });
+      console.log('Client Orders:', response.data.data);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error?.message);
+    }
+  }
+);
+
+// BD Orders
+export const AllBdOrders = createAsyncThunk(
+  'order/getAllBdOrders',
+  async (_, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const response = await axios.get("order/bd", {
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + accessToken,
+        },
+      });
+      console.log('BD Orders:', response.data.data);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error?.message);
+    }
+  }
+);

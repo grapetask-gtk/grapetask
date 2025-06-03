@@ -1,8 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
-
 import axios from "../../utils/axios";
-import { dispatch } from "../store/store";
+// ❌ REMOVE THIS LINE - it causes circular dependency
+// import { dispatch } from '../store/store';
 
 const initialState = {
   isLoading: false,
@@ -60,18 +60,83 @@ const userSlice = createSlice({
     },
   },
 
-  // 👇 FIXED: Use extraReducers as a function
   extraReducers: (builder) => {
-    builder.addCase(toggleUserStatus.fulfilled, (state, action) => {
-      const updatedUser = action.payload.user;
-      const index = state.users.findIndex((u) => u.id === updatedUser.id);
-      if (index !== -1) {
-        state.users[index] = updatedUser;
-      }
-    });
+    builder
+      .addCase(toggleUserStatus.fulfilled, (state, action) => {
+        const updatedUser = action.payload.user;
+        const index = state.users.findIndex((u) => u.id === updatedUser.id);
+        if (index !== -1) {
+          state.users[index] = updatedUser;
+        }
+      })
+      // Add cases for all the new async thunks
+      .addCase(userLogin.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(userLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.userDetail = action.payload;
+      })
+      .addCase(userLogin.rejected, (state, action) => {
+        state.isLoading = false;
+        state.getError = action.payload;
+      })
+      .addCase(userRegister.pending, (state) => {
+        state.isLoadingRegister = true;
+      })
+      .addCase(userRegister.fulfilled, (state, action) => {
+        state.isLoadingRegister = false;
+        state.userDetail = action.payload;
+      })
+      .addCase(userRegister.rejected, (state, action) => {
+        state.isLoadingRegister = false;
+        state.getError = action.payload;
+      })
+      .addCase(getUser.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.userDetail = action.payload;
+      })
+      .addCase(getUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.getError = action.payload;
+      })
+      .addCase(getAllUsers.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getAllUsers.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.users = action.payload.data;
+        state.meta = {
+          current_page: action.payload.current_page,
+          total_pages: action.payload.last_page,
+          total: action.payload.total,
+        };
+      })
+      .addCase(getAllUsers.rejected, (state, action) => {
+        state.isLoading = false;
+        state.getError = action.payload;
+      })
+      .addCase(getAllFreelancers.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getAllFreelancers.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.users = action.payload.data;
+        state.meta = {
+          current_page: action.payload.current_page,
+          total_pages: action.payload.last_page,
+          total: action.payload.total,
+        };
+      })
+      .addCase(getAllFreelancers.rejected, (state, action) => {
+        state.isLoading = false;
+        state.getError = action.payload;
+      });
   },
 });
-
 
 export const {
   startLoading,
@@ -80,147 +145,153 @@ export const {
   hasGetError,
   getUsersSuccess,
   getUserDetailsSuccess,
- 
   setUsers,
   setError,
 } = userSlice.actions;
 
 export default userSlice.reducer;
 
-// THUNKS
-
-export function userLogin(data, handleClose) {
-  return async () => {
-    dispatch(startLoading());
+// ✅ CONVERT ALL CUSTOM THUNKS TO createAsyncThunk
+export const userLogin = createAsyncThunk(
+  'user/login',
+  async ({ data, handleClose }, { rejectWithValue }) => {
     try {
       const response = await axios.post("login", data);
       handleClose(response.data);
+      
       if (!response.data.status) {
-        dispatch(hasGetError(response.data.message));
-        return;
+        return rejectWithValue(response.data.message);
       }
-      dispatch(getUserDetailsSuccess(response.data.data));
+      
+      return response.data.data;
     } catch (error) {
       handleClose(error);
-      dispatch(hasGetError(error?.message));
+      return rejectWithValue(error?.message);
     }
-  };
-}
+  }
+);
 
-export function userRegister(data, handleClose) {
-  return async () => {
-    dispatch(startLoadingRegister());
+export const userRegister = createAsyncThunk(
+  'user/register',
+  async ({ data, handleClose }, { rejectWithValue }) => {
     try {
       const response = await axios.post("register", data);
       handleClose(response.data);
+      
       if (!response.data.status) {
-        dispatch(hasGetError(response.data.message));
-        return;
+        return rejectWithValue(response.data.message);
       }
-      dispatch(getUserDetailsSuccess(response.data.data));
+      
+      return response.data.data;
     } catch (error) {
       handleClose(error);
-      dispatch(hasGetError(error?.response?.data?.message || error.message));
+      return rejectWithValue(error?.response?.data?.message || error.message);
     }
-  };
-}
+  }
+);
 
-export function userForgot(data, handleClose) {
-  return async () => {
-    dispatch(startLoading());
+export const userForgot = createAsyncThunk(
+  'user/forgot',
+  async ({ data, handleClose }, { rejectWithValue }) => {
     try {
       const response = await axios.post("forgot-password", data);
+      
       if (!response.data.status) {
-        dispatch(hasGetError(response.data.message));
         handleClose(null, response.data.message);
-        return;
+        return rejectWithValue(response.data.message);
       }
-      dispatch(getUserDetailsSuccess(response.data.data));
+      
       handleClose(response.data);
+      return response.data.data;
     } catch (error) {
       const message = error?.response?.data?.message || "Something went wrong";
-      dispatch(hasGetError(message));
       handleClose(null, message);
+      return rejectWithValue(message);
     }
-  };
-}
+  }
+);
 
-export function userOtp(data, handleClose) {
-  return async () => {
-    dispatch(startLoading());
+export const userOtp = createAsyncThunk(
+  'user/otp',
+  async ({ data, handleClose }, { rejectWithValue }) => {
     try {
       const response = await axios.post("otp-verify", data);
       handleClose(response.data);
+      
       if (!response.data.status) {
-        dispatch(hasGetError(response.data.message));
-        return;
+        return rejectWithValue(response.data.message);
       }
-      dispatch(getUserDetailsSuccess(response.data.data));
+      
+      return response.data.data;
     } catch (error) {
       handleClose(error);
-      dispatch(hasGetError(error?.message));
+      return rejectWithValue(error?.message);
     }
-  };
-}
+  }
+);
 
-export function userResetPassword(data, handleClose) {
-  return async () => {
-    const accessToken = localStorage.getItem("accessToken");
-    dispatch(startLoading());
+export const userResetPassword = createAsyncThunk(
+  'user/resetPassword',
+  async ({ data, handleClose }, { rejectWithValue }) => {
     try {
+      const accessToken = localStorage.getItem("accessToken");
       const response = await axios.post("reset-password", data, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
+      
       handleClose(response.data);
+      
       if (!response.data.status) {
-        dispatch(hasGetError(response.data.message));
-        return;
+        return rejectWithValue(response.data.message);
       }
-      dispatch(getUserDetailsSuccess(response.data.data));
+      
+      return response.data.data;
     } catch (error) {
       handleClose(error);
-      dispatch(hasGetError(error?.message));
+      return rejectWithValue(error?.message);
     }
-  };
-}
+  }
+);
 
-export function getUser() {
-  return async () => {
-    const accessToken = localStorage.getItem("accessToken");
-    dispatch(startLoading());
+export const getUser = createAsyncThunk(
+  'user/getUser',
+  async (_, { rejectWithValue }) => {
     try {
+      const accessToken = localStorage.getItem("accessToken");
       const response = await axios.get("user", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      dispatch(getUserDetailsSuccess(response.data.data));
+      
+      return response.data.data;
     } catch (error) {
-      dispatch(hasGetError(error?.message));
+      return rejectWithValue(error?.message);
     }
-  };
-}
-
-export const getAllUsers = ({ page = 1, limit = 10, search = "", role = "", status = "", sort = "", order = "asc" }) => async () => {
-  try {
-    dispatch(startLoading());
-    const accessToken = localStorage.getItem("accessToken");
-    let query = `?page=${page}&limit=${limit}`;
-
-if (search) query += `&search=${search}`;
-if (role) query += `&role=${role}`;
-if (status) query += `&status=${status}`;
-if (sort && order) query += `&sort_by=${sort}&sort_order=${order}`;
-
-
-    const { data } = await axios.get(`admin/users${query}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    dispatch(setUsers(data.data));
-  } catch (err) {
-    dispatch(setError(err?.response?.data?.message || "Something went wrong."));
   }
-};
+);
 
-// Ban/Unban user
+export const getAllUsers = createAsyncThunk(
+  'user/getAllUsers',
+  async ({ page = 1, limit = 10, search = "", role = "", status = "", sort = "", order = "asc" }, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      let query = `?page=${page}&limit=${limit}`;
+
+      if (search) query += `&search=${search}`;
+      if (role) query += `&role=${role}`;
+      if (status) query += `&status=${status}`;
+      if (sort && order) query += `&sort_by=${sort}&sort_order=${order}`;
+
+      const { data } = await axios.get(`admin/users${query}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      
+      return data.data;
+    } catch (err) {
+      return rejectWithValue(err?.response?.data?.message || "Something went wrong.");
+    }
+  }
+);
+
 export const toggleUserStatus = createAsyncThunk(
   "users/toggleUserStatus",
   async ({ userId, status }, { rejectWithValue }) => {
@@ -228,7 +299,7 @@ export const toggleUserStatus = createAsyncThunk(
       const accessToken = localStorage.getItem("accessToken");
 
       const response = await axios.put(`/admin/user/${userId}/status`, {
-        status, // Use status directly, don't flip here
+        status,
       }, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
@@ -242,7 +313,6 @@ export const toggleUserStatus = createAsyncThunk(
   }
 );
 
-//udate user role
 export const toggleUserrole = createAsyncThunk(
   "users/toggleUserRole",
   async ({ userId, newRole }, { rejectWithValue }) => {
@@ -262,17 +332,18 @@ export const toggleUserrole = createAsyncThunk(
   }
 );
 
-export function getAllFreelancers(page = 1, perPage = 10) {
-  return async () => {
-    const accessToken = localStorage.getItem("accessToken");
-    dispatch(startLoading());
+export const getAllFreelancers = createAsyncThunk(
+  'user/getAllFreelancers',
+  async ({ page = 1, perPage = 10 }, { rejectWithValue }) => {
     try {
+      const accessToken = localStorage.getItem("accessToken");
       const response = await axios.get(`users/freelancer?page=${page}&per_page=${perPage}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      dispatch(getUsersSuccess(response.data));
+      
+      return response.data;
     } catch (error) {
-      dispatch(hasGetError(error?.response?.data?.message || error.message));
+      return rejectWithValue(error?.response?.data?.message || error.message);
     }
-  };
-}
+  }
+);

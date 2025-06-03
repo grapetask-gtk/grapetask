@@ -1,4 +1,3 @@
-import React from "react";
 import { Route, Routes } from "react-router-dom";
 import Blogopen from "../components/Blogopen";
 import Signin from "../components/Signin";
@@ -24,6 +23,7 @@ import BuyBids from "../pages/PurchaseBids";
 
 import Account from "../components/Account";
 import BonousReward from "../components/BonousReward";
+import Chattingwindow from "../components/frelancerChat/Chat/Chating";
 import Gigs2 from "../components/Gigs2";
 import Interview from "../components/Interview";
 import Order from "../components/Orders/Order";
@@ -34,6 +34,8 @@ import Refund from "../components/Refund";
 import Shipping from "../components/Shipping";
 import Take from "../components/Take";
 import Terms from "../components/Terms";
+import AdminChat from "../pages/admin-panel/chat/AdminChat";
+
 import Applicants from "../pages/Applicants";
 import Chat from "../pages/Chat";
 import Earning from "../pages/Earning";
@@ -43,7 +45,6 @@ import FrelancerChat from "../pages/freelancers/FrelancerChat";
 import PaymentViaCard from "../pages/freelancers/PaymentViaCard";
 import Help from "../pages/Help";
 import HireExpert from "../pages/HireExpert";
-import FreelanceInbox from '../pages/Inbox';
 import Level from "../pages/Level";
 import MeetTopRatedFreelancer from "../pages/MeetTopRatedFreelancer";
 import NotFound from "../pages/NotFound";
@@ -63,17 +64,90 @@ import Thanks from "../pages/Referal/Thanks";
 import ReferalList from "../pages/ReferalList";
 import ResetPassword from "../pages/ResetPassword";
 import SearchGigsMainBanner from "../pages/SearchGigsMainBanner";
+import Spending from "../pages/Spending";
 import Accept from "../pages/StartedJob/Accept";
 import Complete from "../pages/StartedJob/Complete";
 import Progress from "../pages/StartedJob/Progress";
 import MultiSteps from "../pages/Stepper/MultiSteps";
 import UserBuyerRequest from "../pages/UserBuyerRequest";
 
+
+import AboutUs from "../components/footerComponents/AboutUs";
+import AffiliateProgram from "../components/footerComponents/AffiliateProgram";
+import BusinessTools from "../components/footerComponents/BusinessTools";
+import Careers from "../components/footerComponents/Careers";
+import Community from "../components/footerComponents/Community";
+import ContactUs from "../components/footerComponents/ContactUs";
+import DirectContracts from "../components/footerComponents/DirectContracts";
+import Enterprise from "../components/footerComponents/Enterprise";
+import FreelanceUSA from "../components/footerComponents/FreelanceUSA";
+import FreelanceWorldwide from "../components/footerComponents/FreelanceWorldwide";
+import HelpSupport from "../components/footerComponents/HelpSupport";
+import HireAnAgency from "../components/footerComponents/HireAnAgency";
+import HireInUSA from "../components/footerComponents/HireInUSA";
+import HireWorldwide from "../components/footerComponents/HireWorldwide";
+import HowToFindWork from "../components/footerComponents/HowToFindWork";
+import HowToHire from "../components/footerComponents/HowToHire";
+import InvestorRelations from "../components/footerComponents/InvestorRelations";
+import Leadership from "../components/footerComponents/Leadership";
+import ModernSlavery from "../components/footerComponents/ModernSlavery";
+import OurImpact from "../components/footerComponents/OurImpact";
+import PayrollServices from "../components/footerComponents/PayrollServices";
+import Press from "../components/footerComponents/Press";
+import ProjectCatalog from "../components/footerComponents/ProjectCatalog";
+import Resources from "../components/footerComponents/Resources";
+import Reviews from "../components/footerComponents/Reviews";
+import SuccessStories from "../components/footerComponents/SuccessStories";
+import TalentMarketplace from "../components/footerComponents/TalentMarketplace";
+import TalentScout from "../components/footerComponents/TalentScout";
+import TrustSafety from "../components/footerComponents/TrustSafetySecurity";
+
+
+
+
+
+
 function AppRoutes() {
   const token = localStorage.getItem("accessToken");
 
   return (
     <Routes>
+
+{/* footer pages */}
+    <Route path="/privacy" element={<Privacy />} />
+      <Route path="/how-to-hire" element={<HowToHire />} />
+      <Route path="/talent-marketplace" element={<TalentMarketplace />} />
+      <Route path="/project-catalog" element={<ProjectCatalog />} />
+      <Route path="/talent-scout" element={<TalentScout />} />
+      <Route path="/hire-an-agency" element={<HireAnAgency />} />
+      <Route path="/enterprise" element={<Enterprise />} />
+      <Route path="/payroll-services" element={<PayrollServices />} />
+      <Route path="/direct-contracts" element={<DirectContracts />} />
+      <Route path="/hire-worldwide" element={<HireWorldwide />} />
+      <Route path="/hire-in-usa" element={<HireInUSA />} />
+      <Route path="/how-to-find-work" element={<HowToFindWork />} />
+      <Route path="/freelance-jobs-worldwide" element={<FreelanceWorldwide />} />
+      <Route path="/freelance-jobs-usa" element={<FreelanceUSA />} />
+      <Route path="/help-support" element={<HelpSupport />} />
+      <Route path="/success-stories" element={<SuccessStories />} />
+      <Route path="/upwork-reviews" element={<Reviews />} />
+      <Route path="/resources" element={<Resources />} />
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/community" element={<Community />} />
+      <Route path="/affiliate-program" element={<AffiliateProgram />} />
+      <Route path="/business-tools" element={<BusinessTools />} />
+      <Route path="/about-us" element={<AboutUs />} />
+      <Route path="/leadership" element={<Leadership />} />
+      <Route path="/investor-relations" element={<InvestorRelations />} />
+      <Route path="/careers" element={<Careers />} />
+      <Route path="/our-impact" element={<OurImpact />} />
+      <Route path="/press" element={<Press />} />
+      <Route path="/contact-us" element={<ContactUs />} />
+      <Route path="/trust-safety" element={<TrustSafety />} />
+      <Route path="/modern-slavery" element={<ModernSlavery />} />
+  
+
+
       <Route path="/" element={<Index />} />
       <Route path="/whygrapetask" element={<WhyGrapeTask />} />
       <Route path="/aboutus" element={<AboutUS />} />
@@ -116,7 +190,17 @@ function AppRoutes() {
        
        
 
-<Route path="/userInbox" element={<FreelanceInbox />} />
+<Route path="/Inbox" element={<FrelancerChat />} />
+<Route path="/userchat" element={<Chattingwindow
+ />} />
+
+
+
+
+
+<Route path="/adminInbox" element={<AdminChat />} />
+     
+<Route path="/userInbox" element={<FrelancerChat />} />
      
         <Route path="/buyerRequest" element={<BuyerRequest />} />
         <Route path="/jobInvitation" element={<JobInvitation />} />
@@ -125,6 +209,9 @@ function AppRoutes() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/applicants" element={<Applicants />} />
         <Route path="/earning" element={<Earning />} />
+        <Route path="/spending" element={<Spending />} />
+        
+        
         <Route path="/hireExpert" element={<HireExpert />} />
         <Route path="/:username" element={<Gigs2 />} />
         <Route path="/recruitProcess" element={<RecruitProcess />} />

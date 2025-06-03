@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
 import { toast } from "react-toastify";
+import axios from '../../utils/axios';
 
 const initialState = {
   isLoadingRegister: false,
@@ -16,7 +16,7 @@ export const userRegister = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        "https://portal.grapetask.co/api/register",
+        "register",
         userData
       );
       if (response.data.status) {
@@ -39,7 +39,7 @@ export const userOtp = createAsyncThunk(
   async (otpData, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        "https://portal.grapetask.co/api/verify-otp",
+        "verify-otp",
         otpData
       );
       if (response.data.status) {
@@ -63,7 +63,7 @@ export const fetchUsers = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     let accessToken = localStorage.getItem("accessToken");
     try {
-      const response = await axios.get("http://localhost:8000/api/admin/users", {
+      const response = await axios.get("admin/users", {
         headers: {
           Authorization: "Bearer " + accessToken,
         },

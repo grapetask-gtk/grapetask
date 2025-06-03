@@ -1,16 +1,16 @@
-import React from "react";
-import Navbar from "../components/Navbar";
-import Loader from "../assets/LoaderImg.gif";
-import { useDispatch, useSelector } from "../redux/store/store";
-import { geAllGigs } from "../redux/slices/allGigsSlice";
-import { useEffect } from "react";
-import search from "../assets/searchbar.webp";
-import { useState } from "react";
-import Card from "../components/Card";
+import { Button } from "@mui/material";
+import { useEffect, useState } from "react";
+import {
+  BsPlusLg
+} from "react-icons/bs";
 import { useLocation, useNavigate } from "react-router-dom";
+import Loader from "../assets/LoaderImg.gif";
+import search from "../assets/searchbar.webp";
 import Footer from "../components/Footer";
 import GigCard from "../components/GigCard";
-
+import Navbar from "../components/Navbar";
+import { geAllGigs } from "../redux/slices/allGigsSlice";
+import { useDispatch, useSelector } from "../redux/store/store";
 const SearchGigsMainBanner = () => {
   const location = useLocation();
   // const receivedData = location.state.data || 'No data received';
@@ -76,6 +76,16 @@ const SearchGigsMainBanner = () => {
                   />
                 </form>
               </div>
+
+               <div className="col-lg-6 col-md-6 col-sm-6 col-12 mt-lg-0 mt-md-0 mt-sm-0 mt-4 pe-lg-0 text-end justify-content-end">
+             
+                                  <Button
+                                    onClick={() => navigate("/multiSteps")}
+                                    className="btn-stepper poppins px-3 font-16"
+                                  >
+                                    <BsPlusLg className="me-2" /> Create your new gig
+                                  </Button>
+                                </div>
             </div>
             <div className="row">
               <h3 className="mt-4">

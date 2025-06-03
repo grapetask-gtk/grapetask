@@ -1,14 +1,13 @@
-import React from "react";
-import { FaEnvelope, FaTwitter } from "react-icons/fa";
 import { BsFacebook, BsMessenger } from "react-icons/bs";
+import { FaEnvelope, FaTwitter } from "react-icons/fa";
 import { MdOutlineContentCopy } from "react-icons/md";
-import Navbar from "../../components/Navbar";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import Navbar from "../../components/Navbar";
 
 const Level3 = () => {
-  const { userDetail, isLoading, getError } = useSelector((state) => state.profile);
+  // const { userDetail, isLoading, getError } = useSelector((state) => state.profile);
 
+  const userDetail = JSON.parse(localStorage.getItem("UserData") || "{}");
   return (
     <>
       <Navbar FirstNav="none" />

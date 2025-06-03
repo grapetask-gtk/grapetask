@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { AcceptOfferRequest, getBuyerOfferRequest, RejectOfferRequest } from "../redux/slices/offersSlice";
+import {
+  AcceptOfferRequest,
+  getBuyerOfferRequest,
+  RejectOfferRequest,
+} from "../redux/slices/offersSlice";
 import { useDispatch, useSelector } from "../redux/store/store";
 
 const OfferDetail = () => {
   const dispatch = useDispatch();
   const { buyerOfferlist, isLoadingOffer } = useSelector((state) => state.offers);
   const { id } = useParams();
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: "" });
 
   useEffect(() => {
     if (id) {
@@ -16,26 +20,41 @@ const OfferDetail = () => {
     }
   }, [dispatch, id]);
 
-  const handleAccept = async (offerId) => {
-    dispatch(AcceptOfferRequest({ offerId }, () => setShowSuccess(true)));
-  };
+  const handleAccept = (offerId) => {
+  dispatch(
+    AcceptOfferRequest({ offerId }, () => {
+      setToast({ show: true, message: "Offer accepted successfully!" });
+      // Refresh list after accept
+      dispatch(getBuyerOfferRequest({ requestId: id }));
+    })
+  );
+};
 
-  const handleReject = (offerId) => {
-    dispatch(RejectOfferRequest({ offerId }, () => setShowSuccess(true)));
-  };
+const handleReject = (offerId) => {
+  dispatch(
+    RejectOfferRequest({ offerId }, () => {
+      setToast({ show: true, message: "Offer rejected successfully!" });
+      // Refresh list after reject
+      dispatch(getBuyerOfferRequest({ requestId: id }));
+    })
+  );
+};
 
 
   const handleClose = () => {
-    setShowSuccess(false);
+    setToast({ show: false, message: "" });
   };
 
   return (
     <>
       <Navbar FirstNav="none" />
 
-      {showSuccess && (
-        <div className="alert alert-success alert-dismissible fade show" role="alert">
-          Offer accepted successfully!
+      {toast.show && (
+        <div
+          className="alert alert-success alert-dismissible fade show"
+          role="alert"
+        >
+          {toast.message}
           <button type="button" className="btn-close" onClick={handleClose}></button>
         </div>
       )}
@@ -76,7 +95,8 @@ const OfferDetail = () => {
                       <span className="rounded-3 font-14 poppins ms-2">
                         {(() => {
                           const diffInSeconds = Math.floor(
-                            (new Date(offer?.date) - new Date(offer?.created_at)) / 1000
+                            (new Date(offer?.date) - new Date(offer?.created_at)) /
+                              1000
                           );
                           if (diffInSeconds < 60) return "Duration Just now";
                           if (diffInSeconds < 3600)
@@ -98,9 +118,10 @@ const OfferDetail = () => {
                       >
                         Accept
                       </button>
-                      <button style={{ marginLeft: 5 }} className="btn btn-danger"
-                                              onClick={() => handleReject(offer.id)}
-
+                      <button
+                        style={{ marginLeft: 5 }}
+                        className="btn btn-danger"
+                        onClick={() => handleReject(offer.id)}
                       >
                         Reject
                       </button>

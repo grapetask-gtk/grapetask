@@ -1,12 +1,3 @@
-import React from "react";
-import Active from "./Active";
-import { FiSearch } from "react-icons/fi";
-import Navbar from "../Navbar";
-import OrderTabel from "./OrderTabel";
-import search from "../../assets/searchbar.webp";
-import { useDispatch, useSelector } from "../../redux/store/store";
-import { useEffect } from "react";
-import { AllOrders } from "../../redux/slices/allOrderSlice";
 import {
   Paper,
   Table,
@@ -16,26 +7,58 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
+import { useEffect } from "react";
+import search from "../../assets/searchbar.webp";
+import { AllBdOrders, AllClientOrders, AllExpertOrders } from "../../redux/slices/allOrderSlice";
+import { useDispatch, useSelector } from "../../redux/store/store";
+import Navbar from "../Navbar";
+import OrderTabel from "./OrderTabel";
 
 const Order = () => {
   const dispatch = useDispatch();
-  const { orderDetail } = useSelector((state) => state.allOrder);
 
+  const { expertOrders, clientOrders, bdOrders } = useSelector((state) => state.allOrder);
+
+  const user = JSON.parse(localStorage.getItem("UserData") || "{}");
+
+  // Load orders on mount depending on role
   useEffect(() => {
-    dispatch(AllOrders());
-  }, [dispatch]);
-  console.log(orderDetail, "=============order");
-  const filterByType = (array, targetType) => {
-    // return array.filter((obj) => obj.type === targetType);
-    return array?.filter((obj) => obj.status === targetType) || [];
+    if (user?.role === "expert/freelancer") {
+      dispatch(AllExpertOrders());
+    } else if (user?.role === "client") {
+      dispatch(AllClientOrders());
+    } else if (user?.role === "bd") {
+      dispatch(AllBdOrders());
+    }
+  }, [dispatch, user?.role]);
+
+  // Select orders list depending on role
+  let selectedOrders = [];
+  if (user?.role === "expert/freelancer") {
+    selectedOrders = expertOrders;
+  } else if (user?.role === "client") {
+    selectedOrders = clientOrders;
+  } else if (user?.role === "bd") {
+    selectedOrders = bdOrders;
+  }
+
+  const filterByStatus = (array, status) => {
+    return array?.filter((order) => order.status === status) || [];
   };
 
-  const filteredActive = filterByType(orderDetail, "Active");
-  const filteredDelivered = filterByType(orderDetail, "Delivered");
-  const filteredCompleted = filterByType(orderDetail, "Completed");
-  const filteredLate = filterByType(orderDetail, "Late");
-  const filteredCancelled = filterByType(orderDetail, "Cancelled");
-  //   console.log(filteredDelivered,'=============order===Delivered');
+  const activeOrders = filterByStatus(selectedOrders, "Active");
+  const deliveredOrders = filterByStatus(selectedOrders, "Delivered");
+  const completedOrders = filterByStatus(selectedOrders, "Completed");
+  const lateOrders = filterByStatus(selectedOrders, "Late");
+  const cancelledOrders = filterByStatus(selectedOrders, "Cancelled");
+
+  console.log({
+    activeOrders,
+    deliveredOrders,
+    completedOrders,
+    lateOrders,
+    cancelledOrders,
+  });
   return (
     <>
       <Navbar FirstNav="none" />
@@ -196,7 +219,7 @@ const Order = () => {
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {filteredActive?.map((value, index) => (
+                            {activeOrders?.map((value, index) => (
                               <OrderTabel
                                 user={value?.seller.image}
                                 userName={value?.seller.fname}
@@ -212,7 +235,7 @@ const Order = () => {
                                 ).getDate()},${new Date(
                                   value.created_at
                                 ).getFullYear()}`}
-                                price={value?.package?.total}
+                                price={value?.package?.total?.price || value?.price}
                                 btn="Pending"
                               />
                             ))}
@@ -273,7 +296,7 @@ const Order = () => {
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {filteredDelivered?.map((value, index) => (
+                            {deliveredOrders?.map((value, index) => (
                               <OrderTabel
                                 user={value?.client.image}
                                 userName={value?.client.fname}
@@ -350,7 +373,7 @@ const Order = () => {
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {filteredCompleted?.map((value, index) => (
+                            { completedOrders?.map((value, index) => (
                               <OrderTabel
                                 user={value?.client.image}
                                 userName={value?.client.fname}
@@ -427,7 +450,7 @@ const Order = () => {
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {filteredLate?.map((value, index) => (
+                            {lateOrders?.map((value, index) => (
                               <OrderTabel
                                 user={value?.client.image}
                                 userName={value?.client.fname}
@@ -504,7 +527,7 @@ const Order = () => {
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {filteredCancelled?.map((value, index) => (
+                            {cancelledOrders?.map((value, index) => (
                               <OrderTabel
                                 user={value?.client.image}
                                 userName={value?.client.fname}
