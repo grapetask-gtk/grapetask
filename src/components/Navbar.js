@@ -917,6 +917,18 @@ const Navbar = (props) => {
                           </NavLink>
                         </div>
                       )}
+                          {UserRole === "expert/freelancer" && (
+                        <div className="d-flex align-items-center me-3">
+                       
+                        <NavLink to="/buy-bids" className="font-14">
+                      <li>
+                    
+                          <span className="font-14 fw-medium">Available Bids:</span>
+                          <span className="ms-1">{UserData?.total_bids}</span>
+                          </li>
+                          </NavLink>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
