@@ -9,7 +9,7 @@ const Level1 = () => {
   const [copied, setCopied] = useState(false);
 
   const userDetail = JSON.parse(localStorage.getItem("UserData") || "{}");
-  const referralLink = `http://localhost:3000/signup?referral=${userDetail?.referral_code || ''}`;
+  const referralLink = `http://grapetask.co/signup?referral=${userDetail?.referral_code || ''}`;
 
   const copyToClipboard = () => {
     if (!referralLink) return;
