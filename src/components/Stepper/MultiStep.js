@@ -219,127 +219,97 @@ export default function MultiStep() {
   //   setSubCategory(gigData.subcategory_id);
   //   setTags(gigData.tags);
 
-  React.useEffect(() => {
+React.useEffect(() => {
+  if (gigData) {
+    setGigTitle(gigData.title);
+    setCategory(gigData.category_id.toString());
+    setSubCategory(gigData.subcategory_id.toString());
 
-      if (gigData) {
-        setGigTitle(gigData.title);
-        setCategory(gigData.category_id.toString()); // Convert to string
-        setSubCategory(gigData.subcategory_id.toString()); // Convert to string
-        setTags(gigData.tags ? JSON.parse(gigData.tags) : []);
-        
-      // ==========Packeg==========
-      setBasicPackage(gigData.package[0].title);
-      setSourceFileBasice(gigData.package[0].source_file);
-      setResolutionFileBasice(gigData.package[0].resulation);
-      setRavisionBasic(gigData.package[0].ravision);
-      setDeliveryBasic(gigData.package[0].delivery_time);
-      setTotalBasic(gigData.package[0].total);
-      // ========Standard
-      setStanderdPackage(gigData.package[1].title);
-      setSourceFileStandard(gigData.package[1].source_file);
-      setResolutionFileStandard(gigData.package[1].resulation);
-      setRavisionStadard(gigData.package[1].ravision);
-      setDeliveryStadard(gigData.package[1].delivery_time);
-      setTotalStand(gigData.package[1].total);
-      // ========Premium
-      setPremiumPackage(gigData.package[2].title);
-      setSourceFilePremium(gigData.package[2].source_file);
-      setResolutionFilePremium(gigData.package[2].resulation);
-      setRavisionPremium(gigData.package[2].ravision);
-      setDeliveryPremium(gigData.package[2].delivery_time);
-      setTotalPremium(gigData.package[2].total);
-      // ============Description
-      setText(gigData.description);
-      setFaqs(gigData.faq);
-      // ============Requirements
-      setRequirmentfields(gigData?.requirement);
-      // ==========Gallery
+    // ✅ Robust tags parser (string, array, or JSON-stringified array)
+    let tags = [];
+    const rawTags = gigData.tags;
 
-      // setUploadedImages([
-      //   {
-      //     path: gigData.media?.image1,
-      //     name: gigData.media?.image1,
-      //     type: "image/jpeg",
-      //     size: 78934,
-
-      //     webkitRelativePath: "",
-      //   },
-      //   {
-      //     path: gigData.media?.image2,
-      //     name: gigData.media?.image2,
-      //     type: "image/jpeg",
-      //     size: 78934,
-
-      //     webkitRelativePath: "",
-      //   },
-      //   {
-      //     path: gigData.media?.image3,
-      //     name: gigData.media?.image3,
-      //     type: "image/jpeg",
-      //     size: 78934,
-
-      //     webkitRelativePath: "",
-      //   },
-      // ]);
-      // Assuming gigData.media.image1, image2, and image3 are the URLs of the uploaded images
-      // const imageUrls = [
-      //   gigData.media?.image1,
-      //   gigData.media?.image2,
-      //   gigData.media?.image3,
-      // ];
-
-      // const imageFiles = imageUrls.map((imageUrl, index) => {
-      //   if (imageUrl) {
-      //     return new File([imageUrl], `image${index + 1}.webp`, { type: 'image/jpeg' });
-      //   }
-      //   return null;
-      // });
-      // console.log(imageUrls)
-      // Set the array of File objects using setUploadedImages
-      // setUploadedImages(imageFiles.filter(Boolean));
-
-      setUploadedVideos(
-        [gigData.media.video].filter((video) => video !== null)
-      );
-      setUploadedPDFs(
-        [gigData.media.pdf_file1, gigData.media.pdf_file2].filter(
-          (pdf) => pdf !== null
-        )
-      );
-
-      // ======Update--images
-      function addImagesFromPaths(imagePaths) {
-        if (uploadedImages.length < 3) {
-          const newFiles = [];
-          imagePaths.forEach((path, index) => {
-            if (uploadedImages.length + index < 3) {
-              fetch(path)
-                .then((response) => response.blob())
-                .then((blob) => {
-                  const newFile = new File([blob], `image${index + 1}.webp`, {
-                    type: "image/jpeg",
-                  });
-                  newFiles.push(newFile);
-                  if (newFiles.length === imagePaths.length) {
-                    setUploadedImages([...uploadedImages, ...newFiles]);
-                  }
-                })
-                .catch((error) => {
-                  console.error("Error fetching image:", error);
-                });
-            }
-          });
+    if (rawTags) {
+      if (Array.isArray(rawTags)) {
+        tags = rawTags;
+      } else if (typeof rawTags === 'string') {
+        try {
+          const parsed = JSON.parse(rawTags);
+          tags = Array.isArray(parsed) ? parsed : rawTags.split(',').map(t => t.trim());
+        } catch (e) {
+          tags = rawTags.split(',').map(t => t.trim());
         }
       }
-
-      const imagePaths = [
-        gigData.media.image1,
-        gigData.media.image2,
-        gigData.media.image3,
-      ];
-      addImagesFromPaths(imagePaths);
     }
-  }, []);
+
+    setTags(tags);
+
+    // ========== Packages ==========
+    setBasicPackage(gigData.package[0].title);
+    setSourceFileBasice(gigData.package[0].source_file);
+    setResolutionFileBasice(gigData.package[0].resulation);
+    setRavisionBasic(gigData.package[0].ravision);
+    setDeliveryBasic(gigData.package[0].delivery_time);
+    setTotalBasic(gigData.package[0].total);
+
+    setStanderdPackage(gigData.package[1].title);
+    setSourceFileStandard(gigData.package[1].source_file);
+    setResolutionFileStandard(gigData.package[1].resulation);
+    setRavisionStadard(gigData.package[1].ravision);
+    setDeliveryStadard(gigData.package[1].delivery_time);
+    setTotalStand(gigData.package[1].total);
+
+    setPremiumPackage(gigData.package[2].title);
+    setSourceFilePremium(gigData.package[2].source_file);
+    setResolutionFilePremium(gigData.package[2].resulation);
+    setRavisionPremium(gigData.package[2].ravision);
+    setDeliveryPremium(gigData.package[2].delivery_time);
+    setTotalPremium(gigData.package[2].total);
+
+    // ============Description
+    setText(gigData.description);
+    setFaqs(gigData.faq);
+
+    // ============Requirements
+    setRequirmentfields(gigData?.requirement);
+
+    // ============ Videos & PDFs
+    setUploadedVideos([gigData.media.video].filter(video => video !== null));
+    setUploadedPDFs([gigData.media.pdf_file1, gigData.media.pdf_file2].filter(pdf => pdf !== null));
+
+    // ============ Images
+    function addImagesFromPaths(imagePaths) {
+      if (uploadedImages.length < 3) {
+        const newFiles = [];
+        imagePaths.forEach((path, index) => {
+          if (uploadedImages.length + index < 3) {
+            fetch(path)
+              .then(response => response.blob())
+              .then(blob => {
+                const newFile = new File([blob], `image${index + 1}.webp`, {
+                  type: "image/jpeg",
+                });
+                newFiles.push(newFile);
+                if (newFiles.length === imagePaths.length) {
+                  setUploadedImages([...uploadedImages, ...newFiles]);
+                }
+              })
+              .catch(error => {
+                console.error("Error fetching image:", error);
+              });
+          }
+        });
+      }
+    }
+
+    const imagePaths = [
+      gigData.media.image1,
+      gigData.media.image2,
+      gigData.media.image3,
+    ];
+    addImagesFromPaths(imagePaths);
+  }
+}, []);
   const handleNext = (e) => {
     e.preventDefault();
 
