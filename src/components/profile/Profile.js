@@ -1,28 +1,28 @@
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "../../redux/store/store";
-import "../../style/profile.scss";
-import ProfileSideBar from "./ProfileSideBar";
-import Navbar from "../Navbar";
 import { Button } from "@mui/material";
-import ConnectWindows from "../../assets/ConnectWindows.webp";
-import "react-phone-number-input/style.css";
-import PhoneInput from "react-phone-number-input";
-import OtpInput from "react-otp-input";
-import { FaAngleLeft, FaRegUserCircle } from "react-icons/fa";
+import { City, Country, State } from 'country-state-city';
+import { useEffect, useState } from "react";
+import { FaAngleLeft } from "react-icons/fa";
 import { HiOutlineUserCircle } from "react-icons/hi";
-import { json, useNavigate } from "react-router-dom";
+import OtpInput from "react-otp-input";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
+import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Spinner } from "reactstrap";
+import ConnectWindows from "../../assets/ConnectWindows.webp";
 import {
   PrifileOtp,
   getPhoneNumberVer,
   profileChangePassword,
   profileUpdate,
-  userGetData,
-  userProfile,
+  userProfile
 } from "../../redux/slices/profileSlice";
-import { Spinner } from "reactstrap";
-import { useEffect } from "react";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { useDispatch, useSelector } from "../../redux/store/store";
+import "../../style/profile.scss";
+import Navbar from "../Navbar";
+import ProfileSideBar from "./ProfileSideBar";
+
 
 const ProfileUser = () => {
   const [tabState, setTabState] = useState("profile");
@@ -45,6 +45,8 @@ const ProfileUser = () => {
       : "rgba(245, 245, 255, 1)";
     const color = isFilled ? "white" : "rgba(0, 0, 0, 1)";
 
+
+
     return (
       <input
         {...inputProps}
@@ -54,6 +56,10 @@ const ProfileUser = () => {
     );
   };
 
+  // Add these state variables to your existing state declarations:
+const [countries, setCountries] = useState([]);
+const [states, setStates] = useState([]);
+const [cities, setCities] = useState([]);
   // --------profile-----------
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -87,6 +93,42 @@ const ProfileUser = () => {
       console.log(data?.message, "================else");
     }
   };
+
+
+// Initialize countries on component mount
+useEffect(() => {
+  const countryData = Country.getAllCountries();
+  setCountries(countryData);
+}, []);
+
+// Update states when country changes
+useEffect(() => {
+  if (country) {
+    const countryStates = State.getStatesOfCountry(country);
+    setStates(countryStates);
+    setState(""); // Reset state
+    setCities([]); // Reset cities
+    setCity(""); // Reset city
+  } else {
+    setStates([]);
+    setCities([]);
+    setState("");
+    setCity("");
+  }
+}, [country]);
+
+// Update cities when state changes
+useEffect(() => {
+  if (country && state) {
+    const stateCities = City.getCitiesOfState(country, state);
+    setCities(stateCities);
+    setCity(""); // Reset city
+  } else {
+    setCities([]);
+    setCity("");
+  }
+}, [country, state]);
+
 
   useEffect(() => {
     const data = {
@@ -180,6 +222,7 @@ const ProfileUser = () => {
       />
       <div className="container-fluid profileSetting poppins ">
         <div className="row mt-4">
+
           <div className="col-lg-3 col-md-3 col-12  px-0 ">
             <ProfileSideBar setupTabState={setTabState} tabStates={tabState} />
           </div>
@@ -230,35 +273,45 @@ const ProfileUser = () => {
                         <p class="font-18 mb-2 mt-lg-3 mt-md-3 poppins blackcolor">
                           Country
                         </p>
-                        <select
-                          class="form-select border-0  font-16 poppins p-3"
-                          required
-                          aria-label="Default select example"
-                          value={country}
-                          onChange={(e) => setCountry(e.target.value)}
-                        >
-                          <option selected>Pakistan</option>
-                          <option value="India">India</option>
-                          <option value="Amercia">Amercia</option>
-                          <option value="Pakistan"></option>
-                        </select>
+                     <select
+  className="form-select border-0 font-16 poppins p-3"
+  required
+  aria-label="Country select"
+  value={country}
+  onChange={(e) => setCountry(e.target.value)}
+>
+  <option value="">Select Country</option>
+  {countries.map((countryItem) => (
+    <option key={countryItem.isoCode} value={countryItem.isoCode}>
+      {countryItem.name}
+    </option>
+  ))}
+</select>
                       </div>
                       <div className="col-lg-6 col-md-6 col-12 mt-lg-4 mt-md-4 mt-sm-4 mt-3">
                         <p class="font-18 mb-2 mt-lg-3 mt-md-3 poppins blackcolor">
-                          City
+                          Ciity
                         </p>
                         <select
-                          class="form-select border-0  font-16 poppins p-3"
-                          required
-                          aria-label="Default select example"
-                          value={city}
-                          onChange={(e) => setCity(e.target.value)}
-                        >
-                          <option selected>Pakistan</option>
-                          <option value="India">India</option>
-                          <option value="Amercia">Amercia</option>
-                          <option value="Pakistan"></option>
-                        </select>
+  className="form-select border-0 font-16 poppins p-3"
+  required
+  aria-label="City select"
+  value={city}
+  onChange={(e) => setCity(e.target.value)}
+  disabled={!state || cities.length === 0}
+>
+  <option value="">
+    {state ? 
+      (cities.length > 0 ? "Select City" : "No cities available") : 
+      "First select a state"
+    }
+  </option>
+  {cities.map((cityItem, index) => (
+    <option key={index} value={cityItem.name}>
+      {cityItem.name}
+    </option>
+  ))}
+</select>
                       </div>
                       <div className="col-lg-6 col-md-6 col-12 mt-lg-4 mt-md-4 mt-sm-4 mt-3">
                         <label
@@ -267,15 +320,26 @@ const ProfileUser = () => {
                         >
                           State/Province
                         </label>
-                        <input
-                          type="text"
-                          className="form-control p-3  border-0  font-16 poppins"
-                          placeholder="Tom"
-                          required
-                          id="Punjab"
-                          value={state}
-                          onChange={(e) => setState(e.target.value)}
-                        />
+                  <select
+  className="form-select border-0 font-16 poppins p-3"
+  required
+  aria-label="State select"
+  value={state}
+  onChange={(e) => setState(e.target.value)}
+  disabled={!country || states.length === 0}
+>
+  <option value="">
+    {country ? 
+      (states.length > 0 ? "Select State/Province" : "No states available") : 
+      "First select a country"
+    }
+  </option>
+  {states.map((stateItem) => (
+    <option key={stateItem.isoCode} value={stateItem.isoCode}>
+      {stateItem.name}
+    </option>
+  ))}
+</select>
                       </div>
                       <div className="col-lg-6 col-md-6 col-12 mt-lg-4 mt-md-4 mt-sm-4 mt-3">
                         <label

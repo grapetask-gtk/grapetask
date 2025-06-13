@@ -149,34 +149,6 @@ export function CreateOfferRequest(data, handleClose) {
   };
 }
 
-//Accept Offer Request
-// export function AcceptOfferRequest(data, handleClose) {
-//   return async () => {
-//     let accessToken = localStorage.getItem('accessToken')
-//     dispatch(OffersSlice.actions.startLoadingCreate());
-//     try {
-//       // console.log('sending this data' , data);
-//       const response = await axios.post('accept-offer',
-//         data, {
-//           headers: {
-//             'Accept': 'application/json',
-//             'Content-Type': 'application/json',
-//             'Authorization': 'Bearer ' + accessToken
-
-//           }
-//       });
-//       handleClose(response.data);
-//       if (!response.data.status) {
-//         dispatch(OffersSlice.actions.hasGetError(response?.data?.message));
-//       }
-//       // console.log(JSON.stringify(response?.data?.data))
-//       // dispatch(OffersSlice.actions.getUserDetailsSuccess(response.data.data));
-//     } catch (error) {
-//       handleClose(error);
-//       dispatch(OffersSlice.actions.hasGetError(error?.message));
-//     }
-//   };
-// }
 
 export function AcceptOfferRequest(data, handleClose) {
   return async (dispatch) => {

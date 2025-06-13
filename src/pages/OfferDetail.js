@@ -20,15 +20,29 @@ const OfferDetail = () => {
     }
   }, [dispatch, id]);
 
-  const handleAccept = (offerId) => {
+const handleAccept = (offerId) => {
   dispatch(
-    AcceptOfferRequest({ offerId }, () => {
-      setToast({ show: true, message: "Offer accepted successfully!" });
-      // Refresh list after accept
-      dispatch(getBuyerOfferRequest({ requestId: id }));
+    AcceptOfferRequest({ offerId }, (res) => {
+      if (res?.status) {
+        setToast({ show: true, message: "Offer accepted successfully!" });
+
+        // 🔁 Open JazzCash payment form in new tab
+        if (res.data?.payment_form_html) {
+          const win = window.open('', '_blank');
+          win.document.open();
+          win.document.write(res.data.payment_form_html);
+          win.document.close();
+        }
+
+        // 🔄 Refresh offers
+        dispatch(getBuyerOfferRequest({ requestId: id }));
+      } else {
+        setToast({ show: true, message: res?.message || "Offer acceptance failed!" });
+      }
     })
   );
 };
+
 
 const handleReject = (offerId) => {
   dispatch(

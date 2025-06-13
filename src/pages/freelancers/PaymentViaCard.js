@@ -1,5 +1,4 @@
 import { Button } from "@mui/material";
-import React from "react";
 import { useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import swal from "sweetalert";
@@ -30,7 +29,7 @@ const handleFastCheckout = (event) => {
       package_id: package_id,
       status: "Active",
     };
-    dispatch(OrderCreate(data, handleResponse));
+    dispatch(OrderCreate(data, handleResponse)); 
     // navigate('/frelancerChat')
   };
   const handleResponse = (data) => {

@@ -46,7 +46,7 @@ const Level2 = () => {
                                     <input 
                                         type="text" 
                                         className="form-control orderinput p-2 poppins" 
-                                        value={`http://localhost:3000/signup?referral=${userDetail?.referral_code}`} 
+                                        value={`http://grapetask.co/signup?referral=${userDetail?.referral_code}`} 
                                         readOnly
                                     />
                                     <div className="p-2 backgroundoring ms-0 rounded-0">

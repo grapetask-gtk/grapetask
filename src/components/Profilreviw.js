@@ -1,20 +1,76 @@
-import React from 'react'
-import { MdLocationOn } from 'react-icons/md'
 import { Button } from '@mui/material';
-import { useDispatch } from 'react-redux';
-import { inviteToJob } from '../redux/slices/offersSlice';
+import { useState } from "react";
+import {
+    Offcanvas
+} from "react-bootstrap";
+import { MdLocationOn } from 'react-icons/md';
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from 'react-router-dom';
+import Chating from '../components/frelancerChat/Chat/Chating';
+import {
+    clearConversationError,
+    createOrFindConversation,
+    setSelectedConversation
+} from "../redux/slices/messageSlice";
+import { inviteToJob } from '../redux/slices/offersSlice';
 
-const Profilreviw = ({expertDetail}) => {
+
+
+const Profilreviw = ({ expertDetail }) => {
+    const dispatch = useDispatch();
     const navigate = useNavigate();
-    const dispacth = useDispatch();
-    const handleJobInvitation=()=>{
-        let data={
-            invited_to:expertDetail?.id
+ 
+    // Chat modal/offcanvas state
+    const [showChatModal, setShowChatModal] = useState(false);
+    const [selectedClient, setSelectedClient] = useState(null);
+    // Message state
+    const { creatingConversation, error: conversationError } = useSelector(
+        (state) => state.message
+    );
+    // Handle chat opening
+    const handleStartChat = async (client, invitation) => {
+        setSelectedClient(client);
+
+        // Clear any previous errors
+        dispatch(clearConversationError());
+
+        try {
+            // Create or find existing conversation with this client
+            console.log('strated to find conversation for client id:', client.id);
+            const response = await dispatch(createOrFindConversation({
+                participantId: client.id
+                // Link to job context
+               
+            })).unwrap();
+            console.log('got response back in job invitaion page:', response);
+        
+            console.log('slecting conv in job invitation page:', response);
+            dispatch(setSelectedConversation(response));
+
+            // Show chat modal after conversation is ready
+            setShowChatModal(true);
+        } catch (error) {
+            console.error('Error creating conversation:', error);
+            // You might want to show an error toast here
+            alert('Failed to start conversation. Please try again.');
         }
-        dispacth(inviteToJob(data,handleResponse))
+    };
+
+    const closeChatModal = () => {
+        setShowChatModal(false);
+        setSelectedClient(null);
+        // Optionally clear selected conversation
+        // dispatch(setSelectedConversation(null));
+    };
+
+
+    const handleJobInvitation = () => {
+        let data = {
+            invited_to: expertDetail?.id
+        }
+        dispatch(inviteToJob(data, handleResponse))
     }
-    const handleResponse =(data)=>{
+    const handleResponse = (data) => {
 
     }
     return (
@@ -27,7 +83,7 @@ const Profilreviw = ({expertDetail}) => {
                             <div className='d-flex p-4 profile-view poppins'>
                                 <img src={expertDetail?.image} style={{ width: '18%' }} alt="" />
                                 <div className='ms-3 mt-3'>
-                                    <h6 className='colororing font-18 font-500 poppins'>{expertDetail?.fname+" "+expertDetail?.lname}</h6>
+                                    <h6 className='colororing font-18 font-500 poppins'>{expertDetail?.fname + " " + expertDetail?.lname}</h6>
                                     <p className='colororing mb-0 font-14 poppins'>New Seller</p>
                                     <p className='font-12 poppins'><MdLocationOn className='colororing ' />Pakistan</p>
                                     <div className=' mt-2'>
@@ -49,7 +105,8 @@ const Profilreviw = ({expertDetail}) => {
                                 </div>
                                 <div className='d-flex '>
                                     <Button className='btn-stepper poppins px-3 me-3 font-16' onClick={handleJobInvitation}>Invite to job</Button>
-                                    <Button onClick={()=>navigate('/chat/'+expertDetail?.username)} className='btn-stepper-border poppins px-3  font-16'>Send Message </Button>
+                                    <Button onClick={() => handleStartChat(expertDetail)}
+                                        disabled={creatingConversation} className='btn-stepper-border poppins px-3  font-16'>Send Message </Button>
                                 </div>
                             </div>
                         </div>
@@ -129,19 +186,37 @@ const Profilreviw = ({expertDetail}) => {
                         <div className='Hirecard p-3'>
                             <h4 className=' font-18 font-500 poppins blackcolor'>Skills</h4>
                             <div className=' d-flex flex-wrap poppins'>
-                            {expertDetail?.skills?.length>0?
-                                expertDetail?.skills.map((val,index)=>{
-                                    return(
-                                        <div className='rounded-5 owsem'><p className='mb-0 font-15 colorgray'>{val?.skill}</p> </div>
-                                    )
-                                })
-                                :<h2>Skills not added</h2>
-                            }
+                                {expertDetail?.skills?.length > 0 ?
+                                    expertDetail?.skills.map((val, index) => {
+                                        return (
+                                            <div className='rounded-5 owsem'><p className='mb-0 font-15 colorgray'>{val?.skill}</p> </div>
+                                        )
+                                    })
+                                    : <h2>Skills not added</h2>
+                                }
                             </div>
                         </div>
                     </div>
                 </div>
-
+                {/* Chat Offcanvas */}
+                <Offcanvas
+                    show={showChatModal}
+                    onHide={closeChatModal}
+                    placement="end"
+                    style={{ width: '450px' }}
+                >
+                    <Offcanvas.Header closeButton>
+                        <Offcanvas.Title>
+                            Chat with {selectedClient?.fname} {selectedClient?.lname}
+                        </Offcanvas.Title>
+                    </Offcanvas.Header>
+                    <Offcanvas.Body className="p-0 d-flex flex-column">
+                        {/* Render your Chating component */}
+                        <div className="flex-grow-1">
+                            <Chating />
+                        </div>
+                    </Offcanvas.Body>
+                </Offcanvas>
             </div>
         </>
     )

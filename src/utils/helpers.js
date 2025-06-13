@@ -11,6 +11,6 @@ function paginateArray(array, pageSize, pageNumber) {
     --pageNumber; // Adjust the page number to 0-based index
     var startIndex = pageNumber * pageSize;
     var endIndex = startIndex + pageSize;
-    return array.slice(startIndex, endIndex);
+    return array?.slice(startIndex, endIndex);
   }
-export{stripHtmlTags,titleToSlug,paginateArray}
+export { paginateArray, stripHtmlTags, titleToSlug };

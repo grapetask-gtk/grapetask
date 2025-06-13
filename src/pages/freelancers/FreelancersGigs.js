@@ -1,37 +1,63 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "../../redux/store/store";
-import icone from "../../assets/icone.webp";
-import ster from "../../assets/Frame.webp";
-import star6 from "../../assets/5star.webp";
-import timepes from "../../assets/time (1).webp";
-import "../../style/imgSlider.scss";
-import "../../style/frelancer.scss";
-import { BiTime } from "react-icons/bi";
-import { TfiReload } from "react-icons/tfi";
-import Navbar from "../../components/Navbar";
 import { Button } from "@mui/material";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import { FaAngleLeft, FaAngleRight, FaCheck, FaStar } from "react-icons/fa";
-import Card from "../../components/Card";
-import { BsChevronLeft, BsFillPlayCircleFill } from "react-icons/bs";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
-import { onMessageListener } from "../firebase";
-import { AiFillStar } from "react-icons/ai";
-import { geAllGigs, getGigDetail } from "../../redux/slices/allGigsSlice";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import CardImg from "../../assets/GigCradImg.webp";
-import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { useEffect, useState } from "react";
+import {
+  Offcanvas
+} from "react-bootstrap";
+import { AiFillStar } from "react-icons/ai";
+import { BiTime } from "react-icons/bi";
+import { BsChevronLeft, BsFillPlayCircleFill } from "react-icons/bs";
+import { FaAngleLeft, FaAngleRight, FaCheck } from "react-icons/fa";
+import { TfiReload } from "react-icons/tfi";
+import { useNavigate, useParams } from "react-router-dom";
+import Slider from "react-slick";
+import { ToastContainer, toast } from "react-toastify";
+import "slick-carousel/slick/slick-theme.css";
+import "slick-carousel/slick/slick.css";
+import star6 from "../../assets/5star.webp";
+import ster from "../../assets/Frame.webp";
+import icone from "../../assets/icone.webp";
 import Loader from "../../assets/LoaderImg.gif";
-import { OrderCreate } from "../../redux/slices/allOrderSlice";
+import timepes from "../../assets/time (1).webp";
+import Card from "../../components/Card";
 import Footer from "../../components/Footer";
+import Chating from '../../components/frelancerChat/Chat/Chating';
+import Navbar from "../../components/Navbar";
+import { geAllGigs, getGigDetail } from "../../redux/slices/allGigsSlice";
+import {
+  clearConversationError,
+  createOrFindConversation,
+  setSelectedConversation
+} from "../../redux/slices/messageSlice";
+import { useDispatch, useSelector } from "../../redux/store/store";
+import "../../style/frelancer.scss";
+import "../../style/imgSlider.scss";
+import { onMessageListener } from "../firebase";
+
 
 const FreelancersGigs = ({ onSelectPkg }) => {
   const UserDetail = JSON.parse(localStorage.getItem("UserData"));
+
+  const dispatch = useDispatch();
+
+  // Job invitation state
+  const { invitations, isLoadingInvitations, error } = useSelector(
+    (state) => state.jobInvitation
+  );
+
+  // Message state
+  const { creatingConversation, error: conversationError } = useSelector(
+    (state) => state.message
+  );
+
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [selectedInvitationId, setSelectedInvitationId] = useState(null);
+  
+  // Chat modal/offcanvas state
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
+
   //
   const navigate = useNavigate();
 
@@ -41,7 +67,7 @@ const FreelancersGigs = ({ onSelectPkg }) => {
   // const gigDetail = location.state?.gigDetail;
   // console.log(gigDetail,'================================on');
   // ---------- fetching --------------
-  const dispatch = useDispatch();
+ 
   const { gigsDetail, singleGigDetail, isPreLoading } = useSelector(
     (state) => state.allGigs
   );
@@ -52,6 +78,40 @@ const FreelancersGigs = ({ onSelectPkg }) => {
     dispatch(getGigDetail(gigId));
   }, [dispatch, gigId]);
 
+  // Handle chat opening
+  const handleStartChat = async (client) => {
+    setSelectedClient(client);
+    
+    // Clear any previous errors
+    dispatch(clearConversationError());
+    
+    try {
+      // Create or find existing conversation with this client
+      console.log('strated to find conversation for client id:',client.id);
+      const response = await dispatch(createOrFindConversation({
+        participantId: client.id
+         
+      
+      })).unwrap();
+      console.log('got response back in job invitaion page:',response);
+         console.log('slecting conv in job invitation page:',response);
+        dispatch(setSelectedConversation(response));
+        
+      // Show chat modal after conversation is ready
+      setShowChatModal(true);
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      // You might want to show an error toast here
+      alert('Failed to start conversation. Please try again.');
+    }
+  };
+
+  const closeChatModal = () => {
+    setShowChatModal(false);
+    setSelectedClient(null);
+    // Optionally clear selected conversation
+    // dispatch(setSelectedConversation(null));
+  };
   // ============FILTRT PACKEGS ================
   // debugger
   const filterByType = (array, targetType) => {
@@ -633,7 +693,9 @@ const FreelancersGigs = ({ onSelectPkg }) => {
                             {/* )} */}
                             {/* <p className="ms-2 mb-0 takegraycolor">(974)</p> */}
                           </div>
-                          <Button className="btn-stepper-border poppins px-3 mt-2  font-16">
+                          <Button className="btn-stepper-border poppins px-3 mt-2  font-16"
+                           onClick={() => handleStartChat(singleGigDetail?.user)}
+                          >
                             Contact Me
                           </Button>
                         </div>
@@ -974,7 +1036,10 @@ const FreelancersGigs = ({ onSelectPkg }) => {
                             Continue
                           </Button>
 
-                          <Button className="btn-stepper-border poppins w-100 mt-3 font-16">
+                          <Button className="btn-stepper-border poppins w-100 mt-3 font-16"
+                              onClick={() => handleStartChat(singleGigDetail?.user)}
+                        disabled={creatingConversation}
+                          >
                             Contact with sellar
                           </Button>
                           <div
@@ -1751,6 +1816,25 @@ const FreelancersGigs = ({ onSelectPkg }) => {
               )}
             </div>
           </div>
+              {/* Chat Offcanvas */}
+                  <Offcanvas 
+                    show={showChatModal} 
+                    onHide={closeChatModal}
+                    placement="end"
+                    style={{ width: '450px' }}
+                  >
+                    <Offcanvas.Header closeButton>
+                      <Offcanvas.Title>
+                        Chat with {selectedClient?.fname} {selectedClient?.lname}
+                      </Offcanvas.Title>
+                    </Offcanvas.Header>
+                    <Offcanvas.Body className="p-0 d-flex flex-column">
+                      {/* Render your Chating component */}
+                      <div className="flex-grow-1">
+                        <Chating />
+                      </div>
+                    </Offcanvas.Body>
+                  </Offcanvas>
           <Footer />
         </>
       )}

@@ -1,14 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import axios from "../../utils/axios";
-// ❌ REMOVE THIS LINE - it causes circular dependency
-// import { dispatch } from '../store/store';
 
 const initialState = {
   isLoading: false,
   isLoadingRegister: false,
   getError: null,
   users: [],
+  userList: [], // ✅ ADD THIS for freelancers
   meta: {},
   userDetail: {},
 };
@@ -69,13 +68,14 @@ const userSlice = createSlice({
           state.users[index] = updatedUser;
         }
       })
-      // Add cases for all the new async thunks
       .addCase(userLogin.pending, (state) => {
         state.isLoading = true;
+        state.getError = null;
       })
       .addCase(userLogin.fulfilled, (state, action) => {
         state.isLoading = false;
         state.userDetail = action.payload;
+        state.getError = null;
       })
       .addCase(userLogin.rejected, (state, action) => {
         state.isLoading = false;
@@ -83,10 +83,12 @@ const userSlice = createSlice({
       })
       .addCase(userRegister.pending, (state) => {
         state.isLoadingRegister = true;
+        state.getError = null;
       })
       .addCase(userRegister.fulfilled, (state, action) => {
         state.isLoadingRegister = false;
         state.userDetail = action.payload;
+        state.getError = null;
       })
       .addCase(userRegister.rejected, (state, action) => {
         state.isLoadingRegister = false;
@@ -94,10 +96,12 @@ const userSlice = createSlice({
       })
       .addCase(getUser.pending, (state) => {
         state.isLoading = true;
+        state.getError = null;
       })
       .addCase(getUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.userDetail = action.payload;
+        state.getError = null;
       })
       .addCase(getUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -105,6 +109,7 @@ const userSlice = createSlice({
       })
       .addCase(getAllUsers.pending, (state) => {
         state.isLoading = true;
+        state.getError = null;
       })
       .addCase(getAllUsers.fulfilled, (state, action) => {
         state.isLoading = false;
@@ -114,26 +119,38 @@ const userSlice = createSlice({
           total_pages: action.payload.last_page,
           total: action.payload.total,
         };
+        state.getError = null;
       })
       .addCase(getAllUsers.rejected, (state, action) => {
         state.isLoading = false;
         state.getError = action.payload;
       })
+      // ✅ FIXED: Properly handle getAllFreelancers
       .addCase(getAllFreelancers.pending, (state) => {
         state.isLoading = true;
+        state.getError = null;
       })
       .addCase(getAllFreelancers.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.users = action.payload.data;
-        state.meta = {
-          current_page: action.payload.current_page,
-          total_pages: action.payload.last_page,
-          total: action.payload.total,
-        };
+        state.getError = null;
+        
+        // ✅ FIXED: Store freelancers in userList
+        if (action.payload && action.payload.data) {
+          state.userList = action.payload.data;
+          state.meta = {
+            current_page: action.payload.current_page || 1,
+            total_pages: action.payload.last_page || 1,
+            total: action.payload.total || action.payload.data.length,
+          };
+        } else {
+          // Handle case where API response doesn't have nested data
+          state.userList = Array.isArray(action.payload) ? action.payload : [];
+        }
       })
       .addCase(getAllFreelancers.rejected, (state, action) => {
         state.isLoading = false;
         state.getError = action.payload;
+        state.userList = [];
       });
   },
 });
@@ -151,7 +168,7 @@ export const {
 
 export default userSlice.reducer;
 
-// ✅ CONVERT ALL CUSTOM THUNKS TO createAsyncThunk
+// ✅ Authentication thunks
 export const userLogin = createAsyncThunk(
   'user/login',
   async ({ data, handleClose }, { rejectWithValue }) => {
@@ -166,7 +183,7 @@ export const userLogin = createAsyncThunk(
       return response.data.data;
     } catch (error) {
       handleClose(error);
-      return rejectWithValue(error?.message);
+      return rejectWithValue(error?.response?.data?.message || error?.message);
     }
   }
 );
@@ -225,7 +242,7 @@ export const userOtp = createAsyncThunk(
       return response.data.data;
     } catch (error) {
       handleClose(error);
-      return rejectWithValue(error?.message);
+      return rejectWithValue(error?.response?.data?.message || error?.message);
     }
   }
 );
@@ -248,7 +265,7 @@ export const userResetPassword = createAsyncThunk(
       return response.data.data;
     } catch (error) {
       handleClose(error);
-      return rejectWithValue(error?.message);
+      return rejectWithValue(error?.response?.data?.message || error?.message);
     }
   }
 );
@@ -264,7 +281,7 @@ export const getUser = createAsyncThunk(
       
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(error?.message);
+      return rejectWithValue(error?.response?.data?.message || error?.message);
     }
   }
 );
@@ -308,7 +325,7 @@ export const toggleUserStatus = createAsyncThunk(
       return response.data;
     } catch (error) {
       toast.error("Failed to update user status");
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error?.response?.data?.message || "Failed to update user status");
     }
   }
 );
@@ -327,23 +344,36 @@ export const toggleUserrole = createAsyncThunk(
       return response.data;
     } catch (error) {
       toast.error("Failed to update user role");
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error?.response?.data?.message || "Failed to update user role");
     }
   }
 );
 
+// ✅ FIXED: getAllFreelancers with better error handling
 export const getAllFreelancers = createAsyncThunk(
   'user/getAllFreelancers',
-  async ({ page = 1, perPage = 10 }, { rejectWithValue }) => {
+  async ({ page = 1, perPage = 10 } = {}, { rejectWithValue }) => {
     try {
       const accessToken = localStorage.getItem("accessToken");
+      
+      if (!accessToken) {
+        return rejectWithValue("No access token found. Please login again.");
+      }
+
       const response = await axios.get(`users/freelancer?page=${page}&per_page=${perPage}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       
+      // ✅ FIXED: Return the complete response data structure
       return response.data;
     } catch (error) {
-      return rejectWithValue(error?.response?.data?.message || error.message);
+      console.error("getAllFreelancers error:", error);
+      
+      if (error.response?.status === 401) {
+        return rejectWithValue("Authentication failed. Please login again.");
+      }
+      
+      return rejectWithValue(error?.response?.data?.message || error.message || "Failed to fetch freelancers");
     }
   }
 );

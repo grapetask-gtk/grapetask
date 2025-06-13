@@ -5,10 +5,11 @@ const initialState = {
   isLoading: false,
   isLoadingCreate: false,
   isLoadingBuyerList: false,
+  bdListLoading: false, // New loading state
   getError: null,
   requestDetail: [],
   requestClientList: [],
-  bdList: [], // New field to store BD list
+  bdList: [],
 };
 
 const BuyerSlice = createSlice({
@@ -34,6 +35,12 @@ const BuyerSlice = createSlice({
     stopLoadingBuyerList: (state) => {
       state.isLoadingBuyerList = false;
     },
+    startLoadingBds: (state) => {
+      state.bdListLoading = true;
+    },
+    stopLoadingBds: (state) => {
+      state.bdListLoading = false;
+    },
 
     // Error handling
     hasGetError: (state, action) => {
@@ -49,11 +56,14 @@ const BuyerSlice = createSlice({
       state.requestClientList = action.payload;
       state.getError = null;
     },
-    // New reducer to store BD list
     getBdsSuccess: (state, action) => {
-      state.bdList = action.payload;
+      state.bdList = action.payload.data || []; // Access data array
       state.getError = null;
+      state.bdListLoading = false;
     },
+    getBdsFailure: (state) => {
+      state.bdListLoading = false;
+    }
   },
 });
 
@@ -64,10 +74,13 @@ export const {
   stopLoadingCreate,
   startLoadingBuyerList,
   stopLoadingBuyerList,
+  startLoadingBds,
+  stopLoadingBds,
   hasGetError,
   getUserDetailsSuccess,
   getClientDetail,
-  getBdsSuccess, // Exporting new action
+  getBdsSuccess,
+  getBdsFailure
 } = BuyerSlice.actions;
 
 export default BuyerSlice.reducer;
@@ -127,7 +140,6 @@ export const getBuyerRequest = () => async (dispatch) => {
 };
 
 export const getBdBuyerRequest = () => async (dispatch) => {
-
   const accessToken = localStorage.getItem('accessToken');
 
   if (!accessToken) {
@@ -159,21 +171,18 @@ export const getBds = () => async (dispatch) => {
     return;
   }
 
-  dispatch(startLoading());
+  dispatch(startLoadingBds());
 
   try {
     const response = await axios.get('/bds', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
-    // Dispatch new action for BD list
-    console.log('bds list  ',response.data);
     dispatch(getBdsSuccess(response.data));
   } catch (error) {
     const errorMessage = error.response?.data?.message || error.message;
     dispatch(hasGetError(errorMessage));
-  } finally {
-    dispatch(stopLoading());
+    dispatch(getBdsFailure());
   }
 };
 
