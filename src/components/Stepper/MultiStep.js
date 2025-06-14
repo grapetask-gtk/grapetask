@@ -1,17 +1,13 @@
-import * as React from "react";
 import Box from "@mui/material/Box";
-import Stepper from "@mui/material/Stepper";
+import Button from "@mui/material/Button";
 import Step from "@mui/material/Step";
 import StepLabel from "@mui/material/StepLabel";
-import Button from "@mui/material/Button";
+import Stepper from "@mui/material/Stepper";
 import Typography from "@mui/material/Typography";
-import StepOne from "./StepOne";
-import StepTwo from "./StepTwo";
-import StepThree from "./StepThree";
-import StepFour from "./StepFour";
-import StepFive from "./StepFive";
-import StepSix from "./StepSix";
+import * as React from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Spinner } from "reactstrap";
 import {
   Description,
   GigDescriptionUpdate,
@@ -29,8 +25,12 @@ import {
   userGallery,
 } from "../../redux/slices/gigsSlice";
 import { useDispatch, useSelector } from "../../redux/store/store";
-import { Spinner } from "reactstrap";
-import { useState } from "react";
+import StepFive from "./StepFive";
+import StepFour from "./StepFour";
+import StepOne from "./StepOne";
+import StepSix from "./StepSix";
+import StepThree from "./StepThree";
+import StepTwo from "./StepTwo";
 
 const steps = [
   "Overview",
@@ -224,23 +224,10 @@ React.useEffect(() => {
     setCategory(gigData.category_id.toString());
     setSubCategory(gigData.subcategory_id.toString());
 
-<<<<<<< HEAD
     // ✅ Robust tags parser (string, array, or JSON-stringified array)
     let tags = [];
     const rawTags = gigData.tags;
 
-=======
-React.useEffect(() => {
-  if (gigData) {
-    setGigTitle(gigData.title);
-    setCategory(gigData.category_id.toString());
-    setSubCategory(gigData.subcategory_id.toString());
-
-    // ✅ Robust tags parser (string, array, or JSON-stringified array)
-    let tags = [];
-    const rawTags = gigData.tags;
-
->>>>>>> a9365fb85cf7632e467a58a02e33b27bf53cfda5
     if (rawTags) {
       if (Array.isArray(rawTags)) {
         tags = rawTags;
@@ -322,10 +309,6 @@ React.useEffect(() => {
     addImagesFromPaths(imagePaths);
   }
 }, []);
-<<<<<<< HEAD
-
-=======
->>>>>>> a9365fb85cf7632e467a58a02e33b27bf53cfda5
   const handleNext = (e) => {
     e.preventDefault();
 

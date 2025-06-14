@@ -13,41 +13,46 @@ import {
 import doubl from "../assets/doubletick.webp";
 import emptyProfile from "../assets/emptyProfileModal.webp";
 import pen from "../assets/pen.webp";
-import { TagsAdd, usergetsTags } from "../redux/slices/dashboardSlice";
+// Fixed imports - using the correct exports from dashboardSlice
+import { addUserTag, fetchUserActivities, fetchUserStats, fetchUserTags } from "../redux/slices/dashboardSlice";
 import { profileUpdate, userProfile } from "../redux/slices/profileSlice";
 import { useDispatch, useSelector } from "../redux/store/store";
 
 const Dashboardright = () => {
   const dispatch = useDispatch();
   const { userDetail } = useSelector((state) => state.profile);
-  const { tagsList, isLoading } = useSelector((state) => state.dashboard);
+  const { tagsList, isLoading, userStats, activities } = useSelector((state) => state.dashboard);
   const UserData = JSON.parse(localStorage.getItem("UserData"));
 
   // Get user role from userDetail or UserData
   const userRole = userDetail?.role || UserData?.role || "client";
 
-  // Role-based dummy percentages for circular progress bars
+  // Real progress data from userStats
   const getProgressData = () => {
+    if (!userStats) {
+      return { percentage1: 0, percentage2: 0, percentage3: 0 };
+    }
+
     switch (userRole.toLowerCase()) {
       case "expert/freelancer":
         return {
-          percentage1: 85, // Project Success Ratio
-          percentage2: 12, // Total Orders
-          percentage3: 10, // Complete Orders
+          percentage1: userStats.projectSuccessRatio || 0,
+          percentage2: userStats.totalOrders || 0,
+          percentage3: userStats.completeOrders || 0,
         };
       case "bd":
       case "bidder/company representative/middleman":
         return {
-          percentage1: 92, // Client Conversion Rate
-          percentage2: 25, // Total Leads
-          percentage3: 23, // Converted Leads
+          percentage1: userStats.clientConversionRate || 0,
+          percentage2: userStats.totalLeads || 0,
+          percentage3: userStats.convertedLeads || 0,
         };
-      case "Client":
+      case "client":
       default:
         return {
-          percentage1: 0, // Projects Posted
-          percentage2: 0, // Active Projects
-          percentage3: 0, // Completed Projects
+          percentage1: userStats.projectsPosted || 0,
+          percentage2: userStats.activeProjects || 0,
+          percentage3: userStats.completedProjects || 0,
         };
     }
   };
@@ -71,12 +76,16 @@ const Dashboardright = () => {
     }
   };
 
-  // Fetch user profile on mount and update first name
+  // Fetch user profile and stats on mount
   useEffect(() => {
     const data = {
       device_token: "123456789",
     };
     dispatch(userProfile(data));
+    // Fetch user statistics - Fixed function calls
+    dispatch(fetchUserStats());
+    // Fetch user activities - Fixed function calls
+    dispatch(fetchUserActivities());
   }, [dispatch]);
 
   useEffect(() => {
@@ -98,7 +107,8 @@ const Dashboardright = () => {
     let data = {
       skill: tags,
     };
-    dispatch(TagsAdd(data, handleResponseTagsAdd));
+    // Fixed function call - using addUserTag instead of TagsAdd
+    dispatch(addUserTag(data, handleResponseTagsAdd));
   };
   const handleResponseTagsAdd = (data) => {
     if (data?.status) {
@@ -110,7 +120,8 @@ const Dashboardright = () => {
 
   useEffect(() => {
     if (userRole.toLowerCase() === "expert/freelancer" || userRole.toLowerCase() === "bidder/company representative/middleman") {
-      dispatch(usergetsTags());
+      // Fixed function call - using fetchUserTags instead of usergetsTags
+      dispatch(fetchUserTags());
     }
   }, [dispatch, userRole]);
 
@@ -209,8 +220,12 @@ const Dashboardright = () => {
 
   const { label1, label2, label3 } = getProgressLabels();
 
-  // Role-based orders section
+  // Role-based orders section with real data
   const renderOrdersSection = () => {
+    if (!userStats) {
+      return <div>Loading...</div>;
+    }
+
     switch (userRole.toLowerCase()) {
       case "expert/freelancer":
         return (
@@ -222,7 +237,7 @@ const Dashboardright = () => {
                   <p className="font-18 font-500 poppins blackcolor">Active orders</p>
                 </div>
                 <div>
-                  <p className="font-18 font-500 poppins">2</p>
+                  <p className="font-18 font-500 poppins">{userStats.activeOrders || 0}</p>
                 </div>
               </div>
               <hr />
@@ -233,7 +248,7 @@ const Dashboardright = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="font-18 font-500 poppins">$1,250</p>
+                  <p className="font-18 font-500 poppins">${userStats.monthlyEarnings || 0}</p>
                 </div>
               </div>
               <hr />
@@ -242,7 +257,7 @@ const Dashboardright = () => {
                   <p className="font-18 font-500 poppins">Total Earnings</p>
                 </div>
                 <div>
-                  <p className="font-18 font-500 poppins">$8,750</p>
+                  <p className="font-18 font-500 poppins">${userStats.totalEarnings || 0}</p>
                 </div>
               </div>
             </div>
@@ -260,7 +275,7 @@ const Dashboardright = () => {
                   <p className="font-18 font-500 poppins blackcolor">Active Leads</p>
                 </div>
                 <div>
-                  <p className="font-18 font-500 poppins">15</p>
+                  <p className="font-18 font-500 poppins">{userStats.activeLeads || 0}</p>
                 </div>
               </div>
               <hr />
@@ -271,7 +286,7 @@ const Dashboardright = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="font-18 font-500 poppins">8</p>
+                  <p className="font-18 font-500 poppins">{userStats.monthlyConversions || 0}</p>
                 </div>
               </div>
               <hr />
@@ -280,7 +295,7 @@ const Dashboardright = () => {
                   <p className="font-18 font-500 poppins">Revenue Generated</p>
                 </div>
                 <div>
-                  <p className="font-18 font-500 poppins">$25,400</p>
+                  <p className="font-18 font-500 poppins">${userStats.revenueGenerated || 0}</p>
                 </div>
               </div>
             </div>
@@ -298,7 +313,7 @@ const Dashboardright = () => {
                   <p className="font-18 font-500 poppins blackcolor">Active Projects</p>
                 </div>
                 <div>
-                  <p className="font-18 font-500 poppins">0</p>
+                  <p className="font-18 font-500 poppins">{userStats.activeProjects || 0}</p>
                 </div>
               </div>
               <hr />
@@ -309,7 +324,7 @@ const Dashboardright = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="font-18 font-500 poppins">$0</p>
+                  <p className="font-18 font-500 poppins">${userStats.monthlySpent || 0}</p>
                 </div>
               </div>
               <hr />
@@ -318,13 +333,54 @@ const Dashboardright = () => {
                   <p className="font-18 font-500 poppins">Total Projects</p>
                 </div>
                 <div>
-                  <p className="font-18 font-500 poppins">0</p>
+                  <p className="font-18 font-500 poppins">{userStats.totalProjects || 0}</p>
                 </div>
               </div>
             </div>
           </div>
         );
     }
+  };
+
+  // Render activities with real data
+  const renderActivities = () => {
+    if (!activities || activities.length === 0) {
+      return (
+        <div
+          className="d-flex rounded-4 px-3 mt-2 p-2 align-items-center"
+          style={{ border: "1.5px solid #AC9E9E" }}
+        >
+          <div>
+            <img src={doubl} width={45} height={45} alt="Activity" />
+          </div>
+          <div>
+            <h6 className="ms-2 font-14 poppins mb-0">
+              No Activities Found :)
+            </h6>
+          </div>
+        </div>
+      );
+    }
+
+    return activities.slice(0, 3).map((activity, index) => (
+      <div
+        key={index}
+        className="d-flex rounded-4 px-3 mt-2 p-2 align-items-center"
+        style={{ border: "1.5px solid #AC9E9E" }}
+      >
+        <div>
+          <img src={activity.icon || doubl} width={45} height={45} alt="Activity" />
+        </div>
+        <div>
+          <h6 className="ms-2 font-14 poppins mb-0">
+            {activity.description}
+          </h6>
+          <p className="ms-2 font-12 poppins text-muted mb-0">
+            {new Date(activity.createdAt).toLocaleDateString()}
+          </p>
+        </div>
+      </div>
+    ));
   };
 
   // Role-based skills section visibility
@@ -367,7 +423,7 @@ const Dashboardright = () => {
           <div className="Revie">
             <div className="text-center">
               <img
-                src={UserData?.image ? UserData?.image : emptyProfile}
+                src={userDetail?.image || UserData?.image || emptyProfile}
                 className="rounded-circle"
                 width={120}
                 height={120}
@@ -442,19 +498,7 @@ const Dashboardright = () => {
                   <p className="font-16 poppins colororing">See All</p>
                 </div>
               </div>
-              <div
-                className="d-flex rounded-4 px-3 mt-2 p-2 align-items-center"
-                style={{ border: "1.5px solid #AC9E9E" }}
-              >
-                <div>
-                  <img src={doubl} width={45} height={45} alt="Activity" />
-                </div>
-                <div>
-                  <h6 className="ms-2 font-14 poppins mb-0">
-                    No Activities Found :)
-                  </h6>
-                </div>
-              </div>
+              {renderActivities()}
             </div>
             <div className="d-flex mt-5 pb-5 text-center poppins">
               {/* Additional Dashboard Content */}

@@ -1,130 +1,183 @@
-import { createSlice } from '@reduxjs/toolkit'
-import { dispatch } from '../store/store'
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from '../../utils/axios';
+
+// ------------------ Async Thunks ------------------
+
+// Fetch user stats
+export const fetchUserStats = createAsyncThunk(
+  'dashboard/fetchUserStats',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetch('/api/user/stats', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch user stats');
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Fetch user activities
+export const fetchUserActivities = createAsyncThunk(
+  'dashboard/fetchUserActivities',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetch('/api/user/activities', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch user activities');
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Add user tags
+export const addUserTag = createAsyncThunk(
+  'dashboard/addUserTag',
+  async ({ data }, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await axios.post('skill', data, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.data.status) {
+        return rejectWithValue(response?.data?.message || 'Tag add failed');
+      }
+
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error?.message || 'Something went wrong');
+    }
+  }
+);
+
+// Get user tags
+export const fetchUserTags = createAsyncThunk(
+  'dashboard/fetchUserTags',
+  async (_, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await axios.get('skill', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error?.message || 'Failed to fetch tags');
+    }
+  }
+);
+
+// ------------------ Initial State ------------------
 
 const initialState = {
   isLoading: false,
   isLoadingSkills: false,
   getError: null,
-  tagsList : [],
+  tagsList: [],
   userDetail: {},
-}
+  userStats: null,
+  activities: [],
+  error: null,
+};
+
+// ------------------ Slice ------------------
 
 const dashboardSlice = createSlice({
   name: 'dashboard',
   initialState,
   reducers: {
-    //START LOADING
-    startLoading(state) {
-      state.isLoading = true
+    resetErrors(state) {
+      state.getError = null;
+      state.error = null;
     },
-    startLoadingSkills(state) {
-      state.isLoadingSkills = true
-    },
-    stopLoadingSkills(state) {
-      state.isLoadingSkills = false
-    },
-    //STOP LOADING
-    stopLoading(state) {
-      state.isLoading = false
-      state.isLoadingSkills = false
-    },
-    //HAS CREATE ERROR
-    hasCreateError(state, action) {
-      state.isLoading = false
-      state.isLoadingSkills = false
-
-      state.createError = action.payload
-    },
-    //UPDATE ERROR
-    hasUpdateError(state, action) {
-      state.isLoading = false
-      state.isLoadingSkills = false
-
-      state.updateError = action.payload
-    },
-    // HAS UPDATE ERROR
-    hasGetError(state, action) {
-      state.isLoading = false
-      state.isLoadingSkills = false
-
-      state.getError = action.payload
-    },
-
-    // HAS UPDATE ERROR
-    hasDeleteError(state, action) {
-      state.isLoading = false;
-      state.isLoadingSkills = false
-
-      state.deleteError = action.payload
-    },
-
-
-    // GET User DETAILS
-    getTagsSuccess(state, action) {
-      state.isLoading = false;
-      state.isLoadingSkills = false
-      state.tagsList = action.payload
-    },
-    // GET User DETAILS
-    getUserDetailsSuccess(state, action) {
-      state.isLoading = false;
-      state.isLoadingSkills = false
-      state.userDetail = action.payload
+    setUserDetail(state, action) {
+      state.userDetail = action.payload;
     },
   },
-})
-export const { getUserDetailsSuccess } = dashboardSlice.actions;
-export default dashboardSlice.reducer
+  extraReducers: (builder) => {
+    builder
 
-// User Functions
+      // ====== Fetch User Stats ======
+      .addCase(fetchUserStats.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchUserStats.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.userStats = action.payload;
+      })
+      .addCase(fetchUserStats.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
 
-//User TagsAdd
-export function TagsAdd(data, handleClose) {
-  return async () => {
-    let accessToken = localStorage.getItem('accessToken')
-    dispatch(dashboardSlice.actions.startLoading());
-    try {
-      const response = await axios.post('skill',
-        data, {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + accessToken
+      // ====== Fetch User Activities ======
+      .addCase(fetchUserActivities.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchUserActivities.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.activities = action.payload;
+      })
+      .addCase(fetchUserActivities.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
 
-        }
+      // ====== Add Tag ======
+      .addCase(addUserTag.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(addUserTag.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.userDetail = action.payload; // Assuming response returns user detail
+      })
+      .addCase(addUserTag.rejected, (state, action) => {
+        state.isLoading = false;
+        state.getError = action.payload;
+      })
+
+      // ====== Fetch Tags ======
+      .addCase(fetchUserTags.pending, (state) => {
+        state.isLoadingSkills = true;
+      })
+      .addCase(fetchUserTags.fulfilled, (state, action) => {
+        state.isLoadingSkills = false;
+        state.tagsList = action.payload;
+      })
+      .addCase(fetchUserTags.rejected, (state, action) => {
+        state.isLoadingSkills = false;
+        state.getError = action.payload;
       });
-      handleClose(response.data);
-      if (!response.data.status) {
-        dispatch(dashboardSlice.actions.hasGetError(response?.data?.message));
-      }
-      // console.log(JSON.stringify(response?.data?.data))
-      dispatch(dashboardSlice.actions.getUserDetailsSuccess(response.data.data));
-    } catch (error) {
-      handleClose(error);
-      dispatch(dashboardSlice.actions.hasGetError(error?.message));
-    }
-  };
-}
+  },
+});
 
-//Get User Details
-export function usergetsTags() {
-  return async () => {
-    let accessToken = localStorage.getItem('accessToken')
-    dispatch(dashboardSlice.actions.startLoadingSkills());
-    try {
-      const response = await axios.get('skill', {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + accessToken
-        }
-      });
-// console.log(response.data.data);
-      dispatch(dashboardSlice.actions.getTagsSuccess(response.data.data));
-    } catch (error) {
+// ------------------ Exports ------------------
 
-      dispatch(dashboardSlice.actions.hasGetError(error?.message));
-    }
-  };
-}
+export const { resetErrors, setUserDetail } = dashboardSlice.actions;
+export default dashboardSlice.reducer;
