@@ -17,15 +17,12 @@ const WelcomeModal = () => {
   return (
     <Modal show={showModal} onHide={handleClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Welcome to GrapeTask!</Modal.Title>
+        <Modal.Title>GrapeTask is Now Live!</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <p>
-          Please bear with us as the website is currently under development. Our
-          team of developers is diligently working on it. You may encounter
-          errors while using the system or find that some functions appear
-          incomplete. We appreciate your patience and understanding. Please subscribe to our newsletter to stay informed.
-          <br/><a onClick={()=>handleClose()} href="#subscribe">Subscribe Now</a>
+        
+Our platform has officially launched! Explore all features, and let us know your feedback. We’re committed to continuously improving your experience.
         </p>
       </Modal.Body>
     </Modal>
