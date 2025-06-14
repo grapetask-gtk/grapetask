@@ -265,7 +265,7 @@ const StepTwo = ({
       </div>
     ),
     createData(
-      "Ravision",
+      "Revision",
       <>
         <input
           value={ravisionBasic}
