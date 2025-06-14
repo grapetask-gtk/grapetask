@@ -224,23 +224,10 @@ React.useEffect(() => {
     setCategory(gigData.category_id.toString());
     setSubCategory(gigData.subcategory_id.toString());
 
-<<<<<<< HEAD
     // ✅ Robust tags parser (string, array, or JSON-stringified array)
     let tags = [];
     const rawTags = gigData.tags;
 
-=======
-React.useEffect(() => {
-  if (gigData) {
-    setGigTitle(gigData.title);
-    setCategory(gigData.category_id.toString());
-    setSubCategory(gigData.subcategory_id.toString());
-
-    // ✅ Robust tags parser (string, array, or JSON-stringified array)
-    let tags = [];
-    const rawTags = gigData.tags;
-
->>>>>>> a9365fb85cf7632e467a58a02e33b27bf53cfda5
     if (rawTags) {
       if (Array.isArray(rawTags)) {
         tags = rawTags;
@@ -322,10 +309,6 @@ React.useEffect(() => {
     addImagesFromPaths(imagePaths);
   }
 }, []);
-<<<<<<< HEAD
-
-=======
->>>>>>> a9365fb85cf7632e467a58a02e33b27bf53cfda5
   const handleNext = (e) => {
     e.preventDefault();
 
