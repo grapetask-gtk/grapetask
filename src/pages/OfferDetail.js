@@ -21,14 +21,16 @@ const OfferDetail = () => {
   }, [dispatch, id]);
 
 const handleAccept = (offerId) => {
+  // 🪟 Open window early to avoid popup blockers
+  const win = window.open('', '_blank');
+
   dispatch(
     AcceptOfferRequest({ offerId }, (res) => {
       if (res?.status) {
         setToast({ show: true, message: "Offer accepted successfully!" });
 
-        // 🔁 Open JazzCash payment form in new tab
-        if (res.data?.payment_form_html) {
-          const win = window.open('', '_blank');
+        // ✅ Now safe to write to the window
+        if (res.data?.payment_form_html && win) {
           win.document.open();
           win.document.write(res.data.payment_form_html);
           win.document.close();
@@ -38,10 +40,12 @@ const handleAccept = (offerId) => {
         dispatch(getBuyerOfferRequest({ requestId: id }));
       } else {
         setToast({ show: true, message: res?.message || "Offer acceptance failed!" });
+        if (win) win.close(); // Close empty tab if failed
       }
     })
   );
 };
+
 
 
 const handleReject = (offerId) => {

@@ -1,6 +1,6 @@
-import { createSlice } from '@reduxjs/toolkit'
-import { dispatch } from '../store/store'
+import { createSlice } from '@reduxjs/toolkit';
 import axios from '../../utils/axios';
+import { dispatch } from '../store/store';
 
 const initialState = {
   isLoading: false,
@@ -8,127 +8,134 @@ const initialState = {
   updateError: null,
   getError: null,
   deleteError: null,
+  phoneError: null,
+  otpError: null,
   userList: [],
   userDetail: {},
-  myReferrals:[],
-}
+  myReferrals: [],
+  phoneVerificationLoading: false,
+  otpVerificationLoading: false,
+};
 
 const profileSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    //START LOADING
+    // START LOADING
     startLoading(state) {
-      state.isLoading = true
+      state.isLoading = true;
     },
-    //STOP LOADING
+    // STOP LOADING
     stopLoading(state) {
-      state.isLoading = false
+      state.isLoading = false;
     },
-    //HAS CREATE ERROR
+    // HAS CREATE ERROR
     hasCreateError(state, action) {
-      state.isLoading = false
-      state.createError = action.payload
+      state.isLoading = false;
+      state.createError = action.payload;
     },
-    //UPDATE ERROR
+    // UPDATE ERROR
     hasUpdateError(state, action) {
-      state.isLoading = false
-      state.updateError = action.payload
+      state.isLoading = false;
+      state.updateError = action.payload;
     },
-    // HAS UPDATE ERROR
+    // HAS GET ERROR
     hasGetError(state, action) {
-      state.isLoading = false
-      state.getError = action.payload
+      state.isLoading = false;
+      state.getError = action.payload;
     },
-
-    // HAS UPDATE ERROR
+    // HAS DELETE ERROR
     hasDeleteError(state, action) {
       state.isLoading = false;
-      state.deleteError = action.payload
+      state.deleteError = action.payload;
+    },
+    // PHONE VERIFICATION LOADING
+    startPhoneVerificationLoading(state) {
+      state.phoneVerificationLoading = true;
+      state.phoneError = null;
+    },
+    // PHONE VERIFICATION ERROR
+    hasPhoneError(state, action) {
+      state.phoneVerificationLoading = false;
+      state.phoneError = action.payload;
+    },
+    // OTP VERIFICATION LOADING
+    startOtpVerificationLoading(state) {
+      state.otpVerificationLoading = true;
+      state.otpError = null;
+    },
+    // OTP VERIFICATION ERROR
+    hasOtpError(state, action) {
+      state.otpVerificationLoading = false;
+      state.otpError = action.payload;
     },
     // GET User Success
     getUsersSuccess(state, action) {
       state.isLoading = false;
-      state.userList = action.payload
+      state.userList = action.payload;
     },
-
     // GET User DETAILS
     getUserDetailsSuccess(state, action) {
       state.isLoading = false;
-      state.userDetail = action.payload
+      state.userDetail = action.payload;
     },
     getMyReferralSuccess(state, action) {
       state.isLoading = false;
-      state.myReferrals = action.payload
+      state.myReferrals = action.payload;
+    },
+    // Clear phone errors
+    clearPhoneErrors(state) {
+      state.phoneError = null;
+    },
+    // Clear OTP errors
+    clearOtpErrors(state) {
+      state.otpError = null;
     },
   },
-})
-export const { getUserDetailsSuccess } = profileSlice.actions;
-export default profileSlice.reducer
+});
+
+export const { 
+  getUserDetailsSuccess,
+  clearPhoneErrors,
+  clearOtpErrors 
+} = profileSlice.actions;
+
+export default profileSlice.reducer;
 
 // User Functions
 
-//User profileUpdate
-// export function profileUpdate(data, handleClose) {
-//   return async () => {
-//     let accessToken = localStorage.getItem('accessToken')
-
-//     dispatch(profileSlice.actions.startLoading());
-//     try {
-//       const response = await axios.post('update-profile',
-//         data, {
-//           headers: {
-//             'Accept': 'application/json',
-//             'Content-Type': 'application/json',
-//             'Authorization': 'Bearer ' + accessToken
-
-//           }
-//       });
-//       handleClose(response.data);
-//       if (!response.data.status) {
-//         dispatch(profileSlice.actions.hasGetError(response?.data?.message));
-//       }
-//       // console.log(JSON.stringify(response?.data?.data))
-//       dispatch(profileSlice.actions.getUserDetailsSuccess(response.data.data));
-//     } catch (error) {
-//       handleClose(error);
-//       dispatch(profileSlice.actions.hasGetError(error?.message));
-//     }
-//   };
-// }
-//User profileUpdate
+// User profile
 export function userProfile(data) {
   return async () => {
-    let accessToken = localStorage.getItem('accessToken')
+    let accessToken = localStorage.getItem('accessToken');
 
     dispatch(profileSlice.actions.startLoading());
     try {
-      const response = await axios.post('profile',
-        data, {
+      const response = await axios.post('profile', data, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + accessToken
         }
       });
-      // handleClose(response.data);
+      
       if (!response.data.status) {
         dispatch(profileSlice.actions.hasGetError(response?.data?.message));
       }
-      // console.log(JSON.stringify(response?.data?.data))
       dispatch(profileSlice.actions.getUserDetailsSuccess(response.data.data));
       dispatch(profileSlice.actions.getMyReferralSuccess(response.data.referralList));
 
     } catch (error) {
-      // handleClose(error);
       dispatch(profileSlice.actions.hasGetError(error?.message));
     }
   };
 }
+
+// Profile update
 export function profileUpdate(data, handleClose) {
   return async () => {
-    let accessToken = localStorage.getItem('accessToken')
-console.log(accessToken,'=========================================profile slice');
+    let accessToken = localStorage.getItem('accessToken');
+
     dispatch(profileSlice.actions.startLoading());
     try {
       const formData = new FormData();
@@ -153,7 +160,6 @@ console.log(accessToken,'=========================================profile slice'
       if (!response.data.status) {
         dispatch(profileSlice.actions.hasGetError(response?.data?.message));
       }
-      console.log(JSON.stringify(response?.data?.data));
       dispatch(profileSlice.actions.getUserDetailsSuccess(response.data.data));
     } catch (error) {
       handleClose(error);
@@ -161,27 +167,25 @@ console.log(accessToken,'=========================================profile slice'
     }
   };
 }
-// ----------Change--Password----------
+
+// Change Password
 export function profileChangePassword(data, handleClose) {
   return async () => {
-    let accessToken = localStorage.getItem('accessToken')
+    let accessToken = localStorage.getItem('accessToken');
 
     dispatch(profileSlice.actions.startLoading());
     try {
-      const response = await axios.post('change-password',
-        data, {
+      const response = await axios.post('change-password', data, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + accessToken
-
         }
       });
       handleClose(response.data);
       if (!response.data.status) {
         dispatch(profileSlice.actions.hasGetError(response?.data?.message));
       }
-      // console.log(JSON.stringify(response?.data?.data))
       dispatch(profileSlice.actions.getUserDetailsSuccess(response.data.data));
     } catch (error) {
       handleClose(error);
@@ -189,10 +193,70 @@ export function profileChangePassword(data, handleClose) {
     }
   };
 }
-//Get Email  Verify
+
+// Send Phone OTP
+export function sendPhoneOTP(data) {
+  return async () => {
+    let accessToken = localStorage.getItem('accessToken');
+
+    dispatch(profileSlice.actions.startPhoneVerificationLoading());
+    try {
+      const response = await axios.post('send-phone-otp', data, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + accessToken
+        }
+      });
+
+      if (!response.data.status) {
+        dispatch(profileSlice.actions.hasPhoneError(response?.data?.message));
+        return Promise.reject(response?.data?.message);
+      }
+
+      dispatch(profileSlice.actions.stopLoading());
+      return Promise.resolve(response.data);
+    } catch (error) {
+      dispatch(profileSlice.actions.hasPhoneError(error?.message));
+      return Promise.reject(error?.message);
+    }
+  };
+}
+
+// Verify Phone OTP
+export function verifyPhoneOTP(data, handleClose) {
+  return async () => {
+    let accessToken = localStorage.getItem('accessToken');
+
+    dispatch(profileSlice.actions.startOtpVerificationLoading());
+    try {
+      const response = await axios.post('verify-phone-otp', data, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + accessToken
+        }
+      });
+
+      if (!response.data.status) {
+        dispatch(profileSlice.actions.hasOtpError(response?.data?.message));
+        handleClose(response.data);
+        return;
+      }
+
+      dispatch(profileSlice.actions.getUserDetailsSuccess(response.data.data));
+      handleClose(response.data);
+    } catch (error) {
+      dispatch(profileSlice.actions.hasOtpError(error?.message));
+      handleClose(error);
+    }
+  };
+}
+
+// Get Email Verify (existing)
 export function getPhoneNumberVer() {
   return async () => {
-    let accessToken = localStorage.getItem('accessToken')
+    let accessToken = localStorage.getItem('accessToken');
     dispatch(profileSlice.actions.startLoading());
     try {
       const response = await axios.get('send-otp', {
@@ -202,35 +266,31 @@ export function getPhoneNumberVer() {
           'Authorization': 'Bearer ' + accessToken
         }
       });
-
       dispatch(profileSlice.actions.getUserDetailsSuccess(response.data.data));
     } catch (error) {
-
       dispatch(profileSlice.actions.hasGetError(error?.message));
     }
   };
 }
-// -----Otp---Verify----
+
+// OTP Verify (existing)
 export function PrifileOtp(data, handleClose) {
   return async () => {
-    let accessToken = localStorage.getItem('accessToken')
+    let accessToken = localStorage.getItem('accessToken');
 
     dispatch(profileSlice.actions.startLoading());
     try {
-      const response = await axios.post('verify-otp',
-        data, {
+      const response = await axios.post('verify-otp', data, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + accessToken
-
         }
       });
       handleClose(response.data);
       if (!response.data.status) {
         dispatch(profileSlice.actions.hasGetError(response?.data?.message));
       }
-      // console.log(JSON.stringify(response?.data?.data))
       dispatch(profileSlice.actions.getUserDetailsSuccess(response.data.data));
     } catch (error) {
       handleClose(error);

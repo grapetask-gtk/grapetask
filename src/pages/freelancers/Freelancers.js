@@ -1,6 +1,8 @@
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { BsChevronLeft } from "react-icons/bs";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import videoImg from "../../assets/blogVideoImg.webp";
 import Loader from "../../assets/LoaderImg.gif";
@@ -10,16 +12,36 @@ import video2 from "../../assets/video/Freelance3.mp4";
 import video3 from "../../assets/video/Freelance8.mp4";
 import video1 from "../../assets/video/Freelance9.mp4";
 import videoPlay from "../../assets/VideoPlay.webp";
-import ExpertCard from "../../components/ExpertCard"; // New component import
+import ExpertCard from "../../components/ExpertCard";
 import GigCard from "../../components/GigCard";
 import Navbar from "../../components/Navbar";
-import HireExpert from "../../pages/HireExpert";
+import Profilreviw from "../../components/Profilreviw";
 import { geAllGigs } from "../../redux/slices/allGigsSlice";
 import { getBds } from "../../redux/slices/buyerRequestSlice";
 import { getCategory } from "../../redux/slices/gigsSlice";
 import { getAllFreelancers } from "../../redux/slices/userSlice";
-import { useDispatch, useSelector } from "../../redux/store/store";
 import { paginateArray } from "../../utils/helpers";
+
+// Utility functions
+const stripHtmlTags = (html) => {
+  if (!html) return "";
+  return html.replace(/<[^>]*>?/gm, '');
+};
+
+const normalizeRole = (role) => {
+  if (!role) return "";
+  return role.toLowerCase().trim();
+};
+
+const getUserData = () => {
+  try {
+    const userData = localStorage.getItem("UserData");
+    return userData ? JSON.parse(userData) : null;
+  } catch (error) {
+    console.error("Error parsing user data:", error);
+    return null;
+  }
+};
 
 // UserCard component for displaying BDs and Experts
 const UserCard = ({ user, type, canOrder, userRole }) => {
@@ -35,7 +57,6 @@ const UserCard = ({ user, type, canOrder, userRole }) => {
     }
   };
 
-  // Get display name based on user data
   const displayName = user.name || user.username || (type === "bds" ? "Business Developer" : "Expert");
 
   return (
@@ -110,103 +131,93 @@ const UserCard = ({ user, type, canOrder, userRole }) => {
   );
 };
 
-// Helper to strip HTML tags (safe for SSR)
-const stripHtmlTags = (html) => {
-  if (!html) return "";
-  return html.replace(/<[^>]*>?/gm, '');
-};
-
 const Freelancers = () => {
+  // State management
   const [searchKeyword, setSearchKeyword] = useState("");
   const [selectCategory, setSelectCategory] = useState("");
   const [searchType, setSearchType] = useState("services");
-  
-  // Expert listing states
   const [page, setPage] = useState(1);
+  const [bdPage, setBdPage] = useState(1); // Separate pagination for BDs
   const [limit] = useState(10);
   const [expertDetail, setExpertDetail] = useState(null);
+  const [bdDetail, setBdDetail] = useState(null); // Separate state for BD detail
   const [expertModal, setExpertModal] = useState(false);
+  const [bdModal, setBdModal] = useState(false); // Separate modal for BDs
   
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  
+  // Redux selectors
   const { gigsDetail, isLoading } = useSelector((state) => state.allGigs);
   const { userCategory } = useSelector((state) => state.gig);
-  const { userList, isLoading: loading, getError: error } = useSelector((state) => state.user);
-  const { userDetail, freelancers, isLoading: freelancersLoading } = useSelector((state) => state.user);
+  const { userDetail, userList: freelancers, isLoading: freelancersLoading } = useSelector((state) => state.user);
   const { bdList, bdListLoading } = useSelector((state) => state.buyer);
-  const [showExperts, setShowExperts] = useState(false);
-  const navigate = useNavigate();
 
-  // Get user data safely
-  const getUserData = () => {
-    try {
-      const userData = localStorage.getItem("UserData");
-      return userData ? JSON.parse(userData) : null;
-    } catch (error) {
-      console.error("Error parsing user data:", error);
-      return null;
-    }
-  };
-
+  // User data and role determination
   const UserData = getUserData();
   const userRole = userDetail?.role || UserData?.role || "client";
 
-  // Memoized filtered data for experts based on search keyword
-  const getExpertCurrentData = useCallback(() => {
-    if (!freelancers?.data || freelancers.data.length === 0) return [];
+  // Update the safeGetBdList function
+  const safeGetBdList = () => {
+    if (!bdList) return [];
     
-    // First, filter only experts
-    let experts = freelancers.data.filter(user => {
-      const role = (user.role || "").toLowerCase();
-      return role.includes("expert") || role.includes("freelancer");
-    });
-
-    if (searchKeyword.trim() === '') {
-      return experts;
-    }
+    // Handle different response structures
+    if (Array.isArray(bdList)) return bdList;
+    if (Array.isArray(bdList.data)) return bdList.data;
+    if (Array.isArray(bdList.users)) return bdList.users;
+    if (Array.isArray(bdList.results)) return bdList.results;
     
-    const keyword = searchKeyword.toLowerCase().trim();
-    return experts.filter((item) => {
-      const name = (item.name || item.username || "").toLowerCase();
-      const description = (item.description || item.bio || "").toLowerCase();
-      const skills = (item.skills || "").toLowerCase();
-      const expertise = (item.expertise || "").toLowerCase();
-      
-      return (
-        name.includes(keyword) ||
-        description.includes(keyword) ||
-        skills.includes(keyword) ||
-        expertise.includes(keyword)
-      );
-    });
-  }, [freelancers, searchKeyword]);
+    return [];
+  };
 
-  // Memoized current data and total pages for experts
-  const expertCurrentData = useMemo(() => getExpertCurrentData(), [getExpertCurrentData]);
-  const totalPages = useMemo(() => Math.ceil(expertCurrentData.length / limit), [expertCurrentData.length, limit]);
-  const paginatedExperts = useMemo(() => 
-    paginateArray(expertCurrentData, limit, page), 
-    [expertCurrentData, limit, page]
-  );
+  const safeGetFreelancersList = () => {
+    // Handle different possible data structures
+    if (freelancers?.data && Array.isArray(freelancers.data)) return freelancers.data;
+    if (Array.isArray(freelancers)) return freelancers;
+    if (freelancers?.users && Array.isArray(freelancers.users)) return freelancers.users;
+    if (freelancers?.results && Array.isArray(freelancers.results)) return freelancers.results;
+    return [];
+  };
 
-  useEffect(() => {
-    console.log('freelancers in freelancers page:', freelancers?.data);
-  }, [freelancers]);
-  
-  // Define search options based on user role
+  // Enhanced role checking
+  const isExpertRole = (role) => {
+    if (!role) return false;
+    const normalizedRole = normalizeRole(role);
+    return normalizedRole.includes("expert") || 
+           normalizedRole.includes("expert/freelancer") || 
+           normalizedRole.includes("freelancer") || 
+           normalizedRole.includes("developer") ||
+           normalizedRole.includes("designer") ||
+           normalizedRole.includes("consultant") ||
+           normalizedRole.includes("specialist");
+  };
+
+  const isBdRole = (role) => {
+    if (!role) return false;
+    const normalizedRole = normalizeRole(role);
+    return normalizedRole.includes("bd") ||
+           normalizedRole.includes("business_developer") ||
+           normalizedRole.includes("business developer") ||
+           normalizedRole.includes("bidder") ||
+           normalizedRole.includes("middleman") ||
+           normalizedRole.includes("representative");
+  };
+
+  // Search options based on user role
   const getSearchOptions = useMemo(() => {
-    const role = userRole.toLowerCase();
+    const role = normalizeRole(userRole);
     
     if (role.includes("client")) {
       return [{ value: "services", label: "Search Services" }];
     }
-    if (role.includes("bd") || role.includes("business_developer") || role.includes("bidder/company representative/middleman")) {
+    if (isBdRole(userRole) || role.includes("bidder")) {
       return [
         { value: "services", label: "Search Services" },
         { value: "bds", label: "Search Business Developers" },
         { value: "experts", label: "Search Experts" }
       ];
     }
-    if (role.includes("expert") || role.includes("expert/freelancer")) {
+    if (isExpertRole(userRole)) {
       return [
         { value: "services", label: "Browse Services" },
         { value: "experts", label: "Search Other Experts" }
@@ -218,64 +229,116 @@ const Freelancers = () => {
 
   // Check if user can place orders
   const canPlaceOrders = useMemo(() => {
-    const role = userRole.toLowerCase();
+    const role = normalizeRole(userRole);
     return role.includes("client") || 
-           role.includes("bd") || 
-           role.includes("bidder/company representative/middleman") || 
+           isBdRole(userRole) || 
            role.includes("bidder");
   }, [userRole]);
 
-  // Fetch data based on user role
-  useEffect(() => {
-    let isMounted = true;
+  // Expert filtering with enhanced logic
+  const getExpertCurrentData = useCallback(() => {
+    const freelancerData = safeGetFreelancersList();
     
-    const fetchData = async () => {
-      dispatch(geAllGigs());
-      dispatch(getCategory());
+    if (freelancerData.length === 0) {
+      console.log('No freelancer data available for expert filtering');
+      return [];
+    }
+    
+    // Filter experts with more inclusive logic
+    let experts = freelancerData.filter(user => {
+      const userRole = user.role;
+      const isExpert = isExpertRole(userRole);
       
-      const role = userRole.toLowerCase();
-      if (role.includes("bd") || role.includes("bidder/company representative/middleman") || role.includes("bidder") || role.includes("client")) {
-        dispatch(getBds());
-      }
-      if (role.includes("bd") || role.includes("bidder/company representative/middleman") || role.includes("bidder") || role.includes("expert") || role.includes("freelancer")) {
-        dispatch(getAllFreelancers());
-      }
-    };
+      console.log(`Checking user ${user.name || user.username} - Role: "${userRole}" - Is Expert: ${isExpert}`);
+      return isExpert;
+    });
 
-    if (isMounted) {
-      fetchData();
+    console.log(`Found ${experts.length} experts out of ${freelancerData.length} total users`);
+
+    if (searchKeyword.trim() === '') {
+      return experts;
+    }
+    
+    const keyword = searchKeyword.toLowerCase().trim();
+    return experts.filter((item) => {
+      const name = (
+        item?.name ||
+        item?.username ||
+        item?.user_name ||
+        `${item?.fname || ""} ${item?.lname || ""}`
+      ).toLowerCase();
+
+      const description = (item?.description || item?.bio || "").toLowerCase();
+
+      const skills = Array.isArray(item?.skills)
+        ? item.skills.join(", ").toLowerCase()
+        : (item?.skills || "").toLowerCase();
+
+      const expertise = (item?.expertise || "").toLowerCase();
+
+      return (
+        name.includes(keyword) ||
+        description.includes(keyword) ||
+        skills.includes(keyword) ||
+        expertise.includes(keyword)
+      );
+    });
+  }, [freelancers, searchKeyword]);
+
+  // BD filtering logic
+  const getBdsFilteredData = useCallback(() => {
+    const bds = safeGetBdList();
+    
+    if (bds.length === 0) return [];
+
+    let filteredBds = bds.filter(bd => {
+      // Ensure BD has valid role
+      return isBdRole(bd.role);
+    });
+
+    // Apply search filter
+    if (searchKeyword.trim()) {
+      const keyword = searchKeyword.toLowerCase().trim();
+      filteredBds = filteredBds.filter(bd => {
+        const name = (bd.name || bd.username || "").toLowerCase();
+        const skills = (bd.skills || "").toLowerCase();
+        const bio = (bd.bio || bd.description || "").toLowerCase();
+        
+        return name.includes(keyword) || 
+               skills.includes(keyword) || 
+               bio.includes(keyword);
+      });
     }
 
-    return () => {
-      isMounted = false;
-    };
-  }, [dispatch, userRole]);
+    return filteredBds;
+  }, [safeGetBdList, searchKeyword]);
+  
+  // Expert pagination data
+  const expertCurrentData = useMemo(() => getExpertCurrentData(), [getExpertCurrentData]);
+  const expertTotalPages = useMemo(() => Math.ceil(expertCurrentData.length / limit), [expertCurrentData.length, limit]);
+  const paginatedExperts = useMemo(() => 
+    paginateArray(expertCurrentData, limit, page), 
+    [expertCurrentData, limit, page]
+  );
 
-  // Reset to first page when search query changes
-  useEffect(() => {
-    setPage(1);
-  }, [searchKeyword, searchType]);
+  // BD pagination data
+  const bdCurrentData = useMemo(() => getBdsFilteredData(), [getBdsFilteredData]);
+  const bdTotalPages = useMemo(() => Math.ceil(bdCurrentData.length / limit), [bdCurrentData.length, limit]);
+  const paginatedBDs = useMemo(() => 
+    paginateArray(bdCurrentData, limit, bdPage), 
+    [bdCurrentData, limit, bdPage]
+  );
 
-  // Event handlers for expert pagination
-  const handleChangePagination = useCallback((event, newPage) => {
-    setPage(newPage);
-  }, []);
-
-  const showExpertDetail = useCallback((data) => {
-    setExpertDetail(data);
-    setExpertModal(true);
-  }, []);
-
-  const closeModal = useCallback(() => {
-    setExpertModal(false);
-    setExpertDetail(null);
-  }, []);
-
-  // Filter and search logic
+  // Main filtered data logic
   const filteredData = useMemo(() => {
+    console.log(`Filtering data for searchType: ${searchType}`);
+    
     // Services search
     if (searchType === "services") {
-      if (!gigsDetail?.length) return [];
+      if (!gigsDetail?.length) {
+        console.log('No gigs data available');
+        return [];
+      }
 
       return gigsDetail.map((category) => {
         let filteredGigs = category.gigs || [];
@@ -304,42 +367,57 @@ const Freelancers = () => {
 
     // Business Developers search
     if (searchType === "bds") {
-      if (!bdList?.length) return [];
-      
-      let filteredBds = [...bdList];
-      
-      if (searchKeyword.trim()) {
-        const keyword = searchKeyword.toLowerCase().trim();
-        filteredBds = filteredBds.filter(bd => {
-          const name = (bd.name || bd.username || "").toLowerCase();
-          const skills = (bd.skills || "").toLowerCase();
-          return name.includes(keyword) || skills.includes(keyword);
-        });
-      }
-
-      return [{
-        id: "bds",
-        name: "Business Developers",
-        gigs: filteredBds.map(bd => ({
-          ...bd,
-          id: bd.id || bd.user_id,
-          title: bd.name || bd.username || "Business Developer",
-          description: bd.bio || bd.description || "Experienced Business Developer",
-          skills: bd.skills || "",
-          rating: bd.rating,
-          reviews_count: bd.reviews_count,
-          type: "bd"
-        }))
-      }];
+      return [];
     }
 
-    // Experts search - handled separately now
+    // Experts search - handled separately with pagination
     if (searchType === "experts") {
-          setShowExperts(true);
+      return [];
     }
 
     return [];
-  }, [gigsDetail, bdList, selectCategory, searchKeyword, searchType]);
+  }, [gigsDetail, searchType, selectCategory, searchKeyword]);
+
+  // Data fetching
+  useEffect(() => {
+    let isMounted = true;
+    
+    const fetchData = async () => {
+      console.log('Fetching data for userRole:', userRole);
+      
+      // Always fetch gigs and categories
+      dispatch(geAllGigs());
+      dispatch(getCategory());
+      
+      const role = normalizeRole(userRole);
+      
+      // Fetch BDs if user role allows it
+      if (role.includes("client") || isBdRole(userRole) || role.includes("bidder")) {
+        console.log('Fetching BDs...');
+        dispatch(getBds());
+      }
+      
+      // Fetch freelancers if user role allows it
+      if (isBdRole(userRole) || role.includes("bidder") || isExpertRole(userRole)) {
+        console.log('Fetching freelancers...');
+        dispatch(getAllFreelancers());
+      }
+    };
+
+    if (isMounted) {
+      fetchData();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [dispatch, userRole]);
+
+  // Reset pagination when search changes
+  useEffect(() => {
+    setPage(1);
+    setBdPage(1);
+  }, [searchKeyword, searchType]);
 
   // Carousel autoplay
   useEffect(() => {
@@ -350,11 +428,7 @@ const Freelancers = () => {
 
     return () => clearInterval(interval);
   }, []);
-useEffect(() => {
-  console.log('Freelancers state:', freelancers);
-  console.log('Freelancers data:', freelancers?.data);
-  console.log('Filtered experts:', getExpertCurrentData());
-}, [freelancers, getExpertCurrentData]);
+
   // Event handlers
   const handleSearchSubmit = (e) => e.preventDefault();
   const handleCategoryChange = (e) => setSelectCategory(e.target.value);
@@ -365,6 +439,32 @@ useEffect(() => {
     setSelectCategory("");
   };
 
+  const handleChangeExpertPagination = useCallback((event, newPage) => {
+    setPage(newPage);
+  }, []);
+
+  const handleChangeBdPagination = useCallback((event, newPage) => {
+    setBdPage(newPage);
+  }, []);
+
+  const showExpertDetail = useCallback((data) => {
+    setExpertDetail(data);
+    setExpertModal(true);
+  }, []);
+
+  const showBdDetail = useCallback((data) => {
+    setBdDetail(data);
+    setBdModal(true);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setExpertModal(false);
+    setBdModal(false);
+    setExpertDetail(null);
+    setBdDetail(null);
+  }, []);
+
+  // Helper functions
   const getSearchPlaceholder = () => {
     switch (searchType) {
       case "bds": return "Search Business Developers...";
@@ -374,14 +474,61 @@ useEffect(() => {
   };
 
   const getPageTitle = () => {
-    const role = userRole.toLowerCase();
+    const role = normalizeRole(userRole);
     
     if (role.includes("client")) return "Find the Perfect Service for Your Business";
-    if (role.includes("bd") || role.includes("business_developer") || role.includes("bidder")) return "Connect with Services, BDs, and Experts";
-    if (role.includes("expert") || role.includes("freelancer")) return "Explore Services and Connect with Peers";
+    if (isBdRole(userRole) || role.includes("bidder")) return "Connect with Services, BDs, and Experts";
+    if (isExpertRole(userRole)) return "Explore Services and Connect with Peers";
     
     return "Discover Amazing Services";
   };
+
+  // Debug logging
+  useEffect(() => {
+    console.log('=== DEBUGGING DATA STRUCTURE ===');
+    console.log('bdList:', bdList);
+    console.log('bdList type:', typeof bdList, 'length:', bdList?.length);
+    console.log('bdList first item:', bdList?.[0]);
+    
+    console.log('freelancers:', freelancers);
+    console.log('freelancers.data:', freelancers?.data);
+    console.log('freelancers.data type:', typeof freelancers?.data, 'length:', freelancers?.data?.length);
+    console.log('freelancers.data first item:', freelancers?.data?.[0]);
+    
+    console.log('userRole:', userRole);
+    console.log('searchType:', searchType);
+    
+    console.log('Pagination Debug:', {
+      totalExperts: expertCurrentData.length,
+      paginatedExperts: paginatedExperts.length,
+      currentPage: page,
+      totalPages: expertTotalPages
+    });
+
+    console.log('BD Pagination Debug:', {
+      totalBDs: bdCurrentData.length,
+      paginatedBDs: paginatedBDs.length,
+      currentPage: bdPage,
+      totalPages: bdTotalPages
+    });
+
+    // Log all available roles
+    if (freelancers?.data?.length) {
+      console.log('Available freelancer roles:', freelancers.data.map(user => ({
+        name: user.name || user.username,
+        role: user.role
+      })));
+    }
+    
+    if (bdList?.length) {
+      console.log('Available BD roles:', bdList.map(user => ({
+        name: user.name || user.username,
+        role: user.role
+      })));
+    }
+  }, [bdList, freelancers, userRole, searchType, 
+      expertCurrentData.length, paginatedExperts.length, page, expertTotalPages,
+      bdCurrentData.length, paginatedBDs.length, bdPage, bdTotalPages]);
 
   // Loading states
   const isAnyLoading = isLoading || 
@@ -579,19 +726,18 @@ useEffect(() => {
         </div>
       </div>
 
+      {/* MAIN CONTENT */}
       {isAnyLoading ? (
         <div className="text-center">
           <img src={Loader} width={200} height={200} alt="Loading..." />
         </div>
       ) : searchType === "experts" ? (
-        // EXPERTS SECTION - NEW UI LIKE HIRE EXPERT PAGE
-     
+        // EXPERTS SECTION
         <div className="container haifwhitecard rounded-3 pb-5 px-4 mt-3 pt-5">
           <div className="row">
             <h4 className="font-24 poppins fw-bold pb-2">
               Available Experts
             </h4>
-     <HireExpert/>
             
             {/* Results Summary */}
             <div className="mb-3">
@@ -602,46 +748,160 @@ useEffect(() => {
               </p>
             </div>
             
-            {/* Experts Grid */}
-            {paginatedExperts.length === 0 ? (
+            {/* Debug Info */}
+            <div className="mb-3">
+              <small className="text-info">
+                Debug: Total freelancers loaded: {safeGetFreelancersList().length}, 
+                Filtered experts: {expertCurrentData.length}
+              </small>
+            </div>
+            
+            {/* Freelancers List */}
+            {expertCurrentData?.length > 0 ? (
+              paginatedExperts.map((val, index)  => (
+                <ExpertCard
+                  key={val.id || val._id || index}
+                  user={val}
+                  showExpertDetail={showExpertDetail}
+                />
+              ))
+            ) : (
               <div className="text-center py-5">
-                <h5>No experts found</h5>
+                <h5>No freelancers found</h5>
                 <p className="text-muted">
                   {searchKeyword 
-                    ? `No experts match your search "${searchKeyword}". Try different keywords.`
-                    : "No experts available at the moment."}
+                    ? `No freelancers match your search "${searchKeyword}". Try different keywords.`
+                    : "No freelancers available at the moment."
+                  }
                 </p>
               </div>
+            )}
+
+            {/* Expert Detail Modal */}
+            <div
+              className={`offcanvas offcanvas-end p-3 ${expertModal ? "show" : ""}`}
+              tabIndex="-1"
+              id="offcanvasRight"
+              aria-labelledby="offcanvasRightLabel"
+              style={{ visibility: expertModal ? "visible" : "hidden" }}
+            >
+              <div className="offcanvas-header">
+                <h5
+                  className="offcanvas-title"
+                  id="offcanvasRightLabel"
+                  style={{ cursor: "pointer" }}
+                  onClick={closeModal}
+                >
+                  <BsChevronLeft className="colororing" />
+                </h5>
+              </div>
+              <div className="offcanvas-body pe-0">
+                {expertDetail && <Profilreviw expertDetail={expertDetail} />}
+              </div>
+            </div>
+
+            {/* Pagination */}
+            {expertTotalPages > 1 && (
+              <div className="d-flex justify-content-end hireexpert mt-3 mb-3">
+                <Stack spacing={4}>
+                  <Pagination
+                    onChange={handleChangeExpertPagination}
+                    count={expertTotalPages}
+                    page={page}
+                    variant="outlined"
+                    shape="rounded"
+                    color="primary"
+                  />
+                </Stack>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : searchType === "bds" ? (
+        // BUSINESS DEVELOPERS SECTION
+        <div className="container haifwhitecard rounded-3 pb-5 px-4 mt-3 pt-5">
+          <div className="row">
+            <h4 className="font-24 poppins fw-bold pb-2">
+              Available Business Developers
+            </h4>
+            
+            {/* Results Summary */}
+            <div className="mb-3">
+              <p className="text-muted">
+                {searchKeyword 
+                  ? `Found ${bdCurrentData.length} BDs matching "${searchKeyword}"` 
+                  : `Showing ${paginatedBDs.length} of ${bdCurrentData.length} BDs`}
+              </p>
+            </div>
+            
+            {/* Debug Info */}
+            <div className="mb-3">
+              <small className="text-info">
+                Debug: Total BDs loaded: {safeGetBdList().length}, 
+                Filtered BDs: {bdCurrentData.length}
+              </small>
+            </div>
+            
+            {/* BD List */}
+            {bdCurrentData?.length > 0 ? (
+              paginatedBDs.map((bd, index) => (
+                <UserCard 
+                  key={bd.id || bd._id || index}
+                  user={bd}
+                  type="bds"
+                  canOrder={canPlaceOrders}
+                  userRole={userRole}
+                />
+              ))
             ) : (
-              <>
-                <div className="row">
-                  {paginatedExperts.map((expert) => (
-                    <div className="col-lg-4 col-md-6 col-12 mb-4" key={expert.id}>
-                      <ExpertCard
-                        user={expert}
-                        showExpertDetail={showExpertDetail}
-                        canOrder={canPlaceOrders}
-                      />
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="d-flex justify-content-center mt-4">
-                    <Stack spacing={2}>
-                      <Pagination
-                        count={totalPages}
-                        page={page}
-                        onChange={handleChangePagination}
-                        variant="outlined"
-                        shape="rounded"
-                        color="primary"
-                      />
-                    </Stack>
-                  </div>
-                )}
-              </>
+              <div className="text-center py-5">
+                <h5>No Business Developers found</h5>
+                <p className="text-muted">
+                  {searchKeyword 
+                    ? `No BDs match your search "${searchKeyword}". Try different keywords.`
+                    : "No Business Developers available at the moment."
+                  }
+                </p>
+              </div>
+            )}
+
+            {/* BD Detail Modal */}
+            <div
+              className={`offcanvas offcanvas-end p-3 ${bdModal ? "show" : ""}`}
+              tabIndex="-1"
+              id="offcanvasRightBd"
+              aria-labelledby="offcanvasRightBdLabel"
+              style={{ visibility: bdModal ? "visible" : "hidden" }}
+            >
+              <div className="offcanvas-header">
+                <h5
+                  className="offcanvas-title"
+                  id="offcanvasRightBdLabel"
+                  style={{ cursor: "pointer" }}
+                  onClick={closeModal}
+                >
+                  <BsChevronLeft className="colororing" />
+                </h5>
+              </div>
+              <div className="offcanvas-body pe-0">
+                {bdDetail && <Profilreviw expertDetail={bdDetail} />}
+              </div>
+            </div>
+
+            {/* Pagination */}
+            {bdTotalPages > 1 && (
+              <div className="d-flex justify-content-end hireexpert mt-3 mb-3">
+                <Stack spacing={4}>
+                  <Pagination
+                    onChange={handleChangeBdPagination}
+                    count={bdTotalPages}
+                    page={bdPage}
+                    variant="outlined"
+                    shape="rounded"
+                    color="primary"
+                  />
+                </Stack>
+              </div>
             )}
           </div>
         </div>
@@ -654,6 +914,14 @@ useEffect(() => {
                   ? `No ${searchType === "services" ? "services" : searchType} found matching your search`
                   : `No ${searchType === "services" ? "services" : searchType} available`}
               </p>
+              {/* Debug Info */}
+              <div className="text-center mt-3">
+                <small className="text-info">
+                  Debug: Search Type: {searchType}, 
+                  {searchType === "bds" && ` BD Count: ${safeGetBdList().length}`}
+                  {searchType === "services" && ` Gigs Categories: ${gigsDetail?.length || 0}`}
+                </small>
+              </div>
             </div>
           </div>
         </div>
@@ -668,7 +936,7 @@ useEffect(() => {
                 {searchType === "services" 
                   ? `Most popular Services in `
                   : searchType === "bds" 
-                    ? `Available Business Developers`
+                    ? `Available Business Developers (${category.gigs?.length || 0})`
                     : `Available Experts`}
                 {searchType === "services" && <span className="colororing">{category.name}</span>}
               </h4>

@@ -166,10 +166,10 @@ const Loginright = () => {
                     <option value="" disabled>
                       Select your role
                     </option>
-                    <option value="expert/freelancer">Expert/Freelancer</option>
+                    <option value="expert/freelancer">Expert</option>
                     <option value="client">Client</option>
                     <option value="bidder/company representative/middleman">
-                      Bidder/Company Representative/Middleman
+                      Business Developer
                     </option>
                   </select>
                 </div>
