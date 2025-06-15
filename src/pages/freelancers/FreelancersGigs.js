@@ -1726,10 +1726,10 @@ const FreelancersGigs = ({ onSelectPkg }) => {
                                   }
                                   minHeight="50px"
                                   heading={
-                                    innerValue.title.substring(0, 50) + "..."
+                                    innerValue?.title?.substring(0, 50) + "..."
                                   }
                                   phara={stripHtmlTags(
-                                    innerValue.description.substring(0, 100) +
+                                    innerValue?.description?.substring(0, 100) +
                                       "..."
                                   )}
                                   star1={

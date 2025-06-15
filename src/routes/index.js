@@ -8,6 +8,7 @@ import CreateBlogPage from "../pages/admin-panel/blog/create";
 import AdminOrders from '../pages/admin-panel/orders/index';
 import AdminUsers from "../pages/admin-panel/users";
 import Blog from "../pages/Blog";
+import BlogDetail from "../pages/BlogDetail";
 import Dashboard from "../pages/Dashboard";
 import Forgot from "../pages/Forgot";
 import JobInvitation from '../pages/freelancers/FreelancersJobInvitations';
@@ -72,6 +73,8 @@ import MultiSteps from "../pages/Stepper/MultiSteps";
 import UserBuyerRequest from "../pages/UserBuyerRequest";
 
 
+// Inside your
+
 import AboutUs from "../components/footerComponents/AboutUs";
 import AffiliateProgram from "../components/footerComponents/AffiliateProgram";
 import BusinessTools from "../components/footerComponents/BusinessTools";
@@ -133,6 +136,7 @@ function AppRoutes() {
       <Route path="/upwork-reviews" element={<Reviews />} />
       <Route path="/resources" element={<Resources />} />
       <Route path="/blog" element={<Blog />} />
+   
       <Route path="/community" element={<Community />} />
       <Route path="/affiliate-program" element={<AffiliateProgram />} />
       <Route path="/business-tools" element={<BusinessTools />} />
@@ -152,6 +156,7 @@ function AppRoutes() {
       <Route path="/whygrapetask" element={<WhyGrapeTask />} />
       <Route path="/aboutus" element={<AboutUS />} />
       <Route path="/blog" element={<Blog />} />
+       <Route path="/blog/:id" element={<BlogDetail />} />
       <Route path="*" element={<NotFound />} />
       <Route path="/search/gigs" element={<SearchGigsMainBanner />} />
       <Route
