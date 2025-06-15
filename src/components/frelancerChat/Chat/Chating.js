@@ -116,12 +116,12 @@ const Chating = () => {
  const handleDownload = async (filePath, fileName) => {
   // const dispatch = useDispatch();
   
-  console.log('Starting download for:', filePath);
+  // console.log('Starting download for:', filePath);
   
   try {
     // Method 1: Try Redux async thunk (fetch + axios fallback)
     await dispatch(downloadAuthenticatedFile({ filePath, fileName })).unwrap();
-    console.log('Redux download successful');
+  
     return;
   } catch (error) {
     console.log('Redux download failed:', error);
@@ -129,9 +129,9 @@ const Chating = () => {
   
   try {
     // Method 2: Try direct simple download
-    console.log('Trying direct simple download...');
+    // console.log('Trying direct simple download...');
     await downloadFileDirectSimple(filePath);
-    console.log('Direct simple download successful');
+    // console.log('Direct simple download successful');
     return;
   } catch (error) {
     console.log('Direct simple download failed:', error);
@@ -139,9 +139,9 @@ const Chating = () => {
   
   try {
     // Method 3: Try direct download with query params
-    console.log('Trying direct download...');
+    // console.log('Trying direct download...');
     downloadFileDirect(filePath);
-    console.log('Direct download initiated');
+    // console.log('Direct download initiated');
     return;
   } catch (error) {
     console.log('Direct download failed:', error);
@@ -149,9 +149,9 @@ const Chating = () => {
   
   try {
     // Method 4: Try iframe download (CORS workaround)
-    console.log('Trying iframe download...');
+    // console.log('Trying iframe download...');
     downloadWithIframe(filePath);
-    console.log('Iframe download initiated');
+    // console.log('Iframe download initiated');
     return;
   } catch (error) {
     console.log('Iframe download failed:', error);
@@ -159,9 +159,9 @@ const Chating = () => {
   
   try {
     // Method 5: Try new window download (last resort)
-    console.log('Trying new window download...');
+    // console.log('Trying new window download...');
     downloadWithNewWindow(filePath);
-    console.log('New window download initiated');
+    // console.log('New window download initiated');
     return;
   } catch (error) {
     console.log('New window download failed:', error);

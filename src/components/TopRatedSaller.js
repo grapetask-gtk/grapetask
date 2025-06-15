@@ -1,22 +1,16 @@
-import React, { useEffect } from "react";
 import { Button } from "@mui/material";
-import Seller1 from "../assets/TopSeller1.webp";
-import Seller2 from "../assets/TopSeller2.webp";
-import Seller3 from "../assets/TopSeller3.webp";
+import { useEffect, useState } from "react";
+import CountUp from "react-countup";
+import { FaArrowUp } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import Slider from "react-slick";
+import { Line, LineChart } from "recharts";
+import "slick-carousel/slick/slick-theme.css";
+import "slick-carousel/slick/slick.css";
 import plant from "../assets/marquePlant.webp";
 import wallet from "../assets/TopRatedWallet.webp";
-import { FcPaid } from "react-icons/fc";
-import CountUp from "react-countup";
-import { LineChart, Line, ResponsiveContainer } from "recharts";
-import { FaArrowUp } from "react-icons/fa";
-import topRatedIcon from "../assets/top-rated.webp";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import { useDispatch, useSelector } from "../redux/store/store";
 import { sellerRating } from "../redux/slices/ratingSlice";
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useDispatch, useSelector } from "../redux/store/store";
 
 const TopRatedSaller = () => {
   const [direction, setDirection] = useState("up");
@@ -87,7 +81,7 @@ const TopRatedSaller = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { userRating } = useSelector((state) => state.rating);
-  console.log(userRating, "=========userRating");
+
   useEffect(() => {
     dispatch(sellerRating());
   }, [dispatch]);
@@ -98,8 +92,6 @@ const TopRatedSaller = () => {
 
   const filteredRatingFive = filterByType(userRating, "5");
   const filteredRatingFour = filterByType(userRating, "4");
-  console.log(filteredRatingFive, "=============5");
-  console.log(filteredRatingFour, "=============4");
   const data = [
     {
       name: "Page A",

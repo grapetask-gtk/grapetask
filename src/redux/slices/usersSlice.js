@@ -69,7 +69,6 @@ export const fetchUsers = createAsyncThunk(
         },
       });
 
-      console.log('Response is ', response);
       
       // Return the WHOLE response data object
       return response.data;

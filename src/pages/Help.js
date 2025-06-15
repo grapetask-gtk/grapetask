@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "../redux/store/store";
-import Button from "../components/Button";
-import logo from "../assets/logo.webp";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { userRegister } from "../redux/slices/userSlice";
-import { Spinner } from "reactstrap";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Spinner } from "reactstrap";
+import logo from "../assets/logo.webp";
+import { useDispatch, useSelector } from "../redux/store/store";
 const Help = () => {
   const UserData = JSON.parse(localStorage.getItem("UserData"));
   const dispatch = useDispatch();
@@ -14,7 +12,7 @@ const Help = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const referralCode = queryParams.get("referral");
-  console.log(referralCode, "=======referral");
+  // console.log(referralCode, "=======referral");
   const { isLoadingRegister, getError } = useSelector((state) => state.user);
   // const SetRoleName = useSelector((state) => state.role);
   const role = localStorage.getItem("Role");
@@ -65,7 +63,7 @@ const Help = () => {
   };
   const handleResponse = async (data) => {
     if (data?.status) {
-      console.log(data?.access_token, "======devicetoken");
+      // console.log(data?.access_token, "======devicetoken");
       localStorage.setItem("accessToken", data?.access_token);
       localStorage.setItem("UserData", JSON.stringify(data?.data));
 

@@ -179,17 +179,16 @@
 // };
 
 // export default Otp;
-import React, { useState, useEffect } from "react";
-import Loginleft from "../components/Loginleft";
-import logo from "../assets/logo.webp";
+import { useEffect, useState } from "react";
 import OtpInput from "react-otp-input";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "../redux/store/store";
-import { userOtp } from "../redux/slices/userSlice";
-import { Spinner } from "reactstrap";
-import axios from "axios";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Spinner } from "reactstrap";
+import logo from "../assets/logo.webp";
+import Loginleft from "../components/Loginleft";
+import { userOtp } from "../redux/slices/userSlice";
+import { useDispatch, useSelector } from "../redux/store/store";
 
 
 const Otp = ({ formType }) => {
@@ -258,7 +257,7 @@ const Otp = ({ formType }) => {
     // }
   };
  const handleResponse = async (data) => {
-  console.log('response data in otpResetPassword file:',data);
+  // console.log('response data in otpResetPassword file:',data);
     if (data?.status) {
             localStorage.setItem("accessToken", data?.access_token);
       localStorage.setItem("UserData", JSON.stringify(data?.data));

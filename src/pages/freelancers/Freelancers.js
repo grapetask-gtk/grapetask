@@ -249,11 +249,11 @@ const Freelancers = () => {
       const userRole = user.role;
       const isExpert = isExpertRole(userRole);
       
-      console.log(`Checking user ${user.name || user.username} - Role: "${userRole}" - Is Expert: ${isExpert}`);
+      {/* console.log(`Checking user ${user.name || user.username} - Role: "${userRole}" - Is Expert: ${isExpert}`); */}
       return isExpert;
     });
 
-    console.log(`Found ${experts.length} experts out of ${freelancerData.length} total users`);
+    {/* console.log(`Found ${experts.length} experts out of ${freelancerData.length} total users`); */}
 
     if (searchKeyword.trim() === '') {
       return experts;
@@ -331,12 +331,12 @@ const Freelancers = () => {
 
   // Main filtered data logic
   const filteredData = useMemo(() => {
-    console.log(`Filtering data for searchType: ${searchType}`);
+    {/* console.log(`Filtering data for searchType: ${searchType}`); */}
     
     // Services search
     if (searchType === "services") {
       if (!gigsDetail?.length) {
-        console.log('No gigs data available');
+        {/* console.log('No gigs data available'); */}
         return [];
       }
 
@@ -383,7 +383,7 @@ const Freelancers = () => {
     let isMounted = true;
     
     const fetchData = async () => {
-      console.log('Fetching data for userRole:', userRole);
+      {/* console.log('Fetching data for userRole:', userRole); */}
       
       // Always fetch gigs and categories
       dispatch(geAllGigs());
@@ -393,13 +393,13 @@ const Freelancers = () => {
       
       // Fetch BDs if user role allows it
       if (role.includes("client") || isBdRole(userRole) || role.includes("bidder")) {
-        console.log('Fetching BDs...');
+        {/* console.log('Fetching BDs...'); */}
         dispatch(getBds());
       }
       
       // Fetch freelancers if user role allows it
       if (isBdRole(userRole) || role.includes("bidder") || isExpertRole(userRole)) {
-        console.log('Fetching freelancers...');
+        {/* console.log('Fetching freelancers...'); */}
         dispatch(getAllFreelancers());
       }
     };
@@ -485,47 +485,47 @@ const Freelancers = () => {
 
   // Debug logging
   useEffect(() => {
-    console.log('=== DEBUGGING DATA STRUCTURE ===');
-    console.log('bdList:', bdList);
-    console.log('bdList type:', typeof bdList, 'length:', bdList?.length);
-    console.log('bdList first item:', bdList?.[0]);
+    {/* console.log('=== DEBUGGING DATA STRUCTURE ==='); */}
+    {/* console.log('bdList:', bdList); */}
+    {/* console.log('bdList type:', typeof bdList, 'length:', bdList?.length); */}
+    {/* console.log('bdList first item:', bdList?.[0]); */}
     
-    console.log('freelancers:', freelancers);
-    console.log('freelancers.data:', freelancers?.data);
-    console.log('freelancers.data type:', typeof freelancers?.data, 'length:', freelancers?.data?.length);
-    console.log('freelancers.data first item:', freelancers?.data?.[0]);
+    {/* console.log('freelancers:', freelancers); */}
+    {/* console.log('freelancers.data:', freelancers?.data); */}
+    {/* console.log('freelancers.data type:', typeof freelancers?.data, 'length:', freelancers?.data?.length); */}
+    {/* console.log('freelancers.data first item:', freelancers?.data?.[0]); */}
     
-    console.log('userRole:', userRole);
-    console.log('searchType:', searchType);
+    {/* console.log('userRole:', userRole); */}
+    {/* console.log('searchType:', searchType); */}
     
-    console.log('Pagination Debug:', {
+    {/* console.log('Pagination Debug:', {
       totalExperts: expertCurrentData.length,
       paginatedExperts: paginatedExperts.length,
       currentPage: page,
       totalPages: expertTotalPages
-    });
+    }); */}
 
-    console.log('BD Pagination Debug:', {
+    {/* console.log('BD Pagination Debug:', {
       totalBDs: bdCurrentData.length,
       paginatedBDs: paginatedBDs.length,
       currentPage: bdPage,
       totalPages: bdTotalPages
-    });
+    }); */}
 
     // Log all available roles
-    if (freelancers?.data?.length) {
+    {/* if (freelancers?.data?.length) {
       console.log('Available freelancer roles:', freelancers.data.map(user => ({
         name: user.name || user.username,
         role: user.role
       })));
-    }
+    } */}
     
-    if (bdList?.length) {
+    {/* if (bdList?.length) {
       console.log('Available BD roles:', bdList.map(user => ({
         name: user.name || user.username,
         role: user.role
       })));
-    }
+    } */}
   }, [bdList, freelancers, userRole, searchType, 
       expertCurrentData.length, paginatedExperts.length, page, expertTotalPages,
       bdCurrentData.length, paginatedBDs.length, bdPage, bdTotalPages]);

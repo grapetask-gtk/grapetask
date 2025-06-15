@@ -84,7 +84,7 @@ export default function IncomeAreaChart({ view }) {
   ];
 
   // Log visibleSeries to ensure it has the expected structure
-  console.log('Visible series:', visibleSeries);
+  // console.log('Visible series:', visibleSeries);
 
   const axisFonstyle = { fontSize: 10, fill: theme.palette.text.secondary };
 
@@ -100,7 +100,7 @@ export default function IncomeAreaChart({ view }) {
           .filter((series) => series.visible)
           .map((series) => {
             // Log each series to ensure it has the 'type' property
-            console.log('Series:', series);
+            // console.log('Series:', series);
             return {
               type: 'line', // Ensure type is always 'line'
               data: series.data,

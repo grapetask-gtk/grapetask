@@ -58,10 +58,7 @@ const Navbar = (props) => {
     dispatch(fetchNotifications());
   }, [dispatch]);
 
-  // Debug: log current user role
-  useEffect(() => {
-    console.log("Current role:", UserRole);
-  }, [UserRole]);
+  
 
   // Accept invitation handler called from NotificationPopup
   const handleAcceptInvitation = async (notif) => {

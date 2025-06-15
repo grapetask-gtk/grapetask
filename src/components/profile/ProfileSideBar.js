@@ -1,20 +1,16 @@
-import React, { useState, useRef } from "react";
+import React, { useRef, useState } from "react";
 // import John from "../assets/john.webp";
-import { FaPlus, FaUserEdit } from "react-icons/fa";
-import { BsFillShieldLockFill } from "react-icons/bs";
-import { FaPowerOff } from "react-icons/fa";
-import ImageUploading from "react-images-uploading";
-import emptyProfile from "../../assets/AfterUpload.webp";
-import emptyProfileModal from "../../assets/emptyProfileModal.webp";
-import Slider from "@mui/material/Slider";
 import { Box, Button, Modal } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import Avatar from "react-avatar-edit";
-import { profileUpdate, userProfile } from "../../redux/slices/profileSlice";
-import { useDispatch, useSelector } from "../../redux/store/store";
 import { useEffect } from "react";
+import { BsFillShieldLockFill } from "react-icons/bs";
+import { FaPlus, FaPowerOff, FaUserEdit } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import emptyProfile from "../../assets/AfterUpload.webp";
+import emptyProfileModal from "../../assets/emptyProfileModal.webp";
+import { profileUpdate, userProfile } from "../../redux/slices/profileSlice";
+import { useDispatch, useSelector } from "../../redux/store/store";
 const style = {
   position: "absolute",
   top: "50%",
@@ -77,7 +73,7 @@ const ProfileSideBar = ({ setupTabState, tabStates }) => {
     let data = {
       image: imgPreview,
     };
-    console.log(data, "===img---data");
+    // console.log(data, "===img---data");
     dispatch(profileUpdate(data, handleResponse));
   };
   const handleResponse = (data) => {
@@ -102,7 +98,7 @@ const ProfileSideBar = ({ setupTabState, tabStates }) => {
   useEffect(() => {
     setSelectedPreview(emptyProfileModal);
     setImgPreview(userDetail?.image);
-    console.log(userDetail?.image);
+    // console.log(userDetail?.image);
   }, [userDetail]);
   const fileInputRef = useRef(null);
 
@@ -116,12 +112,12 @@ const ProfileSideBar = ({ setupTabState, tabStates }) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       const imageUrl = URL.createObjectURL(selectedFile);
-      console.log(imageUrl);
+      // console.log(imageUrl);
       setSelectedPreview(imageUrl);
       setImageSelected(true);
     }
     setImgPreview(selectedFile);
-    console.log("Selected File:", selectedFile);
+    // console.log("Selected File:", selectedFile);
   };
   return (
     <>

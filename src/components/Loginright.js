@@ -49,7 +49,6 @@ const Loginright = () => {
     referral_code: referralCode || "0",
   };
   
-  console.log("Data being sent:", data);
 
   // ✅ UPDATE THIS LINE - wrap in object
   dispatch(userRegister({ data, handleClose: handleResponse }));

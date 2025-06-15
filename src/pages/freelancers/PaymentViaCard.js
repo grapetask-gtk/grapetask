@@ -34,7 +34,7 @@ const handleFastCheckout = (event) => {
   };
   const handleResponse = (data) => {
     if (data?.status) {
-      console.log(data);
+      // console.log(data);
       window.location.href = data?.checkout;
     } else {
       //   alert(data?.message)

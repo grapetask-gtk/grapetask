@@ -1,16 +1,12 @@
-import React from "react";
-import Navbar from "../components/Navbar";
-import Loader from "../assets/LoaderImg.gif";
-import { useDispatch, useSelector } from "../redux/store/store";
-import { geAllGigs } from "../redux/slices/allGigsSlice";
-import { useEffect } from "react";
-import search from "../assets/searchbar.webp";
-import { useState } from "react";
-import Card from "../components/Card";
-import { useLocation, useNavigate } from "react-router-dom";
-import Footer from "../components/Footer";
-import { sellerRating } from "../redux/slices/ratingSlice";
 import { Button } from "@mui/material";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import Loader from "../assets/LoaderImg.gif";
+import search from "../assets/searchbar.webp";
+import Footer from "../components/Footer";
+import Navbar from "../components/Navbar";
+import { sellerRating } from "../redux/slices/ratingSlice";
+import { useDispatch, useSelector } from "../redux/store/store";
 
 const MeetTopRatedFreelancer = () => {
   const token = localStorage.getItem("accessToken");
@@ -25,7 +21,6 @@ const MeetTopRatedFreelancer = () => {
       ? location.state.dataTopRated
       : { topRated: "" }; // Ensure 'search' property exists
 
-  console.log(receivedData);
   useEffect(() => {
     setSearchKeyword(receivedData);
   }, []);

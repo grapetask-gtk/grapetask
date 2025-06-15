@@ -31,7 +31,6 @@ export const createOrFindConversation = createAsyncThunk(
       if (response.status < 200 || response.status >= 300) {
         return rejectWithValue(response.data.message);
       }
-      console.log('conversation in message slice:', response.data);
       return response.data;
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message;
@@ -53,7 +52,6 @@ export const fetchConversations = createAsyncThunk(
         },
       });
 
-      console.log('conversations in slice:', res.data);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -211,7 +209,7 @@ export const downloadFileDirectSimple = async (filePath) => {
       
       return true;
     } catch (error) {
-      console.log('Query param method failed, trying header method...');
+      
       
       // Method 2: Try with header but no credentials
       const response = await axios({

@@ -52,13 +52,7 @@ const Order = () => {
   const lateOrders = filterByStatus(selectedOrders, "Late");
   const cancelledOrders = filterByStatus(selectedOrders, "Cancelled");
 
-  console.log({
-    activeOrders,
-    deliveredOrders,
-    completedOrders,
-    lateOrders,
-    cancelledOrders,
-  });
+ 
   return (
     <>
       <Navbar FirstNav="none" />

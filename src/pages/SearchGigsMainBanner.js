@@ -19,7 +19,7 @@ const SearchGigsMainBanner = () => {
       ? location.state.data
       : { search: "" }; // Ensure 'search' property exists
 
-  console.log(receivedData);
+  // console.log(receivedData);
   useEffect(() => {
     setSearchKeyword(receivedData?.search);
   }, []);

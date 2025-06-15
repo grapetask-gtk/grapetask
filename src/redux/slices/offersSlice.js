@@ -123,7 +123,7 @@ export function inviteToJob(data, handleClose) {
 //Create Offer Request
 export function CreateOfferRequest(data, handleClose) {
   return async () => {
-    console.log('creating offer with this data' , data);
+
     let accessToken = localStorage.getItem('accessToken')
     dispatch(OffersSlice.actions.startLoadingCreate());
     try {

@@ -1,5 +1,5 @@
 import { Button } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BsPlusLg,
   BsThreeDotsVertical
@@ -68,7 +68,7 @@ const Gigs2 = () => {
       user_id: UserData?.id,
     };
     dispatch(getPersonalGigs(data));
-    console.log(personalGigs);
+   
   }, [dispatch]);
 
   useEffect(() => {

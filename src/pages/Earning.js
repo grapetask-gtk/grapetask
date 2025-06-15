@@ -1,33 +1,25 @@
-import React, { PureComponent, useState } from "react";
-import star6 from "../assets/5star.webp";
-import timepes from "../assets/time (1).webp";
-import imagarrow from "../assets/imgarrow2.webp";
-import imagarrow1 from "../assets/imgarrow.webp";
-import imagarrow2 from "../assets/imgarrow1.webp";
-import user from "../assets/gigsRatingComments.webp";
-import Dashboardright from "../components/Dashboardright";
 import { Button } from "@mui/material";
-import Navbar from "../components/Navbar";
-import { FaArrowDown, FaArrowUp } from "react-icons/fa";
+import { formatDistanceToNow } from "date-fns";
+import { useEffect, useState } from "react";
+import { AiFillStar } from "react-icons/ai";
+import { Link, useNavigate } from "react-router-dom";
 import {
-  BarChart,
   Bar,
+  BarChart,
   Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
   ResponsiveContainer,
-  LabelList,
+  Tooltip,
+  XAxis
 } from "recharts";
 import arrow from "../assets/chartArrow.webp";
-import { Link, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "../redux/store/store";
+import imagarrow1 from "../assets/imgarrow.webp";
+import imagarrow2 from "../assets/imgarrow1.webp";
+import imagarrow from "../assets/imgarrow2.webp";
+import timepes from "../assets/time (1).webp";
+import Dashboardright from "../components/Dashboardright";
+import Navbar from "../components/Navbar";
 import { sellerRating } from "../redux/slices/ratingSlice";
-import { formatDistanceToNow } from "date-fns";
-import { useEffect } from "react";
-import { AiFillStar } from "react-icons/ai";
+import { useDispatch, useSelector } from "../redux/store/store";
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const uvValue = payload[0].value;
@@ -154,7 +146,7 @@ const Earning = () => {
   const { userRating, allRating } = useSelector((state) => state.rating);
   const { userDetail } = useSelector((state) => state.profile);
 
-  console.log(userDetail, "==========userDetail");
+  // console.log(userDetail, "==========userDetail");
   useEffect(() => {
     dispatch(sellerRating());
   }, [dispatch]);

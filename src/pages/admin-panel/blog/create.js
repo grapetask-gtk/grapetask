@@ -12,7 +12,7 @@ const CreateBlogPage = () => {
   const handleCreate = async (formData) => {
     // Debug log
     for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
+      // console.log(`${key}:`, value);
     }
 
     try {
@@ -20,7 +20,7 @@ const CreateBlogPage = () => {
       const payload = unwrapResult(resultAction);
 
       // On success, navigate or show message
-      console.log("Blog created:", payload);
+      // console.log("Blog created:", payload);
       navigate("/admin/blogs");
     } catch (err) {
       console.error("Failed to create blog:", err);

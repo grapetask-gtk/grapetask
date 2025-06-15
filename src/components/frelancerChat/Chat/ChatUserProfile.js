@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import userFallback from "../../../assets/chatImg.webp";
 
@@ -8,9 +7,7 @@ const ChatUserProfile = () => {
   const currentUser = JSON.parse(localStorage.getItem("UserData") || "{}");
 
 
-  useEffect(() => {
-  console.log("selectedConversation in user profile:", selectedConversation);
-}, [selectedConversation]);
+
 
 
 

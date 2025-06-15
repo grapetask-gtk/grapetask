@@ -52,7 +52,7 @@ export default function MultiStep() {
   const location = useLocation();
   const gigData =
     location.state && location.state ? location.state.gigData : "";
-  console.log(gigData);
+  // console.log(gigData);
   const UserData = JSON.parse(localStorage.getItem("UserData"));
   // const filterByType = (array, targetType) => {
   //     // return array.filter((obj) => obj.type === targetType);
@@ -120,7 +120,7 @@ export default function MultiStep() {
   const [deliveryStadard, setDeliveryStadard] = useState("");
   const [deliveryPremium, setDeliveryPremium] = useState("");
   const [sourceFileBasice, setSourceFileBasice] = useState("no");
-  console.log(sourceFileBasice);
+  // console.log(sourceFileBasice);
   const [sourceFileStandard, setSourceFileStandard] = useState("no");
   const [sourceFilePremium, setSourceFilePremium] = useState("no");
   const [resolutionFileBasice, setResolutionFileBasice] = useState("no");
@@ -147,7 +147,7 @@ export default function MultiStep() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [faqs, setFaqs] = useState([]);
-  console.log(faqs, "==============faqs");
+  // console.log(faqs, "==============faqs");
   // console.log(faqs.answer,'==============a')
   // console.log(question,'==============q')
 
@@ -166,9 +166,9 @@ export default function MultiStep() {
   const handleResponseFaqs = (data) => {
     if (data?.status) {
       // navigate('/profile')
-      console.log(data?.message, "==============faqs");
+      // console.log(data?.message, "==============faqs");
     } else {
-      console.log(data?.message, "==============faqs");
+      // console.log(data?.message, "==============faqs");
       // alert(data?.message)
     }
   };
@@ -195,10 +195,10 @@ export default function MultiStep() {
   const handleResponseGallery = (data) => {
     if (data?.status) {
       setActiveStep((prevActiveStep) => prevActiveStep + 1);
-      console.log(data?.message);
+      // console.log(data?.message);
       setIsLoading(false);
     } else {
-      console.log(data?.message);
+      // console.log(data?.message);
       setIsLoading(false);
     }
   };
@@ -548,7 +548,7 @@ React.useEffect(() => {
         if (requirmentfields.length > 0) {
           let requirmentStatus = true;
           requirmentfields.map((value) => {
-            console.log(value, "========value");
+            // console.log(value, "========value");
             if (value == "") {
               requirmentStatus = false;
             }
@@ -577,7 +577,7 @@ React.useEffect(() => {
         if (requirmentfields.length > 0) {
           let requirmentStatus = true;
           requirmentfields.map((value) => {
-            console.log(value, "========value");
+            // console.log(value, "========value");
             if (value == "") {
               requirmentStatus = false;
             }

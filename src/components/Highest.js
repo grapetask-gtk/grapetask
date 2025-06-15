@@ -1,13 +1,12 @@
-import React, { useEffect } from "react";
-import line from "../assets/line.webp";
-import CardImg from "../assets/GigCradImg.webp";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
+import { useEffect } from "react";
 import Slider from "react-slick";
-import "../style/imgSlider.scss";
-import Card from "./Card";
+import "slick-carousel/slick/slick-theme.css";
+import "slick-carousel/slick/slick.css";
+import line from "../assets/line.webp";
 import { sellerRating } from "../redux/slices/ratingSlice";
 import { useDispatch, useSelector } from "../redux/store/store";
+import "../style/imgSlider.scss";
+import Card from "./Card";
 const Highest = () => {
   // ===========Top Rated Seller ============
   const dispatch = useDispatch();
@@ -23,7 +22,6 @@ const Highest = () => {
   };
 
   const TopRatedGigs = filterByTopGigs(userDetail, "5");
-  console.log(TopRatedGigs, "============TopRatedGigs");
   const setting = {
     dots: true,
     autoplay: true,

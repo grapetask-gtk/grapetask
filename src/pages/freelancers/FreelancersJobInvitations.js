@@ -91,14 +91,14 @@ const JobInvitationsPage = () => {
     
     try {
       // Create or find existing conversation with this client
-      console.log('strated to find conversation for client id:',client.id);
+      // console.log('strated to find conversation for client id:',client.id);
       const response = await dispatch(createOrFindConversation({
         participantId: client.id,
         jobInvitationId: invitation.id, // Link to job context
         initialMessage: `Hi! I'd like to discuss your job invitation for "${invitation.buyer_request.title}"`
       })).unwrap();
-      console.log('got response back in job invitaion page:',response);
-         console.log('slecting conv in job invitation page:',response);
+      // console.log('got response back in job invitaion page:',response);
+        //  console.log('slecting conv in job invitation page:',response);
         dispatch(setSelectedConversation(response));
         
       // Show chat modal after conversation is ready

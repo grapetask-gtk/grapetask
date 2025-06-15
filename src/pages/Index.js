@@ -1,69 +1,56 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "../redux/store/store";
-import Navbar from "../components/Navbar";
-import heroImg1 from "../assets/heroSlider-img-1.webp";
-import img from "../assets/img.webp";
-import img1 from "../assets/img1.webp";
-import img2 from "../assets/img2.webp";
-import img3 from "../assets/img3.webp";
-import post from "../assets/post.webp";
-import done from "../assets/done.webp";
-import hire from "../assets/hire.webp";
-import get from "../assets/getwork.webp";
-import make from "../assets/make.webp";
-import line from "../assets/line.webp";
-import client from "../assets/client.webp";
-import cheack from "../assets/cheack.webp";
-import goodcmpny from "../assets/goodcmpny.webp";
-import choose from "../assets/choose.webp";
-import pic1 from "../assets/people.webp";
-import pic2 from "../assets/heand.webp";
-import pic3 from "../assets/massage.webp";
-import vocter from "../assets/Vector.webp";
-import real from "../assets/real.webp";
-import Grapetask from "../components/Grapetask";
-import Freelancer from "../components/Freelancer";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import Footer from "../components/Footer";
-import Testomonial from "../components/Testomonial";
-import Highest from "../components/Highest";
-import Treusted from "../components/Treusted";
-import { RiSearchLine } from "react-icons/ri";
-import { GoLocation } from "react-icons/go";
-import Line from "../assets/hero-search-line.webp";
+import { Button } from "@mui/material";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { Spinner } from "react-bootstrap";
+import { AiFillDollarCircle, AiFillNotification } from "react-icons/ai";
 import {
   FaFolderOpen,
-  FaPenNib,
-  FaStar,
   FaHandshake,
   FaPalette,
-  FaAngleLeft,
-  FaAngleRight,
+  FaPenNib
 } from "react-icons/fa";
-import { AiFillNotification, AiFillDollarCircle } from "react-icons/ai";
+import { GoLocation } from "react-icons/go";
 import { MdOutlineWeb, MdVideoLibrary } from "react-icons/md";
-import quality from "../assets/quality.webp";
-import cost from "../assets/Cost.webp";
-import Secure from "../assets/Secure.webp";
-import UserCheck from "../assets/UserCheck.webp";
-import videoHerosection from "../assets/video/Freelance1.mp4";
-import video1 from "../assets/video/Freelance5.mp4";
-import video2 from "../assets/video/Freelance2.mp4";
-import video3 from "../assets/video/Freelance4.mp4";
-import { Button } from "@mui/material";
-import TopRatedSaller from "../components/TopRatedSaller";
-import videoPlay from "../assets/VideoPlay.webp";
-import videoImg from "../assets/VideiImgMbl.webp";
+import { RiSearchLine } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
-import { geAllGigs } from "../redux/slices/allGigsSlice";
 import Slider from "react-slick";
-import WelcomeModal from "../components/WelcomeModal";
-import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Spinner } from "react-bootstrap";
+import "slick-carousel/slick/slick-theme.css";
+import "slick-carousel/slick/slick.css";
+import cheack from "../assets/cheack.webp";
+import choose from "../assets/choose.webp";
+import client from "../assets/client.webp";
+import cost from "../assets/Cost.webp";
+import done from "../assets/done.webp";
+import get from "../assets/getwork.webp";
+import goodcmpny from "../assets/goodcmpny.webp";
+import pic2 from "../assets/heand.webp";
+import Line from "../assets/hero-search-line.webp";
+import hire from "../assets/hire.webp";
+import line from "../assets/line.webp";
+import make from "../assets/make.webp";
+import pic3 from "../assets/massage.webp";
+import pic1 from "../assets/people.webp";
+import post from "../assets/post.webp";
+import quality from "../assets/quality.webp";
+import real from "../assets/real.webp";
+import Secure from "../assets/Secure.webp";
+import UserCheck from "../assets/UserCheck.webp";
+import video2 from "../assets/video/Freelance2.mp4";
+import video3 from "../assets/video/Freelance4.mp4";
+import video1 from "../assets/video/Freelance5.mp4";
+import Footer from "../components/Footer";
 import GigCard from "../components/GigCard";
+import Grapetask from "../components/Grapetask";
+import Highest from "../components/Highest";
+import Navbar from "../components/Navbar";
+import Testomonial from "../components/Testomonial";
+import TopRatedSaller from "../components/TopRatedSaller";
+import Treusted from "../components/Treusted";
+import WelcomeModal from "../components/WelcomeModal";
+import { geAllGigs } from "../redux/slices/allGigsSlice";
+import { useDispatch, useSelector } from "../redux/store/store";
 const Index = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -98,7 +85,7 @@ const Index = () => {
   const Real_Freelancer = gigsDetail.flatMap(function (object) {
     return object.gigs;
   });
-  console.log(Real_Freelancer, "=========real freelancer");
+  // console.log(Real_Freelancer, "=========real freelancer");
   // ============== TOP RATED FREELANCER ================
   const [topRated, setTopRated] = useState("");
   const handleTopRatedFreelancer = () => {
@@ -167,7 +154,7 @@ const Index = () => {
     axios
       .request(config)
       .then((response) => {
-        console.log(JSON.stringify(response.data));
+        // console.log(JSON.stringify(response.data));
         setSubscribeLoader(false);
         setEmail(null);
         toast.success("Thank you for Subscribing GrapeTask", {

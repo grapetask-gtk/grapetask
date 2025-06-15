@@ -72,7 +72,7 @@ const FreelancersGigs = ({ onSelectPkg }) => {
     (state) => state.allGigs
   );
 
-  console.log(singleGigDetail, "====================freelancerGig");
+  // console.log(singleGigDetail, "====================freelancerGig");
 
   useEffect(() => {
     dispatch(getGigDetail(gigId));
@@ -87,14 +87,14 @@ const FreelancersGigs = ({ onSelectPkg }) => {
     
     try {
       // Create or find existing conversation with this client
-      console.log('strated to find conversation for client id:',client.id);
+      // console.log('strated to find conversation for client id:',client.id);
       const response = await dispatch(createOrFindConversation({
         participantId: client.id
          
       
       })).unwrap();
-      console.log('got response back in job invitaion page:',response);
-         console.log('slecting conv in job invitation page:',response);
+      // console.log('got response back in job invitaion page:',response);
+        //  console.log('slecting conv in job invitation page:',response);
         dispatch(setSelectedConversation(response));
         
       // Show chat modal after conversation is ready
@@ -162,8 +162,8 @@ const FreelancersGigs = ({ onSelectPkg }) => {
 
   onMessageListener()
     .then((payload) => {
-      console.log(payload?.notification?.title, "haschxavsva");
-      console.log(payload, "payload");
+      // console.log(payload?.notification?.title, "haschxavsva");
+      // console.log(payload, "payload");
       toast.success(payload?.notification?.title, {
         position: "top-right",
         autoClose: 2000,
@@ -324,7 +324,7 @@ const FreelancersGigs = ({ onSelectPkg }) => {
   useEffect(() => {
     dispatch(geAllGigs());
   }, [dispatch]);
-  console.log(gigsDetail, "=====================recommended gig");
+  // console.log(gigsDetail, "=====================recommended gig");
   function stripHtmlTags(html) {
     const tempElement = document.createElement("div");
     tempElement.innerHTML = html;
@@ -338,7 +338,7 @@ const FreelancersGigs = ({ onSelectPkg }) => {
       return gig.category_id === singleGigDetail.category_id; // Is example mein, category_id 2 ke liye filter kiya gaya hai.
     });
   });
-  console.log(RecomendedGigsArray);
+  // console.log(RecomendedGigsArray);
   const settings = {
     dots: false,
     autoplay: true,

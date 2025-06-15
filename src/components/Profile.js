@@ -1,23 +1,23 @@
-import React, { useState } from "react";
-import user from "../assets/gigsRatingComments.webp";
-import Navbar from "./Navbar";
-import PropTypes from "prop-types";
-import { useTheme } from "@mui/material/styles";
-import Box from "@mui/material/Box";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableRow from "@mui/material/TableRow";
-import Paper from "@mui/material/Paper";
-import IconButton from "@mui/material/IconButton";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import { Button } from "@mui/material";
-import search from "../assets/searchbar.webp";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Paper from "@mui/material/Paper";
+import { useTheme } from "@mui/material/styles";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableRow from "@mui/material/TableRow";
+import PropTypes from "prop-types";
+import React, { useState } from "react";
 import ReactPaginate from "react-paginate";
+import user from "../assets/gigsRatingComments.webp";
+import search from "../assets/searchbar.webp";
+import Navbar from "./Navbar";
 function TablePaginationActions(props) {
   const theme = useTheme();
   const { count, page, rowsPerPage, onPageChange } = props;
@@ -422,7 +422,7 @@ const Profile = () => {
 
   const offset = currentPage * itemsPerPage;
   const currentPageData = rows.slice(offset, offset + itemsPerPage);
-  console.log(currentPageData);
+ 
 
   const pageCount = Math.ceil(rows.length / itemsPerPage);
   return (

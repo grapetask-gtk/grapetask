@@ -1,13 +1,12 @@
-import React from "react";
+import { Pagination, Stack } from "@mui/material";
+import { useSelector } from "react-redux";
+import earning from "../assets/total-earning.webp";
 import Navbar from "../components/Navbar";
 import ReferalTable from "../components/ReferalTable";
-import { Pagination, Stack } from "@mui/material";
-import earning from "../assets/total-earning.webp";
-import { useSelector } from "react-redux";
 
 const ReferalList = () => {
   const { userDetail, myReferrals } = useSelector((state) => state.profile);
-  console.log(myReferrals, "=========myReferrals");
+  // console.log(myReferrals, "=========myReferrals");
   return (
     <>
       <Navbar FirstNav="none" />

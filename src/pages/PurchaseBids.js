@@ -7,7 +7,7 @@ import {
   TextField,
   Typography
 } from "@mui/material";
-import React, { useState } from "react";
+import { useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "../components/Navbar";
@@ -46,7 +46,7 @@ const BuyBids = () => {
     dispatch(purchaseBidPackage({ amount: Number(amount) }))
       .unwrap()
       .then((response) => {
-        console.log('HandlePurchase response:', response);
+        // console.log('HandlePurchase response:', response);
   
         if (response.status) {
           // Update localStorage
@@ -78,7 +78,7 @@ const BuyBids = () => {
   const handleGooglePaySuccess = (paymentData) => {
     const token = paymentData.paymentMethodData.tokenizationData.token;
     toast.success("Google Pay successful! Processing your purchase...");
-    console.log("Google Pay Token:", token);
+    // console.log("Google Pay Token:", token);
     
     // TODO: send token to your backend and process payment
     // After successful backend processing, optionally call:

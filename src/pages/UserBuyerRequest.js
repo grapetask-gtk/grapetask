@@ -269,7 +269,7 @@ const handleSubmitOffer = useCallback(async (e) => {
 };
 
 
-  console.log("Submitting offer data:", offerData); // For debugging
+  // console.log("Submitting offer data:", offerData); // For debugging
 
   setOfferLoader(true);
   dispatch(CreateOfferRequest(offerData, handleResponseOffer));

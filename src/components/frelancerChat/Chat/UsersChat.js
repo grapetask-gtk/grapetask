@@ -15,13 +15,11 @@ const UsersChat = () => {
 
 
   
-  useEffect(() => {
-  console.log("conversations:", conversations);
-}, [conversations]);
+
 
 
   const handleSelectConversation = (conversation) => {
-    console.log('sending or slecting conv from sidebar', conversation);
+    // console.log('sending or slecting conv from sidebar', conversation);
     dispatch(setSelectedConversation(conversation));
   };
 

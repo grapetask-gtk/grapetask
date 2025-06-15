@@ -18,7 +18,7 @@ const ChatWindow = ({ conversation }) => {
   }, [messages]);
 
   useEffect(() => {
-  console.log("Conversation:", conversation);
+  // console.log("Conversation:", conversation);
 }, [conversation]);
 
 
