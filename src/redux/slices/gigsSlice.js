@@ -118,7 +118,7 @@ export function Overview(data, handleClose) {
       if (!response.data.status) {
         dispatch(gigSlice.actions.hasGetError(response?.data?.message));
       }
-      console.log(JSON.stringify(response?.data?.data.id));
+     
       localStorage.setItem("id", response?.data?.data.id);
       dispatch(gigSlice.actions.getUserDetailsSuccess(response.data.data));
     } catch (error) {
@@ -258,7 +258,7 @@ export function userGallery(data, handleClose) {
       if (!response.data.status) {
         dispatch(gigSlice.actions.hasGetError(response?.data?.message));
       }
-      console.log(JSON.stringify(response?.data?.data));
+      
       dispatch(gigSlice.actions.getUserDetailsSuccess(response.data.data));
     } catch (error) {
       handleClose(error);

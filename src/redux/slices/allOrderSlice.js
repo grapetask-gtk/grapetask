@@ -134,7 +134,7 @@ export const OrderCreate = createAsyncThunk(
         return rejectWithValue(response?.data?.message);
       }
       
-      console.log(JSON.stringify(response?.data?.data));
+      
       return response.data.data;
     } catch (error) {
       handleClose(error);
@@ -156,8 +156,7 @@ export const AllOrders = createAsyncThunk(
           "Authorization": "Bearer " + accessToken,
         },
       });
-      
-      console.log(response.data.data);
+
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error?.message);
@@ -184,7 +183,7 @@ export const AllExpertOrders = createAsyncThunk(
         },
       });
 
-      console.log('Expert Orders:', response.data.data);
+    
       return response.data.data;
     } catch (error) {
       console.error('Error fetching expert orders:', error);
@@ -208,7 +207,7 @@ export const AllClientOrders = createAsyncThunk(
           "Authorization": "Bearer " + accessToken,
         },
       });
-      console.log('Client Orders:', response.data.data);
+      
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error?.message);
@@ -229,7 +228,7 @@ export const AllBdOrders = createAsyncThunk(
           "Authorization": "Bearer " + accessToken,
         },
       });
-      console.log('BD Orders:', response.data.data);
+    
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error?.message);

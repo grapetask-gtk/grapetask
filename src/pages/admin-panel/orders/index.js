@@ -1,67 +1,143 @@
-import { useEffect } from "react";
-import { Spinner, Table } from "react-bootstrap";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  Badge,
+  Button,
+  Col,
+  Form,
+  Row,
+  Spinner,
+  Table,
+} from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
-import { AllBdOrders, AllClientOrders, AllExpertOrders } from "../../../redux/slices/allOrderSlice";
+import { AllOrders } from "../../../redux/slices/allOrderSlice";
 import SidebarLayout from "../sidebarLayout";
 
 export default function ProjectList() {
   const dispatch = useDispatch();
-  const user = JSON.parse(localStorage.getItem("UserData") || '{}'); // adjust this based on your auth slice
 
-  const {
-    orderDetail,
-    expertOrders,
-    clientOrders,
-    bdOrders,
-    isLoading,
-  } = useSelector((state) => state.order);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  // Load orders on mount depending on role
+  // ✅ Fetch all orders for admin
+  const { orderDetail = [], isLoading = false } = useSelector(
+    (state) => state.allOrder || {}
+  );
+
   useEffect(() => {
-    if (user?.role === 'expert/freelancer') {
-      dispatch(AllExpertOrders());
-    } else if (user?.role === 'client') {
-      dispatch(AllClientOrders());
-    } else if (user?.role === 'bd') {
-      dispatch(AllBdOrders());
-    } 
-  }, [dispatch, user?.role]);
+    dispatch(AllOrders());
+  }, [dispatch]);
 
-  // Select orders list depending on role
-  let filteredOrders = [];
-  if (user?.role === 'expert/freelancer') {
-    filteredOrders = expertOrders;
-  } else if (user?.role === 'client') {
-    filteredOrders = clientOrders;
-  } else if (user?.role === 'bd') {
-    filteredOrders = bdOrders;
-  } 
+  // ✅ Filter & Search
+  const filteredOrders = orderDetail.filter((order) => {
+    const searchString = (
+      `${order.id} ${order.title} ${order.client?.name} ${order.expert?.name}`
+    ).toLowerCase();
 
-  if (isLoading) return <Spinner animation="border" />;
+    const matchesSearch = searchString.includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || order.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <SidebarLayout>
-      <Table striped bordered hover>
-        <thead>
-          <tr>
-            <th>ID</th><th>Title</th><th>Client</th><th>Expert</th><th>Status</th><th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredOrders.map(p => (
-            <tr key={p.id}>
-              <td>{p.id}</td>
-              <td>{p.title}</td>
-              <td>{p.client?.name}</td>
-              <td>{p.expert?.name ?? "Unassigned"}</td>
-              <td>{p.status}</td>
-              <td>
-                {/* Add action buttons here if needed */}
-              </td>
+      <h4 className="mt-3">Admin Order Management</h4>
+
+      {/* Filters */}
+      <Row className="my-3">
+        <Col md={6}>
+          <Form.Control
+            type="text"
+            placeholder="Search by ID, title, client, expert..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </Col>
+        <Col md={4}>
+          <Form.Select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </Form.Select>
+        </Col>
+        <Col md={2}>
+          <Button
+            variant="outline-secondary"
+            onClick={() => {
+              setSearchTerm("");
+              setStatusFilter("all");
+            }}
+          >
+            Reset
+          </Button>
+        </Col>
+      </Row>
+
+      {/* Table */}
+      {isLoading ? (
+        <div className="text-center my-4">
+          <Spinner animation="border" />
+        </div>
+      ) : filteredOrders.length === 0 ? (
+        <Alert variant="info">No orders found.</Alert>
+      ) : (
+        <Table striped bordered hover responsive>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Client</th>
+              <th>Expert</th>
+              <th>Status</th>
+              <th>Action</th>
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {filteredOrders.map((order) => (
+              <tr key={order.id}>
+                <td>{order.id}</td>
+                <td>{order.title}</td>
+                <td>{order.client?.name || "N/A"}</td>
+                <td>{order.expert?.name || "Unassigned"}</td>
+                <td>
+                  <Badge
+                    bg={
+                      order.status === "completed"
+                        ? "success"
+                        : order.status === "pending"
+                        ? "warning"
+                        : order.status === "cancelled"
+                        ? "danger"
+                        : "primary"
+                    }
+                  >
+                    {order.status}
+                  </Badge>
+                </td>
+                <td>
+                  {/* Replace with actual modals/actions as needed */}
+                  <Button variant="outline-primary" size="sm" className="me-1">
+                    View
+                  </Button>
+                  <Button variant="outline-success" size="sm" className="me-1">
+                    Assign
+                  </Button>
+                  <Button variant="outline-warning" size="sm">
+                    Status
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
     </SidebarLayout>
   );
 }

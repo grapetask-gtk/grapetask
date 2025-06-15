@@ -46,7 +46,7 @@ export function fetchNotifications() {
     const accessToken = localStorage.getItem("accessToken");
     const userData = JSON.parse(localStorage.getItem("UserData"));
     const userId = userData?.id;
-    console.log('id is ',userId); 
+ 
     
     dispatch(startLoading());
     try {
@@ -59,7 +59,7 @@ export function fetchNotifications() {
           "Content-Type": "application/json"
         }
       });
-      console.log('notifications', response.data.data )
+      
       dispatch(getNotificationsSuccess(response.data?.data));
     } catch (error) {
       dispatch(hasError(error?.message));

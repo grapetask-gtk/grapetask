@@ -36,7 +36,7 @@ export const purchaseBidPackage = createAsyncThunk(
         }
       );
       // Return entire response data or update accordingly
-         console.log('response of purchasing bids ', response);
+       
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
