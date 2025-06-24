@@ -152,30 +152,45 @@ export function CreateOfferRequest(data, handleClose) {
 
 export function AcceptOfferRequest(data, handleClose) {
   return async (dispatch) => {
-    let accessToken = localStorage.getItem('accessToken');
+    const accessToken = localStorage.getItem('accessToken');
     dispatch(OffersSlice.actions.startLoadingCreate());
 
     try {
-      const response = await axios.post('accept-offer', data, {
-        headers: {
-          'Authorization': 'Bearer ' + accessToken,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      });
+      // Configure headers dynamically
+      const headers = {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json',
+      };
 
+      // Use FormData instance for files
+      const payload = data instanceof FormData 
+        ? data 
+        : JSON.stringify(data);
+
+      // Set content type automatically
+      if (!(data instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+      }
+
+      const response = await axios.post('accept-offer', payload, { headers });
+
+      // Handle server-side errors
       if (!response.data.status) {
-        dispatch(OffersSlice.actions.hasGetError(response?.data?.message));
+        const errorMsg = response.data.message || "Request failed";
+        dispatch(OffersSlice.actions.hasGetError(errorMsg));
+        throw new Error(errorMsg); // Critical: Throw to trigger catch
       }
 
       handleClose?.(response.data);
+      return response.data; // Return consistent response
     } catch (error) {
-      dispatch(OffersSlice.actions.hasGetError(error?.message));
+      const errorMsg = error.response?.data?.message || error.message;
+      dispatch(OffersSlice.actions.hasGetError(errorMsg));
       handleClose?.(error);
+      throw error; // Propagate to component
     }
   };
 }
-
 
 
 

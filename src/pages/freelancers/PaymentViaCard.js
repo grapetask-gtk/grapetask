@@ -44,7 +44,7 @@ const handleFastCheckout = (event) => {
     <>
       <Navbar FirstNav="none" />
       <div className="container-fluid p-lg-5 p-md-4 p-3 pt-5">
-        <h6 className="font-30 font-500 cocon byerLine">Add a payout method</h6>
+        <h6 className="font-30 font-500 cocon byerLine">Add a payment method</h6>
         <div class="row justify-content-center payment-cards mt-4">
           <div className="col-lg-3 col-md-3 col-12 poppins">
             <div
@@ -121,55 +121,7 @@ const handleFastCheckout = (event) => {
                 aria-labelledby="v-pills-home-tab"
                 tabindex="0"
               >
-                {/* <form className="row" onSubmit={handleCard}>
-                                    <h6 className='font-600 font-20 blackcolor poppins'>Payment Card</h6>
-                                    <div className="col-lg-6 col-md-6 col-12 mt-lg-4 mt-md-3 mt-3">
-                                        <label htmlFor="card" className='font-16 poppins'>CARD NUMBER</label>
-                                        <div className='bgcard rounded-3 mt-1'>
-                                            <input type="text" id='card' className="form-control orderinput border-0 p-2 poppins" style={{ backgroundColor: 'transparent' }} required />
-                                        </div>
-                                    </div>
-                                    <div className="col-lg-6 col-md-6 col-12 mt-lg-4 mt-md-3 mt-3">
-                                        <label htmlFor="" className='font-16 poppins'>SECURITY CODE</label>
-                                        <div className='bgcard rounded-3 mt-1'>
-                                            <select className="form-select font-16 border-0 p-2" required style={{ backgroundColor: 'transparent' }} aria-label="Default select example">
-                                                <option selected value=""></option>
-                                                <option value="1">One</option>
-                                                <option value="2">Two</option>
-                                                <option value="3">Three</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="col-lg-6 col-md-6 col-12 mt-lg-4 mt-md-3 mt-3">
-                                        <label htmlFor="fname" className='font-16 poppins'>FIRST NAME</label>
-                                        <div className='bgcard rounded-3 mt-1'>
-                                            <input type="text" id='fname' className="form-control orderinput border-0 border-0 p-2 poppins" style={{ backgroundColor: 'transparent' }} required />
-                                        </div>
-                                    </div>
-                                    <div className="col-lg-6 col-md-6 col-12 mt-lg-4 mt-md-3 mt-3">
-                                        <label htmlFor="lname" className='font-16 poppins'>LAST NAME</label>
-                                        <div className='bgcard rounded-3 mt-1'>
-                                            <input type="text" id='lname' className="form-control orderinput border-0 p-2 poppins" style={{ backgroundColor: 'transparent' }} required />
-                                        </div>
-                                    </div>
-                                    <div className="col-lg-6 col-md-6 col-12 mt-lg-4 mt-md-3 mt-3">
-                                        <label htmlFor="month" className='font-16 poppins'>EXPIRATION MONTH</label>
-                                        <div className='bgcard rounded-3 mt-1'>
-
-                                            <input type="text" id='month' className="form-control orderinput border-0 border-0 p-2 poppins" style={{ backgroundColor: 'transparent' }} required />
-                                        </div>
-                                    </div>
-                                    <div className="col-lg-6 col-md-6 col-12 mt-lg-4 mt-md-3 mt-3">
-                                        <label htmlFor="year" className='font-16 poppins'>EXPIRATION YEAR</label>
-                                        <div className='bgcard rounded-3 mt-1'>
-                                            <input type="text" id='year' className="form-control orderinput border-0 p-2 poppins" style={{ backgroundColor: 'transparent' }} required />
-                                        </div>
-                                    </div>
-                                    <div className='mt-4 '>
-                                        <Button type='submit' className='btn-stepper poppins px-3  font-16' >Complete Order</Button>
-                                    </div>
-                                </form> */}
-                <div className="row ">
+                              <div className="row ">
                   <div className="col-3">
                     <h6 className="font-500 font-18 blackcolor poppins">
                       Title of Account:
@@ -323,3 +275,4 @@ const handleFastCheckout = (event) => {
 };
 
 export default PaymentViaCard;
+

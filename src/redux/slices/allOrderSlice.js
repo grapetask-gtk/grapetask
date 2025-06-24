@@ -99,7 +99,22 @@ const allOrderSlice = createSlice({
       .addCase(AllBdOrders.rejected, (state, action) => {
         state.isLoading = false;
         state.getError = action.payload;
-      });
+      })
+
+      .addCase(ApproveOrderPayment.fulfilled, (state, action) => {
+  // Update the status of the order in state.orderDetail
+  const updated = state.orderDetail.map((order) =>
+    order.id === action.payload.id ? action.payload : order
+  );
+  state.orderDetail = updated;
+})
+.addCase(RejectOrderPayment.fulfilled, (state, action) => {
+  const updated = state.orderDetail.map((order) =>
+    order.id === action.payload.id ? action.payload : order
+  );
+  state.orderDetail = updated;
+});
+
   },
 });
 
@@ -232,6 +247,54 @@ export const AllBdOrders = createAsyncThunk(
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error?.message);
+    }
+  }
+);
+
+// Approve Payment
+export const ApproveOrderPayment = createAsyncThunk(
+  'order/approvePayment',
+  async (orderId, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const response = await axios.post(
+        `order/verify/${orderId}`,
+        { status: "active" },
+        {
+          headers: {
+            "Accept": "application/json",
+            "Authorization": `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error?.response?.data?.message || error.message);
+    }
+  }
+);
+
+// Reject Payment
+export const RejectOrderPayment = createAsyncThunk(
+  'order/rejectPayment',
+  async (orderId, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const response = await axios.post(
+        `order/verify/${orderId}`,
+        { status: "cancelled" },
+        {
+          headers: {
+            "Accept": "application/json",
+            "Authorization": `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error?.response?.data?.message || error.message);
     }
   }
 );

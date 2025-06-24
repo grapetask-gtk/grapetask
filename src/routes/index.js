@@ -3,9 +3,11 @@ import Blogopen from "../components/Blogopen";
 import Signin from "../components/Signin";
 import AboutUS from "../pages/AboutUS";
 import AdminDashboard from "../pages/admin-panel";
+import AdminBids from '../pages/admin-panel/bids/index';
 import BlogListPage from "../pages/admin-panel/blog/BlogList";
 import CreateBlogPage from "../pages/admin-panel/blog/create";
 import AdminOrders from '../pages/admin-panel/orders/index';
+import AdminPayments from '../pages/admin-panel/payment/index';
 import AdminUsers from "../pages/admin-panel/users";
 import Blog from "../pages/Blog";
 import BlogDetail from "../pages/BlogDetail";
@@ -192,7 +194,12 @@ function AppRoutes() {
 <Route path="/admin/blogs/create" element={<CreateBlogPage />} />
 {/* <Route path="/admin/blogs/edit/:id" element={<EditBlogPage />} /> */}
 <Route path="/admin/projects" element={<AdminOrders/>} />
-       
+
+<Route path="/admin/payments" element={<AdminPayments/>} />
+
+<Route path="/admin/bids" element={<AdminBids/>} />
+
+     
        
 
 <Route path="/Inbox" element={<FrelancerChat />} />

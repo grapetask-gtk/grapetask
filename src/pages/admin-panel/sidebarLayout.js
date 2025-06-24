@@ -22,6 +22,9 @@ const SidebarLayout = ({ children }) => {
     
     { path: "/admin/projects", label: "Projects", icon: <FaFolderOpen /> },
     { path: "/admin/payments", label: "Payments", icon: <FaMoneyCheckAlt /> },
+    { path: "/admin/bids", label: "Bids Payment", icon: <FaMoneyCheckAlt /> },
+
+    
     { path: "/adminInbox", label: "Inbox", icon: <FaRocketchat /> },
     { path: "/admin/settings", label: "Settings", icon: <FaCog /> },
   ];
