@@ -59,9 +59,10 @@ const BuyerSlice = createSlice({
    // Update the getBdsSuccess reducer
 getBdsSuccess: (state, action) => {
   // Handle both array and object responses
-  state.bdList = Array.isArray(action.payload) 
-    ? action.payload 
-    : action.payload.data || action.payload.users || action.payload.results || [];
+ state.bdList = action.payload?.data || 
+                 action.payload?.users || 
+                 action.payload?.results || 
+                 action.payload || [];
   state.getError = null;
   state.bdListLoading = false;
 },

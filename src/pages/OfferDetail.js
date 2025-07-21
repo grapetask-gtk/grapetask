@@ -1,40 +1,62 @@
 import { Alert, Box, Button, CircularProgress, Modal, Snackbar, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import swal from "sweetalert";
 import Navbar from "../components/Navbar";
+import { AllBdOrders } from "../redux/slices/allOrderSlice";
 import {
   AcceptOfferRequest,
+  AssignToExpertRequest,
   getBuyerOfferRequest,
-  RejectOfferRequest,
+  RejectOfferRequest
 } from "../redux/slices/offersSlice";
 import { useDispatch, useSelector } from "../redux/store/store";
 
 const OfferDetail = () => {
   const dispatch = useDispatch();
-  const { buyerOfferlist, isLoadingOffer } = useSelector((state) => state.offers);
+  const { 
+    buyerOfferlist, 
+    isLoadingOffer,
+    isAssigning,
+    assignSuccess,
+    assignError
+  } = useSelector((state) => state.offers);
+  
+  const bdOrders = useSelector(state => state.allOrder?.bdOrders || []);
+  const isLoadingBdOrders = useSelector(state => state.allOrder?.isLoading ?? true);
+  const auth = useSelector((state) => state.auth);
+
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-const [selectedImagePreview, setSelectedPreview] = useState(null);
 
+  // User state management
+  const [user, setUser] = useState({});
+  const [isBusinessDeveloper, setIsBusinessDeveloper] = useState(false);
 
- // ----------------- image upload --------------
+  // Image preview state
+  const [selectedImagePreview, setSelectedImagePreview] = useState(null);
 
-  const [imgPreview, setImgPreview] = useState(null);
-    const [isImageSelected, setImageSelected] = useState(false);
-  // State management
+  // Modal states
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedOfferId, setSelectedOfferId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("fast-checkout");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [formData, setFormData] = useState({
+
+  // Form states
+  const [paymentFormData, setPaymentFormData] = useState({
     username: "",
     email: "",
     password: "",
     amount: "",
     file: null
+  });
+
+  const [assignmentFormData, setAssignmentFormData] = useState({
+    bdOrderId: "",
+    assignmentNotes: ""
   });
 
   // Extract query parameters
@@ -43,15 +65,74 @@ const [selectedImagePreview, setSelectedPreview] = useState(null);
   const gig_id = queryParams.get("gig_id");
   const package_id = queryParams.get("package_id");
 
-  // Load offers on component mount
+  // Initialize user data
+  useEffect(() => {
+    try {
+      if (auth?.user) {
+        setUser(auth.user);
+      } else {
+        const userData = localStorage.getItem("UserData");
+        if (userData) setUser(JSON.parse(userData));
+      }
+    } catch (error) {
+      setUser({});
+    }
+  }, [auth?.user]);
+
+  // Set business developer status
+  useEffect(() => {
+    setIsBusinessDeveloper(
+      user?.role === 'bidder/company representative/middleman' || 
+      user?.user_type === 'business_developer'
+    );
+  }, [user]);
+
+  // Load offers
   useEffect(() => {
     if (id) {
       dispatch(getBuyerOfferRequest({ requestId: id }));
     }
   }, [dispatch, id]);
 
+  // Load BD orders for assignment modal
+  useEffect(() => {
+    dispatch(AllBdOrders());
+  }, [dispatch]);
+
+  // Cleanup object URLs
+  useEffect(() => {
+    return () => {
+      if (selectedImagePreview) {
+        URL.revokeObjectURL(selectedImagePreview);
+      }
+    };
+  }, [selectedImagePreview]);
+
+  // Handle assignment status changes
+  useEffect(() => {
+    if (assignSuccess) {
+      setToast({
+        show: true,
+        message: "Offer assigned successfully!",
+        type: "success"
+      });
+      // Close modal after successful assignment
+      setShowAssignModal(false);
+      // Refresh offers list
+      dispatch(getBuyerOfferRequest({ requestId: id }));
+    }
+
+    if (assignError) {
+      setToast({
+        show: true,
+        message: assignError,
+        type: "error"
+      });
+    }
+  }, [assignSuccess, assignError, dispatch, id]);
+
   // Utility function to calculate duration
-  const getDuration = (created, due) => {
+  const getDuration = useCallback((created, due) => {
     const diffInMs = new Date(due) - new Date(created);
     const diffInSeconds = Math.floor(diffInMs / 1000);
     
@@ -61,271 +142,183 @@ const [selectedImagePreview, setSelectedPreview] = useState(null);
     if (diffInSeconds < 2592000) return `Duration: ${Math.floor(diffInSeconds / 86400)} days`;
     if (diffInSeconds < 31536000) return `Duration: ${Math.floor(diffInSeconds / 2592000)} months`;
     return `Duration: ${Math.floor(diffInSeconds / 31536000)} years`;
-  };
+  }, []);
 
-  // Open payment modal 
-  const openPaymentModal = (offerId) => {
+  // Modal management functions
+  const openPaymentModal = useCallback((offerId) => {
     setSelectedOfferId(offerId);
     setPaymentMethod("fast-checkout");
     setShowPaymentModal(true);
-    // Reset form data
-    setFormData({
+    setPaymentFormData({
       username: "",
       email: "",
       password: "",
       amount: "",
       file: null
     });
-  };
+    setSelectedImagePreview(null);
+  }, []);
 
-  // Close payment modal
-  const closePaymentModal = () => {
+  const openAssignModal = useCallback((offerId) => {
+    setSelectedOfferId(offerId);
+    setShowAssignModal(true);
+    setAssignmentFormData({
+      bdOrderId: "",
+      assignmentNotes: ""
+    });
+  }, []);
+
+  const closePaymentModal = useCallback(() => {
     setShowPaymentModal(false);
     setSelectedOfferId(null);
     setIsProcessing(false);
-  };
+    if (selectedImagePreview) {
+      URL.revokeObjectURL(selectedImagePreview);
+      setSelectedImagePreview(null);
+    }
+  }, [selectedImagePreview]);
 
-  // Handle form input changes
-  
-   const handleInputChange = (e) => {
+  const closeAssignModal = useCallback(() => {
+    setShowAssignModal(false);
+    setSelectedOfferId(null);
+  }, []);
+
+  // Form handlers
+  const handlePaymentInputChange = useCallback((e) => {
     const { name, type, files, value } = e.target;
     
-    // Handle file inputs
-    if (type === 'file' && files && files[0]) {
+    if (type === 'file' && files?.[0]) {
       const selectedFile = files[0];
-      const imageUrl = URL.createObjectURL(selectedFile);
-      setSelectedPreview(imageUrl);
-      setImageSelected(true);
       
-      // Update form data with file
-      setFormData(prev => ({ ...prev, [name]: selectedFile }));
-    } 
-    // Handle non-file inputs
-    else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      if (selectedImagePreview) URL.revokeObjectURL(selectedImagePreview);
+      
+      const imageUrl = URL.createObjectURL(selectedFile);
+      setSelectedImagePreview(imageUrl);
+      
+      setPaymentFormData(prev => ({ ...prev, [name]: selectedFile }));
+    } else {
+      setPaymentFormData(prev => ({ ...prev, [name]: value }));
+    }
+  }, [selectedImagePreview]);
+
+  const handleAssignmentInputChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setAssignmentFormData(prev => ({ ...prev, [name]: value }));
+  }, []);
+
+  // Handle assign to expert
+  const handleAssignToExpert = async (e) => {
+    e.preventDefault();
+    
+    if (!assignmentFormData.bdOrderId) {
+      setToast({ show: true, message: "Please select a BD Order", type: "error" });
+      return;
+    }
+
+    try {
+      await dispatch(AssignToExpertRequest({
+        offerId: selectedOfferId,
+        bdOrderId: assignmentFormData.bdOrderId,
+        assignmentNotes: assignmentFormData.assignmentNotes,
+        seller_id: sellerId,
+        gig_id,
+        package_id
+      })).unwrap();
+    } catch (error) {
+      // Error is handled by Redux and shown in useEffect
     }
   };
 
-const handleFastCheckout = async (e) => {
-  e.preventDefault();
-  
-  if (!formData.file) {
-    setToast({ 
-      show: true, 
-      message: "Please upload a transfer receipt before proceeding.", 
-      type: "error" 
-    });
-    return;
-  }
-
-  setIsProcessing(true);
-
-  try {
-    // Use FormData for file uploads
-    const formDataToSend = new FormData();
-    formDataToSend.append('seller_id', sellerId);
-    formDataToSend.append('gig_id', gig_id);
-    formDataToSend.append('package_id', package_id);
-    formDataToSend.append('offerId', selectedOfferId);
-    formDataToSend.append('payment_method', 'bank_transfer');
-    formDataToSend.append('transfer_receipt', formData.file, formData.file.name);
-    formDataToSend.append('status', 'pending_verification');
-
-    // Send FormData instance to thunk
-    await dispatch(AcceptOfferRequest(formDataToSend));
-
-    // Only executed if server returns status:true
-    swal("Success", "Your transfer receipt has been submitted for verification", "success");
-    setToast({ 
-      show: true, 
-      message: "Transfer receipt submitted successfully! Your order will be activated after verification.", 
-      type: "success" 
-    });
-    
-    dispatch(getBuyerOfferRequest({ requestId: id }));
-    closePaymentModal();
-  } catch (error) {
-    setToast({ 
-      show: true, 
-      message: error.message || "Failed to process bank transfer. Please try again.", 
-      type: "error" 
-    });
-  } finally {
-    setIsProcessing(false);
-  }
-};
-
-  // Handle card payment
-  const handleCardPayment = async (e) => {
+  // Handle fast checkout
+  const handleFastCheckout = async (e) => {
     e.preventDefault();
     
-    // Validate form
-    const requiredFields = ['username', 'email', 'password', 'amount'];
-    const missingFields = requiredFields.filter(field => !formData[field]);
-    
-    if (missingFields.length > 0) {
-      setToast({ 
-        show: true, 
-        message: `Please fill in all required fields: ${missingFields.join(', ')}`, 
-        type: "error" 
-      });
-      return;
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setToast({ 
-        show: true, 
-        message: "Please enter a valid email address.", 
-        type: "error" 
-      });
-      return;
-    }
-
-    // Validate amount
-    if (parseFloat(formData.amount) <= 0) {
-      setToast({ 
-        show: true, 
-        message: "Please enter a valid amount greater than 0.", 
-        type: "error" 
-      });
+    if (!paymentFormData.file) {
+      setToast({ show: true, message: "Please upload a receipt", type: "error" });
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      // Prepare payment data
-      const paymentData = {
-        offerId: selectedOfferId,
-        paymentMethod: 'card',
-        cardDetails: {
-          holderName: formData.username,
-          email: formData.email,
-          amount: parseFloat(formData.amount),
-          // Note: In real implementation, card details should be tokenized
-          // and PIN should never be sent in plain text
-        },
-        seller_id: sellerId,
-        gig_id: gig_id,
-        package_id: package_id
-      };
+      const formData = new FormData();
+      formData.append('seller_id', sellerId);
+      formData.append('gig_id', gig_id);
+      formData.append('package_id', package_id);
+      formData.append('offerId', selectedOfferId);
+      formData.append('payment_method', 'bank_transfer');
+      formData.append('transfer_receipt', paymentFormData.file);
+      formData.append('status', 'pending_verification');
 
-      // Process card payment through your payment gateway
-      const response = await dispatch(
-        AcceptOfferRequest(paymentData)
-      );
+      await dispatch(AcceptOfferRequest(formData)).unwrap();
 
-      if (response?.payload?.status || response?.status) {
-        // Check if payment gateway response is included
-        if (response?.payload?.payment_form_html || response?.data?.payment_form_html) {
-          // Open payment gateway in new window
-          const win = window.open("", "_blank");
-          if (win) {
-            win.document.open();
-            win.document.write(response.payload?.payment_form_html || response.data?.payment_form_html);
-            win.document.close();
-          }
-        }
-
-        swal("Success", "Payment initiated successfully", "success");
-        setToast({ 
-          show: true, 
-          message: "Payment processed successfully!", 
-          type: "success" 
-        });
-        
-        // Refresh the offer list
-        dispatch(getBuyerOfferRequest({ requestId: id }));
-        closePaymentModal();
-        
-        // Navigate to success page if no payment form
-        if (!response?.payload?.payment_form_html && !response?.data?.payment_form_html) {
-          navigate("/payment/success");
-        }
-      } else {
-        throw new Error(response?.payload?.message || response?.message || "Payment processing failed");
-      }
+      setToast({ show: true, message: "Receipt submitted successfully!", type: "success" });
+      await dispatch(getBuyerOfferRequest({ requestId: id }));
+      closePaymentModal();
     } catch (error) {
-      console.error('Card payment error:', error);
-      setToast({ 
-        show: true, 
-        message: error.message || "Payment failed. Please check your card details and try again.", 
-        type: "error" 
-      });
+      setToast({ show: true, message: error.message || "Transfer failed", type: "error" });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Confirm payment based on selected method
-  const confirmPayment = async () => {
-    if (!paymentMethod) {
-      setToast({ 
-        show: true, 
-        message: "Please select a payment method.", 
-        type: "error" 
-      });
+  // Handle card payment
+  const handleCardPayment = async (e) => {
+    e.preventDefault();
+    
+    // Validation
+    const requiredFields = ['username', 'email', 'password', 'amount'];
+    if (requiredFields.some(field => !paymentFormData[field])) {
+      setToast({ show: true, message: "Please fill all fields", type: "error" });
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paymentFormData.email)) {
+      setToast({ show: true, message: "Invalid email", type: "error" });
+      return;
+    }
+
+    if (parseFloat(paymentFormData.amount) <= 0) {
+      setToast({ show: true, message: "Invalid amount", type: "error" });
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      // Prepare payment data based on method
-      let paymentData = {
+      const paymentData = {
         offerId: selectedOfferId,
-        paymentMethod,
+        paymentMethod: 'card',
+        cardDetails: {
+          holderName: paymentFormData.username,
+          email: paymentFormData.email,
+          amount: parseFloat(paymentFormData.amount),
+        },
         seller_id: sellerId,
-        gig_id: gig_id,
-        package_id: package_id
+        gig_id,
+        package_id
       };
 
-      // Add method-specific data
-      if (paymentMethod === 'bank_transfer' && formData.file) {
-        paymentData.transferReceipt = formData.file;
-      } else if (paymentMethod === 'card') {
-        paymentData.cardDetails = {
-          holderName: formData.username,
-          email: formData.email,
-          amount: parseFloat(formData.amount)
-        };
+      const response = await dispatch(AcceptOfferRequest(paymentData)).unwrap();
+
+      if (response?.payment_form_html) {
+        const win = window.open("", "_blank");
+        if (win) {
+          win.document.open();
+          win.document.write(response.payment_form_html);
+          win.document.close();
+        }
       }
 
-      const response = await dispatch(AcceptOfferRequest(paymentData));
-
-      if (response?.payload?.status || response?.status) {
-        setToast({ 
-          show: true, 
-          message: "Offer accepted successfully!", 
-          type: "success" 
-        });
-
-        // Handle payment form if provided (for card payments)
-        const paymentFormHtml = response?.payload?.payment_form_html || response?.data?.payment_form_html;
-        if (paymentFormHtml) {
-          const win = window.open("", "_blank");
-          if (win) {
-            win.document.open();
-            win.document.write(paymentFormHtml);
-            win.document.close();
-          }
-        }
-
-        // Refresh offer list
-        dispatch(getBuyerOfferRequest({ requestId: id }));
-        closePaymentModal();
-      } else {
-        throw new Error(response?.payload?.message || response?.message || "Offer acceptance failed");
+      setToast({ show: true, message: "Payment processed!", type: "success" });
+      await dispatch(getBuyerOfferRequest({ requestId: id }));
+      closePaymentModal();
+      
+      if (!response?.payment_form_html) {
+        navigate("/payment/success");
       }
     } catch (error) {
-      console.error('Payment confirmation error:', error);
-      setToast({
-        show: true,
-        message: error.message || "Offer acceptance failed! Please try again.",
-        type: "error"
-      });
+      setToast({ show: true, message: error.message || "Payment failed", type: "error" });
     } finally {
       setIsProcessing(false);
     }
@@ -335,7 +328,7 @@ const handleFastCheckout = async (e) => {
   const handleReject = async (offerId) => {
     const result = await swal({
       title: "Are you sure?",
-      text: "You want to reject this offer?",
+      text: "Reject this offer?",
       icon: "warning",
       buttons: true,
       dangerMode: true,
@@ -346,52 +339,64 @@ const handleFastCheckout = async (e) => {
     setIsProcessing(true);
     
     try {
-      const response = await dispatch(RejectOfferRequest({ offerId }));
-      
-      if (response?.payload?.status || response?.type?.includes('fulfilled')) {
-        setToast({ 
-          show: true, 
-          message: "Offer rejected successfully!", 
-          type: "success" 
-        });
-        dispatch(getBuyerOfferRequest({ requestId: id }));
-      } else {
-        throw new Error(response?.payload?.message || "Failed to reject offer");
-      }
+      await dispatch(RejectOfferRequest({ offerId })).unwrap();
+      setToast({ show: true, message: "Offer rejected!", type: "success" });
+      await dispatch(getBuyerOfferRequest({ requestId: id }));
     } catch (error) {
-      console.error('Reject offer error:', error);
-      setToast({ 
-        show: true, 
-        message: error.message || "Failed to reject offer. Please try again.", 
-        type: "error" 
-      });
+      setToast({ show: true, message: error.message || "Rejection failed", type: "error" });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Close toast notification
-  const handleCloseToast = () => {
-    setToast({ show: false, message: "", type: "success" });
-  };
+  // Close toast
+  const handleCloseToast = useCallback(() => {
+    setToast(prev => ({ ...prev, show: false }));
+  }, []);
 
+  // Render BD orders in dropdown
+  const renderOrderOptions = () => {
+    if (isLoadingBdOrders) {
+      return <option disabled>Loading BD orders...</option>;
+    }
+
+    const ordersArray = bdOrders || [];
+    
+    if (ordersArray.length === 0) {
+      return <option disabled>No BD orders available</option>;
+    }
+
+    return ordersArray.map(order => {
+      if (!order) return null;
+      
+      const bdOrderId = order.bdOrderId || order.id || order._id || 'N/A';
+      const orderTitle = order.buyerrequest?.title || order.subject || `BD Order #${bdOrderId}`;
+      
+      let clientName = 'Unknown Client';
+      if (order.client?.fname) clientName = order.client.fname;
+      else if (order.buyer?.fname) clientName = order.buyer.fname;
+      else if (order.user?.fname) clientName = order.user.fname;
+      else if (typeof order.client === 'string') clientName = order.client;
+
+      return (
+        <option key={bdOrderId} value={bdOrderId}>
+          {orderTitle} (BD Order ID: {bdOrderId}) - {clientName}
+        </option>
+      );
+    });
+  };
 
   return (
     <>
       <Navbar FirstNav="none" />
 
-      {/* Toast Notification */}
       <Snackbar
         open={toast.show}
         autoHideDuration={6000}
         onClose={handleCloseToast}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <Alert 
-          onClose={handleCloseToast} 
-          severity={toast.type} 
-          sx={{ width: '100%' }}
-        >
+        <Alert onClose={handleCloseToast} severity={toast.type} sx={{ width: '100%' }}>
           {toast.message}
         </Alert>
       </Snackbar>
@@ -417,10 +422,8 @@ const handleFastCheckout = async (e) => {
                       width={60}
                       height={60}
                       className="rounded-circle flex-shrink-0"
-                      alt={`${offer.business?.fname} ${offer.business?.lname}`}
-                      onError={(e) => {
-                        e.target.src = '/default-avatar.png';
-                      }}
+                      alt={`${offer.business?.fname || ''} ${offer.business?.lname || ''}`}
+                      onError={(e) => e.target.src = '/default-avatar.png'}
                     />
                     <div className="ms-3 flex-grow-1">
                       <h6 className="font-18 font-500 poppins mb-2">
@@ -432,34 +435,44 @@ const handleFastCheckout = async (e) => {
                     </div>
                   </div>
                   
-                 <div className="userByer my-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-  {/* Offer Info Section */}
-  <div className="d-flex flex-column flex-sm-row gap-2">
-    <span className="badge bg-light text-dark border font-14 poppins px-3 py-2 rounded-3">
-      Budget: ${offer.price}
-    </span>
-    <span className="badge bg-light text-dark border font-14 poppins px-3 py-2 rounded-3">
-      {getDuration(offer.created_at, offer.date)}
-    </span>
-  </div>
+                  <div className="userByer my-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                    <div className="d-flex flex-column flex-sm-row gap-2">
+                      <span className="badge bg-light text-dark border font-14 poppins px-3 py-2 rounded-3">
+                        Budget: ${offer.price}
+                      </span>
+                      <span className="badge bg-light text-dark border font-14 poppins px-3 py-2 rounded-3">
+                        {getDuration(offer.created_at, offer.date)}
+                      </span>
+                    </div>
 
-  {/* Action Buttons Section */}
-  <div className="d-flex flex-wrap gap-2 mt-2 mt-md-0">
-    <button
-      className="btn btn-success px-4"
-      onClick={() => openPaymentModal(offer.id)}
-    >
-      Accept
-    </button>
-    <button
-      className="btn btn-danger px-4"
-      onClick={() => handleReject(offer.id)}
-    >
-      Reject
-    </button>
-  </div>
-</div>
-
+                    <div className="d-flex flex-wrap gap-2 mt-2 mt-md-0">
+                      {isBusinessDeveloper ? (
+                        <button
+                          className="btn btn-primary px-4"
+                          onClick={() => openAssignModal(offer.id)}
+                          disabled={isAssigning}
+                        >
+                          Assign to Expert
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn-success px-4"
+                          onClick={() => openPaymentModal(offer.id)}
+                          disabled={isProcessing}
+                        >
+                          Accept
+                        </button>
+                      )}
+                      
+                      <button
+                        className="btn btn-danger px-4"
+                        onClick={() => handleReject(offer.id)}
+                        disabled={isProcessing || isAssigning}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))
@@ -498,24 +511,17 @@ const handleFastCheckout = async (e) => {
         >
           <div className="p-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
-              <h5 className="font-500 cocon byerLine mb-0">Add a payment method</h5>
-              <Button
-                onClick={closePaymentModal}
-                sx={{ minWidth: 'auto', p: 1 }}
-                disabled={isProcessing}
-              >
+              <h5 className="font-500 cocon byerLine mb-0">Add payment method</h5>
+              <Button onClick={closePaymentModal} disabled={isProcessing}>
                 ✕
               </Button>
             </div>
 
             <div className="row">
-              {/* Payment Method Selection */}
               <div className="col-lg-4 col-md-4 col-12 mb-4">
                 <div className="nav flex-column nav-pills Paymentwhite p-3 rounded-3 h-100">
                   <button
-                    className={`nav-link d-flex align-items-center mb-2 ${
-                      paymentMethod === 'fast-checkout' ? 'active' : ''
-                    }`}
+                    className={`nav-link d-flex align-items-center mb-2 ${paymentMethod === 'fast-checkout' ? 'active' : ''}`}
                     onClick={() => setPaymentMethod('fast-checkout')}
                     disabled={isProcessing}
                   >
@@ -528,9 +534,7 @@ const handleFastCheckout = async (e) => {
                   </button>
 
                   <button
-                    className={`nav-link d-flex align-items-center mb-2 ${
-                      paymentMethod === 'card' ? 'active' : ''
-                    }`}
+                    className={`nav-link d-flex align-items-center mb-2 ${paymentMethod === 'card' ? 'active' : ''}`}
                     onClick={() => setPaymentMethod('card')}
                     disabled={isProcessing}
                   >
@@ -544,9 +548,7 @@ const handleFastCheckout = async (e) => {
                   </button>
 
                   <button
-                    className={`nav-link d-flex align-items-center ${
-                      paymentMethod === 'paypal' ? 'active' : ''
-                    }`}
+                    className={`nav-link d-flex align-items-center ${paymentMethod === 'paypal' ? 'active' : ''}`}
                     onClick={() => setPaymentMethod('paypal')}
                     disabled
                   >
@@ -561,7 +563,6 @@ const handleFastCheckout = async (e) => {
                 </div>
               </div>
 
-              {/* Payment Content */}
               <div className="col-lg-8 col-md-8 col-12">
                 <div className="Paymentwhite p-4 rounded-3 h-100">
                   {paymentMethod === 'fast-checkout' && (
@@ -589,7 +590,7 @@ const handleFastCheckout = async (e) => {
                         <div className="col-md-8 col-12">
                           <div className="mb-3">
                             <label htmlFor="transferFile" className="form-label">
-                              Upload Transfer Receipt
+                              Upload Transfer Receipt *
                             </label>
                             <input
                               className="form-control"
@@ -597,26 +598,28 @@ const handleFastCheckout = async (e) => {
                               id="transferFile"
                               name="file"
                               accept="image/*,.pdf"
-                              onChange={handleInputChange}
+                              onChange={handlePaymentInputChange}
                               disabled={isProcessing}
                             />
 
-                            <img
-                        src={selectedImagePreview}
-                        className="mt-3 rounded-circle "
-                        width={150}
-                        height={150}
-                        alt="w8"
-                      />
+                            {selectedImagePreview && (
+                              <img
+                                src={selectedImagePreview}
+                                className="mt-3 rounded"
+                                width={150}
+                                height={150}
+                                alt="Transfer Receipt Preview"
+                                style={{ objectFit: 'cover' }}
+                              />
+                            )}
                           </div>
                         </div>
-                        
                       </div>
 
                       <Button
                         variant="contained"
                         onClick={handleFastCheckout}
-                        disabled={isProcessing}
+                        disabled={isProcessing || !paymentFormData.file}
                         startIcon={isProcessing ? <CircularProgress size={20} /> : null}
                         className="btn-stepper"
                       >
@@ -641,8 +644,8 @@ const handleFastCheckout = async (e) => {
                             id="username"
                             name="username"
                             className="form-control"
-                            value={formData.username}
-                            onChange={handleInputChange}
+                            value={paymentFormData.username}
+                            onChange={handlePaymentInputChange}
                             required
                             disabled={isProcessing}
                           />
@@ -657,8 +660,8 @@ const handleFastCheckout = async (e) => {
                             id="email"
                             name="email"
                             className="form-control"
-                            value={formData.email}
-                            onChange={handleInputChange}
+                            value={paymentFormData.email}
+                            onChange={handlePaymentInputChange}
                             required
                             disabled={isProcessing}
                           />
@@ -673,8 +676,8 @@ const handleFastCheckout = async (e) => {
                             id="password"
                             name="password"
                             className="form-control"
-                            value={formData.password}
-                            onChange={handleInputChange}
+                            value={paymentFormData.password}
+                            onChange={handlePaymentInputChange}
                             maxLength={6}
                             minLength={4}
                             required
@@ -691,8 +694,8 @@ const handleFastCheckout = async (e) => {
                             id="amount"
                             name="amount"
                             className="form-control"
-                            value={formData.amount}
-                            onChange={handleInputChange}
+                            value={paymentFormData.amount}
+                            onChange={handlePaymentInputChange}
                             min="1"
                             step="0.01"
                             required
@@ -708,13 +711,106 @@ const handleFastCheckout = async (e) => {
                         startIcon={isProcessing ? <CircularProgress size={20} /> : null}
                         className="btn-stepper"
                       >
-                        {isProcessing ? 'Processing Payment...' : 'Complete Payment'}
+                        {isProcessing ? 'Processing...' : 'Complete Payment'}
                       </Button>
                     </form>
                   )}
                 </div>
               </div>
             </div>
+          </div>
+        </Box>
+      </Modal>
+
+      {/* Assign to Expert Modal */}
+      <Modal
+        open={showAssignModal}
+        onClose={closeAssignModal}
+        aria-labelledby="assign-modal-title"
+        aria-describedby="assign-modal-description"
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: { xs: '95%', sm: '90%', md: '70%', lg: '60%' },
+            maxWidth: '800px',
+            maxHeight: '90vh',
+            bgcolor: 'background.paper',
+            borderRadius: 2,
+            boxShadow: 24,
+            overflow: 'auto',
+            p: 0
+          }}
+        >
+          <div className="p-4">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h5 className="font-500 cocon byerLine mb-0">Assign to Expert</h5>
+              <Button onClick={closeAssignModal} disabled={isAssigning}>
+                ✕
+              </Button>
+            </div>
+
+            <form onSubmit={handleAssignToExpert}>
+              <div className="row">
+                <div className="col-12 mb-3">
+                  <label htmlFor="bdOrderId" className="form-label">
+                    Select BD Order *
+                  </label>
+                  <select
+                    id="bdOrderId"
+                    name="bdOrderId"
+                    className="form-select"
+                    value={assignmentFormData.bdOrderId}
+                    onChange={handleAssignmentInputChange}
+                    required
+                    disabled={isAssigning}
+                  >
+                    <option value="">Select a BD Order</option>
+                    {renderOrderOptions()}
+                  </select>
+                </div>
+
+                <div className="col-12 mb-3">
+                  <label htmlFor="assignmentNotes" className="form-label">
+                    Assignment Notes (Optional)
+                  </label>
+                  <textarea
+                    id="assignmentNotes"
+                    name="assignmentNotes"
+                    className="form-control"
+                    rows="4"
+                    value={assignmentFormData.assignmentNotes}
+                    onChange={handleAssignmentInputChange}
+                    placeholder="Add instructions for the expert..."
+                    disabled={isAssigning}
+                  />
+                </div>
+              </div>
+
+              <div className="d-flex gap-2">
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={isAssigning}
+                  startIcon={isAssigning ? <CircularProgress size={20} /> : null}
+                  className="btn-stepper"
+                >
+                  {isAssigning ? 'Assigning...' : 'Assign to Expert'}
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={closeAssignModal}
+                  disabled={isAssigning}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
           </div>
         </Box>
       </Modal>

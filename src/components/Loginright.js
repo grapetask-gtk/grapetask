@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -7,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { Spinner } from "reactstrap";
 import logo from "../assets/logo.webp";
 import { userRegister } from "../redux/slices/userSlice";
+import axios from "../utils/axios";
 
 
 const Loginright = () => {
@@ -68,7 +68,7 @@ const Loginright = () => {
 
       // Store user data in localStorage
       if (data?.data) {
-        localStorage.setItem("userData", JSON.stringify(data.data));
+        localStorage.setItem("UserData", JSON.stringify(data.data));
       }
 // store role
       if (data?.data?.role) {
@@ -110,7 +110,7 @@ const Loginright = () => {
     if (data?.status) {
       // Store access token and user data in localStorage
       localStorage.setItem("accessToken", data.access_token);
-      localStorage.setItem("userData", JSON.stringify(data.data));
+      localStorage.setItem("UserData", JSON.stringify(data.data));
     } else {
       setIsError(true);
       setIsErrorShow(data?.message || "Registration failed. Please try again.");

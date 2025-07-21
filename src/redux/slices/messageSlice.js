@@ -89,7 +89,9 @@ export const sendMessage = createAsyncThunk(
       formData.append("message_type", payload.message_type);
       formData.append("message", payload.message);
       formData.append("receiver_id", payload.receiver_id);
-
+      if(payload.offer_id){
+      formData.append("offer_id", payload.offer_id);
+}
       if (payload.file) {
         formData.append("file", payload.file);
       }

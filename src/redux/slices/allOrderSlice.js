@@ -87,33 +87,49 @@ const allOrderSlice = createSlice({
         state.isLoading = false;
         state.getError = action.payload;
       })
-
-      // BD Orders
+      // BD Orders (FIXED)
       .addCase(AllBdOrders.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(AllBdOrders.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.bdOrders = action.payload;
-      })
-      .addCase(AllBdOrders.rejected, (state, action) => {
+.addCase(AllBdOrders.fulfilled, (state, action) => {
+  state.isLoading = false;
+  // Store the array directly, not nested in data property
+  state.bdOrders = action.payload; 
+})   
+.addCase(AllBdOrders.rejected, (state, action) => {
         state.isLoading = false;
         state.getError = action.payload;
       })
 
       .addCase(ApproveOrderPayment.fulfilled, (state, action) => {
-  // Update the status of the order in state.orderDetail
-  const updated = state.orderDetail.map((order) =>
-    order.id === action.payload.id ? action.payload : order
-  );
-  state.orderDetail = updated;
+        const updated = state.orderDetail.map((order) =>
+          order.id === action.payload.id ? action.payload : order
+        );
+        state.orderDetail = updated;
+      })
+      .addCase(RejectOrderPayment.fulfilled, (state, action) => {
+        const updated = state.orderDetail.map((order) =>
+          order.id === action.payload.id ? action.payload : order
+        );
+        state.orderDetail = updated;
+      })
+
+      // Order Submit
+.addCase(OrderSubmit.pending, (state) => {
+  state.isLoading = true;
 })
-.addCase(RejectOrderPayment.fulfilled, (state, action) => {
-  const updated = state.orderDetail.map((order) =>
+.addCase(OrderSubmit.fulfilled, (state, action) => {
+  state.isLoading = false;
+  // Optionally update relevant order in orderDetail
+  const updatedOrders = state.orderDetail.map(order =>
     order.id === action.payload.id ? action.payload : order
   );
-  state.orderDetail = updated;
-});
+  state.orderDetail = updatedOrders;
+})
+.addCase(OrderSubmit.rejected, (state, action) => {
+  state.isLoading = false;
+  state.getError = action.payload;
+})
 
   },
 });
@@ -127,9 +143,7 @@ export const {
 } = allOrderSlice.actions;
 
 export default allOrderSlice.reducer;
-
-
-// ✅ Convert to createAsyncThunk
+// Thunks
 export const OrderCreate = createAsyncThunk(
   'order/create',
   async ({ data, handleClose }, { rejectWithValue }) => {
@@ -149,7 +163,6 @@ export const OrderCreate = createAsyncThunk(
         return rejectWithValue(response?.data?.message);
       }
       
-      
       return response.data.data;
     } catch (error) {
       handleClose(error);
@@ -158,7 +171,6 @@ export const OrderCreate = createAsyncThunk(
   }
 );
 
-// Get Order Details
 export const AllOrders = createAsyncThunk(
   'order/getAllOrders',
   async (_, { rejectWithValue }) => {
@@ -197,11 +209,9 @@ export const AllExpertOrders = createAsyncThunk(
           Authorization: `Bearer ${accessToken}`,
         },
       });
-
     
       return response.data.data;
     } catch (error) {
-      console.error('Error fetching expert orders:', error);
       return rejectWithValue(
         error?.response?.data?.message || error.message
       );
@@ -209,7 +219,6 @@ export const AllExpertOrders = createAsyncThunk(
   }
 );
 
-// Client Orders
 export const AllClientOrders = createAsyncThunk(
   'order/getAllClientOrders',
   async (_, { rejectWithValue }) => {
@@ -230,28 +239,52 @@ export const AllClientOrders = createAsyncThunk(
   }
 );
 
-// BD Orders
+// FIXED BD Orders Thunk
+
 export const AllBdOrders = createAsyncThunk(
   'order/getAllBdOrders',
   async (_, { rejectWithValue }) => {
     try {
+      console.log('=== BD ORDERS THUNK STARTED ===');
+      
       const accessToken = localStorage.getItem("accessToken");
-      const response = await axios.get("order/bd", {
+      const userData = JSON.parse(localStorage.getItem("UserData") || '{}');
+
+      console.log('User data:', userData);
+
+      if (!userData?.id) {
+        console.log('ERROR: Missing user ID');
+        throw new Error('Missing user ID');
+      }
+
+      const response = await axios.get("bd/order", {
+        params: { bd_id: userData.id },
         headers: {
           "Accept": "application/json",
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + accessToken,
+          "Authorization": `Bearer ${accessToken}`,
         },
       });
-    
-      return response.data.data;
+
+      console.log('=== BD ORDERS API RESPONSE ===');
+      console.log('Full response:', response);
+      console.log('Response data:', response.data);
+      console.log('Response data.data:', response.data.data);
+      
+      // Make sure we're returning the actual array
+      const ordersData = response.data?.data || [];
+      console.log('Returning orders data:', ordersData);
+      console.log('Orders data length:', ordersData.length);
+      
+      return ordersData;
+     
     } catch (error) {
-      return rejectWithValue(error?.message);
+      console.log('=== BD ORDERS THUNK ERROR ===');
+      console.log('Error:', error);
+      return rejectWithValue(error?.response?.data?.message || error.message);
     }
   }
 );
 
-// Approve Payment
 export const ApproveOrderPayment = createAsyncThunk(
   'order/approvePayment',
   async (orderId, { rejectWithValue }) => {
@@ -259,7 +292,7 @@ export const ApproveOrderPayment = createAsyncThunk(
       const accessToken = localStorage.getItem("accessToken");
       const response = await axios.post(
         `order/verify/${orderId}`,
-        { status: "active" },
+        { status: "Project Started" },
         {
           headers: {
             "Accept": "application/json",
@@ -275,7 +308,6 @@ export const ApproveOrderPayment = createAsyncThunk(
   }
 );
 
-// Reject Payment
 export const RejectOrderPayment = createAsyncThunk(
   'order/rejectPayment',
   async (orderId, { rejectWithValue }) => {
@@ -298,3 +330,109 @@ export const RejectOrderPayment = createAsyncThunk(
     }
   }
 );
+
+export const OrderSubmit = createAsyncThunk(
+  'order/submit',
+  async ({ orderId, payload, onUploadProgress }, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+
+      const response = await axios.post(
+        `order/submit`,
+        payload,
+        {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          onUploadProgress // this will come from the component
+        }
+      );
+
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error?.response?.data?.message || error.message);
+    }
+  }
+);
+
+
+   
+export const OrderComplete = createAsyncThunk(
+  'order/complete',
+  async ({ orderId, payload }, { rejectWithValue }) => {  // 👈 Destructure arguments
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      
+      // Convert FormData to URL-encoded format
+      const params = new URLSearchParams();
+      params.append('status', payload.get('status'));
+      params.append('order_id', payload.get('order_id'));
+      
+      const response = await axios.post(
+        `order/complete`,  // Endpoint without ID in URL
+        params,  // Send as URL-encoded form data
+        {
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error?.response?.data?.message || error.message);
+    }
+  }
+);
+export const ReviewSubmit = createAsyncThunk(
+  'order/submit',
+  async (payload, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const response = await axios.post(`order/complete`, payload, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          "Authorization": "Bearer " + accessToken,
+        }
+      });
+
+      if (!response.data.status) {
+        return rejectWithValue(response?.data?.message);
+      }
+
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error?.response?.data?.message || error.message);
+    }
+  }
+);
+
+ 
+
+
+//       const response = await axios.post(API_URL, formData, {
+//   onUploadProgress: progressEvent => {
+//     const percentCompleted = Math.round(
+//       (progressEvent.loaded * 100) / progressEvent.total
+//     );
+//     setUploadProgress(prev => ({
+//       ...prev,
+//       [file.name]: percentCompleted
+//     }));
+//   }
+// });
+
+
+//       return response.data.data; // success payload
+//     } catch (error) {
+//       console.error("OrderSubmit Error:", error);
+//       return rejectWithValue(error?.response?.data?.message || error.message);
+//     }
+//   }
+// );
+

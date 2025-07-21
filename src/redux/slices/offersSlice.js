@@ -1,6 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
 import axios from '../../utils/axios';
-import { dispatch } from '../store/store';
 
 const initialState = {
   offerIsLoading: false,
@@ -9,12 +8,14 @@ const initialState = {
   getError: null,
   offerDetail: [],
   personalGigs: [],
-
-isLoadingExperts: false,
+  isLoadingExperts: false,
   errorExperts: null,
   experts: [],
   userGigs: {},
   buyerOfferlist: [],
+  isAssigning: false,
+  assignError: null,
+  assignSuccess: false,
 }
 
 const OffersSlice = createSlice({
@@ -53,7 +54,7 @@ const OffersSlice = createSlice({
     // Action when experts are successfully fetched
     getExpertsSuccess: (state, action) => {
       state.isLoadingExperts = false;
-      state.experts = action.payload; // Should be array of experts
+      state.experts = action.payload;
     },
     // Action when fetching experts fails
     hasGetErrorExperts: (state, action) => {
@@ -81,74 +82,115 @@ const OffersSlice = createSlice({
       state.isLoadingOffer = false;
       state.buyerOfferlist= action.payload
     },
+
+    startAssigning: (state) => {
+      state.isAssigning = true;
+      state.assignSuccess = false;
+      state.assignError = null;
+    },
+    assignSuccess: (state) => {
+      state.isAssigning = false;
+      state.assignSuccess = true;
+    },
+    assignError: (state, action) => {
+      state.isAssigning = false;
+      state.assignError = action.payload;
+    },
   },
 })
-export const { getAllOfferDetails, getOfferGigDetails ,getBuyerOfferDetail, getUserGigDetails, 
+
+export const { 
+  getAllOfferDetails, 
+  getOfferGigDetails, 
+  getBuyerOfferDetail, 
+  getUserGigDetails, 
   startLoadingExperts,
   getExpertsSuccess,
-  hasGetErrorExperts,} = OffersSlice.actions;
+  hasGetErrorExperts,
+} = OffersSlice.actions;
+
 export default OffersSlice.reducer
 
 // User Functions
 
-
 //Invite to Job
 export function inviteToJob(data, handleClose) {
-  return async () => {
-    let accessToken = localStorage.getItem('accessToken')
+  return async (dispatch) => {
+    let accessToken = localStorage.getItem('accessToken');
     dispatch(OffersSlice.actions.startLoadingCreate());
+    
     try {
-      const response = await axios.post('job-invitation',
-        data, {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + accessToken
-
-          }
+      const response = await axios.post('job-invitation', data, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + accessToken
+        }
       });
-      handleClose(response.data);
+
+      // Handle optional callback
+      if (handleClose) handleClose(response.data);
+
+      // Check for server-side errors
       if (!response.data.status) {
-        dispatch(OffersSlice.actions.hasGetError(response?.data?.message));
+        const errorMsg = response.data.message || "Request failed";
+        dispatch(OffersSlice.actions.hasGetError(errorMsg));
+        throw new Error(errorMsg);
       }
-      // console.log(JSON.stringify(response?.data?.data))
-      // dispatch(OffersSlice.actions.getUserDetailsSuccess(response.data.data));
+
+      // Stop loading on success
+      dispatch(OffersSlice.actions.stopLoading());
+      return response.data;
+      
     } catch (error) {
-      handleClose(error);
-      dispatch(OffersSlice.actions.hasGetError(error?.message));
+      const errorMsg = error.response?.data?.message || error.message;
+      dispatch(OffersSlice.actions.hasGetError(errorMsg));
+      
+      if (handleClose) handleClose(error);
+      throw error;
     }
   };
 }
-  
-//Create Offer Request
+
+// Create Offer Request - FIXED VERSION
 export function CreateOfferRequest(data, handleClose) {
-  return async () => {
-
-    let accessToken = localStorage.getItem('accessToken')
+  return async (dispatch) => {
+    let accessToken = localStorage.getItem('accessToken');
     dispatch(OffersSlice.actions.startLoadingCreate());
+    
     try {
-      const response = await axios.post('offer-request',
-        data, {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + accessToken
-
-          }
+      const response = await axios.post('offer-request', data, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + accessToken
+        }
       });
-      handleClose(response.data);
+
+      // Handle optional callback FIRST
+      if (handleClose) handleClose(response.data);
+      
+      // Check for server-side errors
       if (!response.data.status) {
-        dispatch(OffersSlice.actions.hasGetError(response?.data?.message));
+        const errorMsg = response.data.message || "Request failed";
+        dispatch(OffersSlice.actions.hasGetError(errorMsg));
+        throw new Error(errorMsg);
       }
-      // console.log(JSON.stringify(response?.data?.data))
-      // dispatch(OffersSlice.actions.getUserDetailsSuccess(response.data.data));
+
+      // Stop loading on success
+      dispatch(OffersSlice.actions.stopLoading());
+      
+      return response.data; // ✅ Return data for unwrap()
+      
     } catch (error) {
-      handleClose(error);
-      dispatch(OffersSlice.actions.hasGetError(error?.message));
+      const errorMsg = error.response?.data?.message || error.message;
+      dispatch(OffersSlice.actions.hasGetError(errorMsg));
+      
+      if (handleClose) handleClose(error);
+      throw error; // ✅ Ensure unwrap gets rejected
     }
   };
 }
-
 
 export function AcceptOfferRequest(data, handleClose) {
   return async (dispatch) => {
@@ -174,26 +216,29 @@ export function AcceptOfferRequest(data, handleClose) {
 
       const response = await axios.post('accept-offer', payload, { headers });
 
+      // Handle optional callback
+      if (handleClose) handleClose(response.data);
+
       // Handle server-side errors
       if (!response.data.status) {
         const errorMsg = response.data.message || "Request failed";
         dispatch(OffersSlice.actions.hasGetError(errorMsg));
-        throw new Error(errorMsg); // Critical: Throw to trigger catch
+        throw new Error(errorMsg);
       }
 
-      handleClose?.(response.data);
-      return response.data; // Return consistent response
+      // Stop loading on success
+      dispatch(OffersSlice.actions.stopLoading());
+      return response.data;
+      
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.message;
       dispatch(OffersSlice.actions.hasGetError(errorMsg));
-      handleClose?.(error);
-      throw error; // Propagate to component
+      
+      if (handleClose) handleClose(error);
+      throw error;
     }
   };
 }
-
-
-
 
 //reject offer 
 export function RejectOfferRequest(data, handleClose) {
@@ -210,25 +255,78 @@ export function RejectOfferRequest(data, handleClose) {
         },
       });
 
+      // Handle optional callback
+      if (handleClose) handleClose(response.data);
+
+      // Check for server-side errors
       if (!response.data.status) {
-        dispatch(OffersSlice.actions.hasGetError(response?.data?.message));
+        const errorMsg = response.data.message || "Request failed";
+        dispatch(OffersSlice.actions.hasGetError(errorMsg));
+        throw new Error(errorMsg);
       }
 
-      handleClose?.(response.data);
+      // Stop loading on success
+      dispatch(OffersSlice.actions.stopLoading());
+      return response.data;
+      
     } catch (error) {
-      dispatch(OffersSlice.actions.hasGetError(error?.message));
-      handleClose?.(error);
+      const errorMsg = error.response?.data?.message || error.message;
+      dispatch(OffersSlice.actions.hasGetError(errorMsg));
+      
+      if (handleClose) handleClose(error);
+      throw error;
     }
   };
 }
 
+//Assign to Expert Request
+export function AssignToExpertRequest(data) {
+  return async (dispatch) => {
+    const accessToken = localStorage.getItem('accessToken');
+    dispatch(OffersSlice.actions.startAssigning());
+    
+    try {
+      // Configure headers dynamically
+      const headers = {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json',
+      };
 
+      // Use FormData instance for files
+      const payload = data instanceof FormData 
+        ? data 
+        : JSON.stringify(data);
+
+      // Set content type automatically
+      if (!(data instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+      }
+
+      const response = await axios.post('assign-to-expert', payload, { headers });
+      
+      if (!response.data.status) {
+        const errorMsg = response.data.message || "Assignment failed";
+        dispatch(OffersSlice.actions.assignError(errorMsg));
+        throw new Error(errorMsg);
+      }
+
+      dispatch(OffersSlice.actions.assignSuccess());
+      return response.data;
+      
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || error.message;
+      dispatch(OffersSlice.actions.assignError(errorMsg));
+      throw error;
+    }
+  };
+}
 
 //getting experts 
 export function getExperts(handleClose) {
   return async (dispatch) => {
     let accessToken = localStorage.getItem("accessToken");
     dispatch(OffersSlice.actions.startLoadingExperts());
+    
     try {
       const response = await axios.get("experts", {
         headers: {
@@ -236,53 +334,60 @@ export function getExperts(handleClose) {
         },
       });
       
-       if (response.data) {
-        // console.log('experts',response.data);
+      if (response.data) {
         dispatch(OffersSlice.actions.getExpertsSuccess(response.data));
       } else {
         dispatch(OffersSlice.actions.hasGetErrorExperts(response.data.message));
       }
       
       if (handleClose) handleClose(response.data);
+      return response.data;
+      
     } catch (error) {
-      dispatch(OffersSlice.actions.hasGetErrorExperts(error.message));
+      const errorMsg = error.message;
+      dispatch(OffersSlice.actions.hasGetErrorExperts(errorMsg));
+      
       if (handleClose) handleClose(error);
+      throw error;
     }
   };
 }
 
 //Get getOfferGigs
 export function getPersonalGigs(data) {
-  return async () => {
-     let  accessToken = localStorage.getItem('accessToken')
+  return async (dispatch) => {
+    let accessToken = localStorage.getItem('accessToken');
     dispatch(OffersSlice.actions.startLoading());
+    
     try {
-      const response = await axios.get('user-gig-detail',{
+      const response = await axios.get('user-gig-detail', {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + accessToken
         },
-        params : data
+        params: data
       });
 
       dispatch(OffersSlice.actions.getOfferGigDetails(response.data.data));
-      // console.log(response.data.data);
+      return response.data.data;
+      
     } catch (error) {
-        console.log(error?.message);
-
-      dispatch(OffersSlice.actions.hasGetError(error?.message));
+      const errorMsg = error.message;
+      dispatch(OffersSlice.actions.hasGetError(errorMsg));
+      throw error;
     }
   };
 }
+
 // Get get ALL OFFER Request
 export function getOfferRequest() {
-  return async () => {
-    let accessToken = localStorage.getItem('accessToken')
+  return async (dispatch) => {
+    let accessToken = localStorage.getItem('accessToken');
     dispatch(OffersSlice.actions.startLoading());
+    
     try {
       const response = await axios.get('offer-request', {
-        
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -291,20 +396,22 @@ export function getOfferRequest() {
       });
 
       dispatch(OffersSlice.actions.getAllOfferDetails(response.data.data));
-      // console.log(response.data.data );
+      return response.data.data;
+      
     } catch (error) {
-
-      dispatch(OffersSlice.actions.hasGetError(error?.message));
-      console.log(error?.message);
+      const errorMsg = error.message;
+      dispatch(OffersSlice.actions.hasGetError(errorMsg));
+      throw error;
     }
   };
 }
+
 //Get get Offer Request
 export function getBuyerOfferRequest(data) {
-  // console.log('data sent' ,data);
-  return async () => {
-    let accessToken = localStorage.getItem('accessToken')
+  return async (dispatch) => {
+    let accessToken = localStorage.getItem('accessToken');
     dispatch(OffersSlice.actions.startLoadingOfferDetail());
+    
     try {
       const response = await axios.get('buyer-offer-list', {
         headers: {
@@ -312,40 +419,43 @@ export function getBuyerOfferRequest(data) {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + accessToken
         },
-        params : data
-
+        params: data
       });
 
       dispatch(OffersSlice.actions.getBuyerOfferDetail(response.data.data));
+      return response.data.data;
+      
     } catch (error) {
-
-      dispatch(OffersSlice.actions.hasGetError(error?.message));
+      const errorMsg = error.message;
+      dispatch(OffersSlice.actions.hasGetError(errorMsg));
+      throw error;
     }
   };
 }
 
-
 //Get getUserGigs
 export function getUserGigs(data) {
-  return async () => {
-     let  accessToken = localStorage.getItem('accessToken')
+  return async (dispatch) => {
+    let accessToken = localStorage.getItem('accessToken');
     dispatch(OffersSlice.actions.startLoading());
+    
     try {
-      const response = await axios.get('gig-user',{
-        headers:  {
+      const response = await axios.get('gig-user', {
+        headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + accessToken
         },
-        params : data
+        params: data
       });
 
       dispatch(OffersSlice.actions.getUserGigDetails(response.data.data));
-      // console.log(response.data.data);
+      return response.data.data;
+      
     } catch (error) {
-        console.log(error?.message);
-
-      dispatch(OffersSlice.actions.hasGetError(error?.message));
+      const errorMsg = error.message;
+      dispatch(OffersSlice.actions.hasGetError(errorMsg));
+      throw error;
     }
   };
 }

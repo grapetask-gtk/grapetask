@@ -12,6 +12,7 @@ import video2 from "../../assets/video/Freelance3.mp4";
 import video3 from "../../assets/video/Freelance8.mp4";
 import video1 from "../../assets/video/Freelance9.mp4";
 import videoPlay from "../../assets/VideoPlay.webp";
+import BdCard from "../../components/BdCard";
 import ExpertCard from "../../components/ExpertCard";
 import GigCard from "../../components/GigCard";
 import Navbar from "../../components/Navbar";
@@ -158,17 +159,31 @@ const Freelancers = () => {
   const userRole = userDetail?.role || UserData?.role || "client";
 
   // Update the safeGetBdList function
-  const safeGetBdList = () => {
-    if (!bdList) return [];
+const safeGetBdList = useCallback(() => {
+  if (!bdList) return [];
+  
+  // Handle all possible response structures
+  return bdList?.data || bdList?.users || bdList?.results || bdList || [];
+});
+
+// Fix 2: Simplify BD filtering
+const getBdsFilteredData = useCallback(() => {
+  const bds = safeGetBdList();
+  
+  if (!searchKeyword.trim()) return bds;
+
+  const keyword = searchKeyword.toLowerCase().trim();
+  return bds.filter(bd => {
+    const name = (bd.name || bd.username || bd.fname || "").toLowerCase();
+    const skills = (bd.skills || "").toLowerCase();
+    const bio = (bd.bio || bd.description || "").toLowerCase();
+    const country = (bd.country || bd.country || bd.location || "").toLowerCase();
     
-    // Handle different response structures
-    if (Array.isArray(bdList)) return bdList;
-    if (Array.isArray(bdList.data)) return bdList.data;
-    if (Array.isArray(bdList.users)) return bdList.users;
-    if (Array.isArray(bdList.results)) return bdList.results;
-    
-    return [];
-  };
+    return name.includes(keyword) || 
+           skills.includes(keyword) || 
+           bio.includes(keyword);
+  });
+}, [safeGetBdList, searchKeyword]);
 
   const safeGetFreelancersList = () => {
     // Handle different possible data structures
@@ -208,7 +223,9 @@ const Freelancers = () => {
     const role = normalizeRole(userRole);
     
     if (role.includes("client")) {
-      return [{ value: "services", label: "Search Services" }];
+      return [{ value: "services", label: "Search Services" },
+        { value: "bds", label: "Search Business Developers" }];
+      
     }
     if (isBdRole(userRole) || role.includes("bidder")) {
       return [
@@ -286,7 +303,7 @@ const Freelancers = () => {
   }, [freelancers, searchKeyword]);
 
   // BD filtering logic
-  const getBdsFilteredData = useCallback(() => {
+  {/* const getBdsFilteredData = useCallback(() => {
     const bds = safeGetBdList();
     
     if (bds.length === 0) return [];
@@ -300,7 +317,7 @@ const Freelancers = () => {
     if (searchKeyword.trim()) {
       const keyword = searchKeyword.toLowerCase().trim();
       filteredBds = filteredBds.filter(bd => {
-        const name = (bd.name || bd.username || "").toLowerCase();
+        const name = (bd.fname || bd.username || "").toLowerCase();
         const skills = (bd.skills || "").toLowerCase();
         const bio = (bd.bio || bd.description || "").toLowerCase();
         
@@ -311,7 +328,7 @@ const Freelancers = () => {
     }
 
     return filteredBds;
-  }, [safeGetBdList, searchKeyword]);
+  }, [safeGetBdList, searchKeyword]); */}
   
   // Expert pagination data
   const expertCurrentData = useMemo(() => getExpertCurrentData(), [getExpertCurrentData]);
@@ -392,7 +409,7 @@ const Freelancers = () => {
       const role = normalizeRole(userRole);
       
       // Fetch BDs if user role allows it
-      if (role.includes("client") || isBdRole(userRole) || role.includes("bidder")) {
+      if (role.includes("client") || isBdRole(userRole) || role.includes("bidder/company representative/middleman")) {
         {/* console.log('Fetching BDs...'); */}
         dispatch(getBds());
       }
@@ -818,52 +835,46 @@ const Freelancers = () => {
           </div>
         </div>
       ) : searchType === "bds" ? (
-        // BUSINESS DEVELOPERS SECTION
-        <div className="container haifwhitecard rounded-3 pb-5 px-4 mt-3 pt-5">
-          <div className="row">
-            <h4 className="font-24 poppins fw-bold pb-2">
-              Available Business Developers
-            </h4>
-            
-            {/* Results Summary */}
-            <div className="mb-3">
-              <p className="text-muted">
-                {searchKeyword 
-                  ? `Found ${bdCurrentData.length} BDs matching "${searchKeyword}"` 
-                  : `Showing ${paginatedBDs.length} of ${bdCurrentData.length} BDs`}
-              </p>
-            </div>
-            
-            {/* Debug Info */}
-            <div className="mb-3">
-              <small className="text-info">
-                Debug: Total BDs loaded: {safeGetBdList().length}, 
-                Filtered BDs: {bdCurrentData.length}
-              </small>
-            </div>
-            
-            {/* BD List */}
-            {bdCurrentData?.length > 0 ? (
-              paginatedBDs.map((bd, index) => (
-                <UserCard 
+       
+  <div className="container haifwhitecard rounded-3 pb-5 px-4 mt-3 pt-5">
+    <div className="row">
+      <h4 className="font-24 poppins fw-bold pb-2">
+        Available Business Developers
+      </h4>
+      
+      {/* Results Summary */}
+      <div className="mb-3">
+        <p className="text-muted">
+          {searchKeyword 
+            ? `Found ${bdCurrentData.length} BDs matching "${searchKeyword}"` 
+            : `Showing ${paginatedBDs.length} of ${bdCurrentData.length} BDs`}
+        </p>
+      </div>
+      
+      {/* BD List */}
+      {bdCurrentData.length > 0 ? (
+        paginatedBDs.map((bd, index) => (
+      
+
+<BdCard 
                   key={bd.id || bd._id || index}
                   user={bd}
-                  type="bds"
-                  canOrder={canPlaceOrders}
-                  userRole={userRole}
+                  bd={bd}
+                  showBdDetail={showBdDetail}
                 />
-              ))
-            ) : (
-              <div className="text-center py-5">
-                <h5>No Business Developers found</h5>
-                <p className="text-muted">
-                  {searchKeyword 
-                    ? `No BDs match your search "${searchKeyword}". Try different keywords.`
-                    : "No Business Developers available at the moment."
-                  }
-                </p>
-              </div>
-            )}
+        ))
+      ) : (
+        <div className="text-center py-5">
+          <h5>No Business Developers found</h5>
+          <p className="text-muted">
+            {bdListLoading
+              ? "Loading BDs..."
+              : searchKeyword 
+                ? `No BDs match your search "${searchKeyword}"`
+                : "No Business Developers available"}
+          </p>
+        </div>
+      )}
 
             {/* BD Detail Modal */}
             <div

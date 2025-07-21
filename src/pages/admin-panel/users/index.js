@@ -174,7 +174,7 @@ const UsersPage = () => {
                       >
                         <option value="admin">Admin</option>
                         <option value="bidder/company representative/middleman">Business developer</option>
-                        <option value="\texpert/freelancer">Freelancer</option>
+                        <option value="expert/freelancer">Freelancer</option>
                         <option value="client">Client</option>
                       </Form.Select>
                     </td>

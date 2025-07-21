@@ -179,15 +179,15 @@
 // };
 
 // export default Otp;
-import React, { useState, useEffect } from "react";
-import Loginleft from "../components/Loginleft";
-import logo from "../assets/logo.webp";
+
+import { useEffect, useState } from "react";
 import OtpInput from "react-otp-input";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "../redux/store/store";
-import { userOtp } from "../redux/slices/userSlice";
 import { Spinner } from "reactstrap";
-import axios from "axios";
+import logo from "../assets/logo.webp";
+import Loginleft from "../components/Loginleft";
+import { useDispatch, useSelector } from "../redux/store/store";
+import axios from '../utils/axios';
 
 const Otp = ({ formType }) => {
   const dispatch = useDispatch();
@@ -225,7 +225,7 @@ const Otp = ({ formType }) => {
     try {
       // Verify OTP using the API
       const response = await axios.post(
-        "https://portal.grapetask.co/api/otp-verify",
+        "otp-verify",
         data,
         {
           headers: {

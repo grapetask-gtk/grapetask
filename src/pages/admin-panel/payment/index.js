@@ -23,6 +23,7 @@ export default function PaymentVerification() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showModal, setShowModal] = useState(false);
+const [receiptBlobUrl, setReceiptBlobUrl] = useState(null);
 
   const { orderDetail = [], isLoading = false } = useSelector(
     (state) => state.allOrder || {}
@@ -44,14 +45,48 @@ const [toast, setToast] = useState({ show: false, message: "", type: "success" }
     );
   });
 
-  const handleViewReceipt = (order) => {
-    setSelectedOrder(order);
-    setShowModal(true);
-  };
+const handleViewReceipt = async (order) => {
+  setSelectedOrder(order);
+  setShowModal(true);
+  setReceiptBlobUrl(null); // reset
+
+  const fileName = order.transfer_receipt_path.split("/").pop();
+  let accessToken = localStorage.getItem("accessToken");
+     
+  try {
+    const response = await fetch(
+      `${HOST_API}files/bank_receipts/${fileName}`,
+      {
+        method: "GET",
+        credentials: "include", 
+                 headers: {
+          Authorization: "Bearer " + accessToken,
+        },
+      }
+    );
+
+    if (!response.ok) throw new Error("Failed to load receipt.");
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    setReceiptBlobUrl(url);
+  } catch (error) {
+    console.error("Error loading receipt:", error);
+    setReceiptBlobUrl(null);
+  }
+};
+
+const handleCloseModal = () => {
+  setShowModal(false);
+  if (receiptBlobUrl) {
+    URL.revokeObjectURL(receiptBlobUrl); // free memory
+    setReceiptBlobUrl(null);
+  }
+};
 
   const handleApprove = async (orderId) => {
   try {
-    await dispatch(ApproveOrderPayment(orderId)).unwrap();
+    await dispatch(ApproveOrderPayment(orderId));
     setToast({ show: true, message: "✅ Payment approved successfully.", type: "success" });
     setShowModal(false);
   } catch (error) {
@@ -155,25 +190,23 @@ const handleReject = async (orderId) => {
       )}
 
       {/* Modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg">
+     <Modal show={showModal} onHide={handleCloseModal} centered size="lg">
+
         <Modal.Header closeButton>
           <Modal.Title>Payment Receipt</Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center">
-          {selectedOrder?.transfer_receipt_path ? (
-            <Image
-           src={`${ HOST_API }files/bank_receipts/${selectedOrder.transfer_receipt_path.split('/').pop()}`}
-              alt="Transfer Receipt"
-              fluid
-            />
-          ) : (
-            <p>No receipt uploaded.</p>
-          )}
+         {receiptBlobUrl ? (
+    <Image src={receiptBlobUrl} alt="Transfer Receipt" fluid />
+  ) : (
+    <p>Loading or failed to load receipt.</p>
+  )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Close
-          </Button>
+         <Button variant="secondary" onClick={handleCloseModal}>
+  Close
+</Button>
+
         </Modal.Footer>
       </Modal>
     </SidebarLayout>

@@ -249,14 +249,7 @@ const UserBuyerRequest = () => {
 const handleSubmitOffer = useCallback(async (e) => {
   e.preventDefault();
   
-  // Validate required fields
-  // if (!gigRadio) {
-  //   toast.error("Please select a gig before submitting the offer.");
-  //   return;
-  // }
-
-
- const offerData = {
+   const offerData = {
   id: buyerId, // Matches backend's 'id' validation (buyer_request_id)
   client_id: buyerRequestData.client.id, // From buyer request's client
   gig_id: gigRadio || null, // Use null instead of empty string
@@ -269,22 +262,19 @@ const handleSubmitOffer = useCallback(async (e) => {
 };
 
 
-  // console.log("Submitting offer data:", offerData); // For debugging
-
   setOfferLoader(true);
-  dispatch(CreateOfferRequest(offerData, handleResponseOffer));
-}, [
-  buyerRequestData, 
-  UserRole, 
-  expertId, 
-  dispatch, 
-  handleResponseOffer,
-  gigRadio, // Add missing dependencies
-  description,
-  offerPrice,
-  offerDate,
-  buyerId
-]);
+  
+  try {
+    // Using callback method
+    await dispatch(CreateOfferRequest(offerData, handleResponseOffer)).unwrap();
+    // handleResponseOffer will be called automatically
+  } catch (error) {
+    console.error("Error creating offer:", error);
+    // handleResponseOffer will be called with error automatically
+  } finally {
+    setOfferLoader(false);
+  }
+}, [/* your dependencies */]);
 
   const resetForm = useCallback(() => {
     setDescription("");

@@ -1,16 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
-import { IoCheckmarkDoneOutline } from "react-icons/io5";
+import { Button } from "@mui/material";
+import Pusher from "pusher-js";
+import { useEffect, useRef, useState } from "react";
+import { BsThreeDotsVertical } from "react-icons/bs";
+import { FaMicrophone } from "react-icons/fa";
+import { IoMdAttach } from "react-icons/io";
+import { RiSendPlaneFill } from "react-icons/ri";
 import user from "../../assets/chatImg.webp";
 import videos from "../../assets/VideoCall.webp";
 import voice from "../../assets/VoiceCall.webp";
-import { AiOutlineLink } from "react-icons/ai";
-import { GrGallery } from "react-icons/gr";
-import { BsEmojiSmile, BsThreeDotsVertical } from "react-icons/bs";
-import { IoMdAttach } from "react-icons/io";
-import { RiSendPlaneFill } from "react-icons/ri";
-import { FaMicrophone } from "react-icons/fa";
-import { Button } from "@mui/material";
-import Pusher from "pusher-js";
 
 const Chating = ({ handlevideo, video }) => {
   const inputReference = useRef(null);
