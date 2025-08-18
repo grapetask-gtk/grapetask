@@ -47,7 +47,7 @@ const Freelancer = (props) => {
         <img 
           className="img-fluid w-100 h-100 object-fit-cover" 
           onError={handleImageError} 
-          src={imgSrc} 
+          src={props.imges || imgSrc} 
           alt={props.heading}
         />
         <div className="position-absolute top-0 start-0 end-0 d-flex justify-content-between p-2">
