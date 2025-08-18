@@ -34,6 +34,7 @@ const UserBuyerRequest = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   
+
   // Offer creation states
   const [buyerId, setBuyerId] = useState("");
   const [description, setDescription] = useState("");
@@ -250,12 +251,12 @@ const handleSubmitOffer = useCallback(async (e) => {
   e.preventDefault();
   
    const offerData = {
-  id: buyerId, // Matches backend's 'id' validation (buyer_request_id)
-  client_id: buyerRequestData.client.id, // From buyer request's client
-  gig_id: gigRadio || null, // Use null instead of empty string
+  id: buyerId, 
+  client_id: buyerRequestData?.client?.id, 
+  gig_id: gigRadio || null, 
   description: description.trim(),
   price: offerPrice.replace('$', ''),
-  date: offerDate, // Matches backend's 'date' field
+  date: offerDate, 
   expert_id: UserRole === "bidder/company representative/middleman" 
     ? (expertId || null) 
     : (buyerRequestData?.expert_id || null) // Use null instead of empty string
@@ -274,7 +275,19 @@ const handleSubmitOffer = useCallback(async (e) => {
   } finally {
     setOfferLoader(false);
   }
-}, [/* your dependencies */]);
+},  [
+  
+  buyerId,
+  description,
+  offerPrice,
+  offerDate,
+  gigRadio,
+  expertId,
+  buyerRequestData,
+  UserRole,
+  dispatch,
+  handleResponseOffer
+]);
 
   const resetForm = useCallback(() => {
     setDescription("");
@@ -555,7 +568,7 @@ const handleSubmitOffer = useCallback(async (e) => {
 
       {/* Modal for Create Offer / Invite Expert */}
       <Modal
-        open={open || inviteModal}
+        open={open }
         onClose={handleClose}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
@@ -656,7 +669,7 @@ const handleSubmitOffer = useCallback(async (e) => {
           style={{ backgroundColor: "#f5f5ff" }}
         >
           <input
-            required
+           
             checked={gigRadio === innerValue.id}
             type="radio"
             value={innerValue.id}
@@ -684,6 +697,114 @@ const handleSubmitOffer = useCallback(async (e) => {
     ))}
   </div>
 </div>
+
+              <div className="mt-4 text-end">
+                <Button
+                  type="submit"
+                  disabled={offerLoader}
+                  className="btn-stepper poppins px-4 fw-normal font-16 w-auto"
+                >
+                  {offerLoader ? <Spinner size="sm" color="light" /> : "Send Offer"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Box>
+      </Modal>
+      <Modal
+        open={inviteModal}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box className="p-lg-3 p-md-3 p-2" sx={style}>
+          <div className="d-flex justify-content-between">
+            <h1 className="font-20 font-500 cocon blackcolor">
+              {inviteModal ? "Invite Expert" : `Offer Request ${buyerId}`}
+            </h1>
+            <button
+              type="button"
+              onClick={resetForm}
+              className="btn-close"
+              aria-label="Close"
+            />
+          </div>
+          <div className="container-fluid profileSetting">
+            <form onSubmit={handleSubmitOffer} className="row">
+              <div className="col-12 prof-fields">
+                <label htmlFor="description" className="form-label font-18 poppins blackcolor">
+                  Description
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  maxLength={200}
+                  className="form-control p-3 textArea border-0 font-16 poppins"
+                  required
+                  id="description"
+                />
+                <p className="font-12 text-secondary text-end mt-2">
+                  {description.length}/200
+                </p>
+              </div>
+              <div className="col-lg-6 col-md-6 col-12 prof-fields mt-4">
+                <label htmlFor="Price" className="form-label font-18 poppins blackcolor">
+                  Price
+                </label>
+                <input
+                  type="text"
+                  value={offerPrice}
+                  onChange={handlePriceChange}
+                  placeholder="$0"
+                  className="form-control p-3 border-0 font-16 poppins"
+                  required
+                  id="Price"
+                />
+              </div>
+              <div className="col-lg-6 col-md-6 col-12 prof-fields mt-4">
+                <label htmlFor="date" className="form-label font-18 poppins blackcolor">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={offerDate}
+                  onChange={(e) => setOfferDate(e.target.value)}
+                  className="form-control p-3 border-0 font-16 poppins"
+                  required
+                  id="date"
+                />
+              </div>
+              {UserRole === "bidder/company representative/middleman" && (
+                <div className="col-12 prof-fields mt-4">
+                  <label htmlFor="expertId" className="form-label font-18 poppins blackcolor">
+                    Select Expert 
+                                      </label>
+                  <select
+                  required
+                    className="form-control p-3 border-0 font-16 poppins"
+                    value={expertId}
+                    onChange={(e) => setExpertId(e.target.value)}
+                    id="expertId"
+                  >
+                    <option value="">-- Select an Expert --</option>
+                    {experts?.length > 0 ? (
+                      experts.map((ex) => (
+                        <option key={ex.id} value={ex.id}>
+                          {ex.fname} {ex.lname}
+                        </option>
+                      ))
+                    ) : (
+                      <option disabled>
+                        {isLoadingExperts ? "Loading experts..." : "No experts available"}
+                      </option>
+                    )}
+                  </select>
+                  <small className="text-muted">
+                    If selected, this will invite the expert and update the order status to "Project Started".
+                  </small>
+                </div>
+              )}
+            
 
               <div className="mt-4 text-end">
                 <Button

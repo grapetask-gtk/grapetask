@@ -18,48 +18,67 @@ import { addUserTag, fetchUserActivities, fetchUserStats, fetchUserTags } from "
 import { profileUpdate, userProfile } from "../redux/slices/profileSlice";
 import { useDispatch, useSelector } from "../redux/store/store";
 
+// Add this to your component to debug
+
 const Dashboardright = () => {
   const dispatch = useDispatch();
   const { userDetail } = useSelector((state) => state.profile);
-  const { tagsList, isLoading, userStats, activities } = useSelector((state) => state.dashboard);
+  const { tagsList, isLoading, userStats, activities, error } = useSelector((state) => state.dashboard);
   const UserData = JSON.parse(localStorage.getItem("UserData"));
 
+  // Add debugging
+  console.log('🔍 Component Debug Info:');
+  console.log('- isLoading:', isLoading);
+  console.log('- userStats:', userStats);
+  console.log('- activities:', activities);
+  console.log('- error:', error);
+  console.log('- Full dashboard state:', useSelector((state) => state.dashboard));
+
   // Get user role from userDetail or UserData
-  const userRole = userDetail?.role || UserData?.role || "client";
+  const userRole = userDetail?.role || UserData?.role || "Client";
 
   // Real progress data from userStats
   const getProgressData = () => {
+    console.log('🎯 Getting progress data for role:', userRole);
+    console.log('🎯 UserStats in getProgressData:', userStats);
+    
     if (!userStats) {
+      console.log('⚠️ No userStats available');
       return { percentage1: 0, percentage2: 0, percentage3: 0 };
     }
 
     switch (userRole.toLowerCase()) {
       case "expert/freelancer":
-        return {
+        const expertData = {
           percentage1: userStats.projectSuccessRatio || 0,
           percentage2: userStats.totalOrders || 0,
           percentage3: userStats.completeOrders || 0,
         };
+        console.log('👨‍💼 Expert data:', expertData);
+        return expertData;
       case "bd":
       case "bidder/company representative/middleman":
-        return {
+        const bdData = {
           percentage1: userStats.clientConversionRate || 0,
           percentage2: userStats.totalLeads || 0,
           percentage3: userStats.convertedLeads || 0,
         };
+        console.log('🏢 BD data:', bdData);
+        return bdData;
       case "client":
       default:
-        return {
+        const clientData = {
           percentage1: userStats.projectsPosted || 0,
           percentage2: userStats.activeProjects || 0,
           percentage3: userStats.completedProjects || 0,
         };
+        console.log('👤 Client data:', clientData);
+        return clientData;
     }
   };
 
   const { percentage1, percentage2, percentage3 } = getProgressData();
-
-  // ---------- Name Update -----------
+ // ---------- Name Update -----------
   const [firstName, setFirstName] = useState("");
   const handleNameSubmit = (e) => {
     e.preventDefault();
@@ -75,17 +94,30 @@ const Dashboardright = () => {
       // Handle error
     }
   };
-
-  // Fetch user profile and stats on mount
+  // Check if the API calls are being made
   useEffect(() => {
+    console.log('🚀 Component mounted, dispatching API calls...');
+    
     const data = {
       device_token: "123456789",
     };
+    
+    console.log('📞 Dispatching userProfile...');
     dispatch(userProfile(data));
-    // Fetch user statistics - Fixed function calls
-    dispatch(fetchUserStats());
-    // Fetch user activities - Fixed function calls
-    dispatch(fetchUserActivities());
+    
+    console.log('📞 Dispatching fetchUserStats...');
+    dispatch(fetchUserStats()).then((result) => {
+      console.log('🎉 fetchUserStats completed:', result);
+    }).catch((error) => {
+      console.error('💥 fetchUserStats failed:', error);
+    });
+    
+    console.log('📞 Dispatching fetchUserActivities...');
+    dispatch(fetchUserActivities()).then((result) => {
+      console.log('🎉 fetchUserActivities completed:', result);
+    }).catch((error) => {
+      console.error('💥 fetchUserActivities failed:', error);
+    });
   }, [dispatch]);
 
   useEffect(() => {
@@ -93,6 +125,17 @@ const Dashboardright = () => {
       setFirstName(userDetail.fname);
     }
   }, [userDetail]);
+
+  useEffect(() => {
+    console.log('📊 Data updated:');
+    console.log('- User Stats:', userStats);
+    console.log('- Activities:', activities);
+    console.log('- Progress data:', { percentage1, percentage2, percentage3 });
+  }, [userStats, activities, percentage1, percentage2, percentage3]);
+
+ 
+
+  
 
   // ------------- Skills Section -------------
   const [showModal, setShowModal] = useState(false);
@@ -102,14 +145,36 @@ const Dashboardright = () => {
   };
 
   const handleTagsAdd = (e) => {
-    e.preventDefault();
+  e.preventDefault();
+  
+  // Add validation
+  console.log('Tags to send:', tags);
+  
+  if (!tags || tags.length === 0) {
+    console.warn('No skills to add');
     setShowModal(false);
-    let data = {
-      skill: tags,
-    };
-    // Fixed function call - using addUserTag instead of TagsAdd
-    dispatch(addUserTag(data, handleResponseTagsAdd));
+    return;
+  }
+  
+  setShowModal(false);
+  
+  let requestData = {
+    skill: tags,
   };
+  
+  // ✅ Fix: Wrap data in an object with 'data' property
+  dispatch(addUserTag({ data: requestData }))
+    .unwrap()
+    .then((response) => {
+      console.log('Skills added successfully:', response);
+      // Refresh the tags list
+      dispatch(fetchUserTags());
+    })
+    .catch((error) => {
+      console.error('Failed to add skills:', error);
+    });
+};
+
   const handleResponseTagsAdd = (data) => {
     if (data?.status) {
       // Optionally handle success
@@ -369,7 +434,7 @@ const Dashboardright = () => {
         style={{ border: "1.5px solid #AC9E9E" }}
       >
         <div>
-          <img src={activity.icon || doubl} width={45} height={45} alt="Activity" />
+          <img src={doubl} width={45} height={45} alt="Activity" />
         </div>
         <div>
           <h6 className="ms-2 font-14 poppins mb-0">

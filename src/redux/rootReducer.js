@@ -17,9 +17,12 @@ import ratingSlice from './slices/ratingSlice';
 import skillsSlice from './slices/skillsSlice';
 import userSlice from './slices/userSlice';
 import usersSlice from './slices/usersSlice';
+import withdrawalSlice from './slices/withdrawalSlice';
+
 const rootReducer = combineReducers({
   user: userSlice,
   users: usersSlice,
+  withdrawal: withdrawalSlice,
   profile: profileSlice,
   gig: gigsSlice,
   allGigs: allGigsSlice,

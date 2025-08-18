@@ -1,23 +1,7 @@
-import React from "react";
-import icone from "../assets/icone.webp";
-import studio from "../assets/studio.webp";
-import ster from "../assets/Frame.webp";
-import star6 from "../assets/5star.webp";
-import timepes from "../assets/time (1).webp";
-import user from "../assets/gigsRatingComments.webp";
-import amazing from "../assets/amazon.webp";
-import "../style/imgSlider.scss";
-import { BiTime } from "react-icons/bi";
-import { TfiReload } from "react-icons/tfi";
-import Navbar from "./Navbar";
-import ImgSlider from "./ImgSlider";
-import { Button } from "@mui/material";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import Slider from "react-slick";
-import { FaCheck, FaStar } from "react-icons/fa";
-import Card from "./Card";
 import { MdLocationOn } from "react-icons/md";
+import "slick-carousel/slick/slick-theme.css";
+import "slick-carousel/slick/slick.css";
+import "../style/imgSlider.scss";
 
 const ExpertCard = ({ user, showExpertDetail }) => {
   return (
@@ -30,12 +14,12 @@ const ExpertCard = ({ user, showExpertDetail }) => {
           <h6 className="colororing font-18 font-500 poppins">
             {user?.fname + " " + user?.lname}
           </h6>
-          <p className="colororing mb-0 font-14 poppins">New Seller </p>
-          <p className="font-12 poppins">
-            <MdLocationOn className="colororing " />
-            Pakistan
-          </p>
-        </div>
+          <p className="colororing mb-0 font-14 poppins">{user?.role }</p>
+  <p className="font-12 poppins">
+  <MdLocationOn className="colororing" />
+  {user?.country ?? 'Unknown Country'}
+</p>
+      </div>
       </div>
       <div className="d-flex flex-wrap mt-2">
         <div>

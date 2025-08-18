@@ -1,10 +1,6 @@
-import React from "react";
-import search from "../assets/searchbar.webp";
-import Navbar from "./Navbar";
-import NewWay from "../assets/NewWay.webp";
+import { useNavigate } from "react-router-dom";
+import { titleToSlug } from "../utils/helpers";
 import Card from "./Card";
-import { Link, useNavigate } from "react-router-dom";
-import { stripHtmlTags, titleToSlug } from "../utils/helpers";
 const GigCard = ({ gig }) => {
   const navigate = useNavigate();
   return (
@@ -12,7 +8,7 @@ const GigCard = ({ gig }) => {
       <div
         onClick={() =>
           navigate(
-            `/g/${titleToSlug(gig?.title)}/${gig?.seller?.username}/${gig?.id}`
+            `/g/${titleToSlug(gig?.title)}/${gig?.seller?.fname}/${gig?.id}`
           )
         }
         className="cursor-pointer h-100"
@@ -30,71 +26,7 @@ const GigCard = ({ gig }) => {
             }
             heading={gig.title}
             // phara={stripHtmlTags(gig.description)}
-            star1={
-              parseInt(
-                gig.rating
-                  .map((value) => value.ratings)
-                  .filter((value) => !isNaN(value))
-                  .reduce(
-                    (acc, rating, index, array) => acc + rating / array.length,
-                    0
-                  )
-              ) >= 1
-                ? "#F16336"
-                : "#D4D4D4"
-            }
-            star2={
-              parseInt(
-                gig.rating
-                  .map((value) => value.ratings)
-                  .filter((value) => !isNaN(value))
-                  .reduce(
-                    (acc, rating, index, array) => acc + rating / array.length,
-                    0
-                  )
-              ) >= 2
-                ? "#F16336"
-                : "#D4D4D4"
-            }
-            star3={
-              parseInt(
-                gig.rating
-                  .map((value) => value.ratings)
-                  .filter((value) => !isNaN(value))
-                  .reduce(
-                    (acc, rating, index, array) => acc + rating / array.length,
-                    0
-                  )
-              ) >= 3
-                ? "#F16336"
-                : "#D4D4D4"
-            }
-            star4={
-              parseInt(
-                gig.rating
-                  .map((value) => value.ratings)
-                  .filter((value) => !isNaN(value))
-                  .reduce(
-                    (acc, rating, index, array) => acc + rating / array.length,
-                    0
-                  )
-              ) >= 4
-                ? "#F16336"
-                : "#D4D4D4"
-            }
-            star5={
-              parseInt(
-                gig.rating
-                  .map((value) => value.ratings)
-                  .filter((value) => !isNaN(value))
-                  .reduce(
-                    (acc, rating, index, array) => acc + rating / array.length,
-                    0
-                  )
-              ) >= 5
-                ? "#F16336"
-                : "#D4D4D4"
-            }
+        
             projectNumber="0"
             price={gig.package[0]?.total}
           />

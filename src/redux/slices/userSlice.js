@@ -3,19 +3,27 @@ import { toast } from "react-toastify";
 import axios from "../../utils/axios";
 
 const initialState = {
+  // Authentication state
+  isAuthenticated: false,
+  tokenValidated: false,
+  authLoading: false,  // Separate loading state for auth checks
+  authError: null,
+  
+  // Existing user state
   isLoading: false,
   isLoadingRegister: false,
   getError: null,
   users: [],
-  userList: [], // ✅ ADD THIS for freelancers
+  userList: [],
   meta: {},
-  userDetail: {},
+  userDetail: null,  // Changed from {} to null for better initial state
 };
 
 const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
+    // Existing reducers
     startLoading(state) {
       state.isLoading = true;
     },
@@ -57,10 +65,24 @@ const userSlice = createSlice({
       state.isLoading = false;
       state.getError = action.payload;
     },
+    
+    // New auth-related reducers
+    logoutUser(state) {
+      state.isAuthenticated = false;
+      state.userDetail = null;
+      state.tokenValidated = true;
+      localStorage.removeItem('accessToken');
+    },
+    setAuthState(state, action) {
+      state.isAuthenticated = action.payload;
+    },
+    resetAuthError(state) {
+      state.authError = null;
+    }
   },
-
   extraReducers: (builder) => {
     builder
+      // Existing cases
       .addCase(toggleUserStatus.fulfilled, (state, action) => {
         const updatedUser = action.payload.user;
         const index = state.users.findIndex((u) => u.id === updatedUser.id);
@@ -68,19 +90,47 @@ const userSlice = createSlice({
           state.users[index] = updatedUser;
         }
       })
+      
+      // Enhanced auth cases
       .addCase(userLogin.pending, (state) => {
         state.isLoading = true;
         state.getError = null;
+        state.authLoading = true;
       })
       .addCase(userLogin.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.authLoading = false;
         state.userDetail = action.payload;
+        state.isAuthenticated = true;
+        state.tokenValidated = true;
         state.getError = null;
+        localStorage.setItem('accessToken', action.payload.token || action.payload.access_token);
       })
       .addCase(userLogin.rejected, (state, action) => {
         state.isLoading = false;
+        state.authLoading = false;
         state.getError = action.payload;
+        state.isAuthenticated = false;
+        state.tokenValidated = true;
       })
+      
+      .addCase(validateToken.pending, (state) => {
+        state.authLoading = true;
+      })
+      .addCase(validateToken.fulfilled, (state, action) => {
+        state.authLoading = false;
+        state.isAuthenticated = true;
+        state.tokenValidated = true;
+        state.userDetail = action.payload;
+      })
+      .addCase(validateToken.rejected, (state) => {
+        state.authLoading = false;
+        state.isAuthenticated = false;
+        state.tokenValidated = true;
+        state.userDetail = null;
+      })
+      
+      // Rest of your existing cases
       .addCase(userRegister.pending, (state) => {
         state.isLoadingRegister = true;
         state.getError = null;
@@ -101,11 +151,13 @@ const userSlice = createSlice({
       .addCase(getUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.userDetail = action.payload;
+        state.isAuthenticated = true;
         state.getError = null;
       })
       .addCase(getUser.rejected, (state, action) => {
         state.isLoading = false;
         state.getError = action.payload;
+        state.isAuthenticated = false;
       })
       .addCase(getAllUsers.pending, (state) => {
         state.isLoading = true;
@@ -125,7 +177,6 @@ const userSlice = createSlice({
         state.isLoading = false;
         state.getError = action.payload;
       })
-      // ✅ FIXED: Properly handle getAllFreelancers
       .addCase(getAllFreelancers.pending, (state) => {
         state.isLoading = true;
         state.getError = null;
@@ -133,8 +184,6 @@ const userSlice = createSlice({
       .addCase(getAllFreelancers.fulfilled, (state, action) => {
         state.isLoading = false;
         state.getError = null;
-        
-        // ✅ FIXED: Store freelancers in userList
         if (action.payload && action.payload.data) {
           state.userList = action.payload.data;
           state.meta = {
@@ -143,7 +192,6 @@ const userSlice = createSlice({
             total: action.payload.total || action.payload.data.length,
           };
         } else {
-          // Handle case where API response doesn't have nested data
           state.userList = Array.isArray(action.payload) ? action.payload : [];
         }
       })
@@ -152,9 +200,10 @@ const userSlice = createSlice({
         state.getError = action.payload;
         state.userList = [];
       });
-  },
+  }
 });
 
+// Export all actions
 export const {
   startLoading,
   startLoadingRegister,
@@ -164,9 +213,29 @@ export const {
   getUserDetailsSuccess,
   setUsers,
   setError,
+  logoutUser,
+  setAuthState,
+  resetAuthError
 } = userSlice.actions;
 
-export default userSlice.reducer;
+// Thunks
+export const validateToken = createAsyncThunk(
+  'user/validateToken',
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return rejectWithValue('No token found');
+      
+      const response = await axios.get('/auth/validate', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data.user;
+    } catch (error) {
+      localStorage.removeItem('accessToken');
+      return rejectWithValue(error.response?.data?.message || 'Invalid token');
+    }
+  }
+);
 
 // ✅ Authentication thunks
 export const userLogin = createAsyncThunk(
@@ -180,7 +249,7 @@ export const userLogin = createAsyncThunk(
         return rejectWithValue(response.data.message);
       }
       
-      return response.data.data;
+      return response.data;
     } catch (error) {
       handleClose(error);
       return rejectWithValue(error?.response?.data?.message || error?.message);
@@ -377,3 +446,5 @@ export const getAllFreelancers = createAsyncThunk(
     }
   }
 );
+
+export default userSlice.reducer;

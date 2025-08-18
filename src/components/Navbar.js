@@ -24,22 +24,39 @@ const Navbar = (props) => {
   const token = localStorage.getItem("accessToken");
   const UserRole = localStorage.getItem("Role");
   const dispatch = useDispatch();
+
+//   const getUserData = () => {
+//   try {
+//     const storedData = localStorage.getItem("UserData");
+
+//     // Check if data exists and is not "undefined" or "null"
+//     if (storedData && storedData !== "undefined" && storedData !== "null") {
+//       return JSON.parse(storedData);
+
+    
+//     }
+
+//     return null;
+//   } catch (error) {
+//     console.error("Error parsing user data from localStorage:", error);
+//     return null;
+//   }
+// };
+//   const storedData = getUserData();
+// useEffect(() => {
+//   console.log("User data retrieved from localStorage:", storedData);
+// }, []);
+
+
+let UserData = {};
+try {
+  UserData = JSON.parse(localStorage.getItem("UserData") || "{}");
+} catch (e) {
+  console.warn('Failed to parse UserData in localStorage', e);
+  UserData = {};
+}
   
-  // FIX: Safe parsing of UserData from localStorage
-  const getUserData = () => {
-    try {
-      const userData = localStorage.getItem("UserData");
-      if (userData && userData !== "undefined" && userData !== "null") {
-        return JSON.parse(userData);
-      }
-      return null;
-    } catch (error) {
-      console.error("Error parsing user data from localStorage:", error);
-      return null;
-    }
-  };
-  
-  const UserData = getUserData();
+  // const UserData = getUserData();
   
   const [showDiv, setShowDiv] = useState(false);
   const [profile, setProfile] = useState(false);
@@ -199,14 +216,18 @@ const Navbar = (props) => {
                     <li className="nav-item">
                       <NavLink className="nav-link" to="/dashboard">Dashboard</NavLink>
                     </li>
+                       <li className="nav-item">
+                        <NavLink className="nav-link" to="/freelancers">Browse </NavLink>
+                      </li>
+                   
                     {UserRole !== "Client" && (
                       <li className="nav-item">
-                        <NavLink className="nav-link" to="/earning">Earning Orders</NavLink>
+                        <NavLink className="nav-link" to="/earning">Earnings</NavLink>
                       </li>
                     )}
                     {UserRole === "Client" && (
                       <li className="nav-item">
-                        <NavLink className="nav-link" to="/spending">Spending Orders</NavLink>
+                        <NavLink className="nav-link" to="/spending">Spendings</NavLink>
                       </li>
                     )}
                     
@@ -215,6 +236,8 @@ const Navbar = (props) => {
                         <NavLink className="nav-link" to="/hireExpert">Hire Expert</NavLink>
                       </li>
                     )}
+
+
                     <li className="position-relative">
                       <span 
                         className="nav-link fw-medium" 
@@ -375,7 +398,7 @@ const Navbar = (props) => {
                         </span>
                         {profile && (
                           <ul className="p-3 px-3 mt-3 second-profile-drop position-absolute poppins">
-                            <NavLink to={`/${UserData?.username}`} className="font-14">
+                            <NavLink to={`/${UserData?.fname}`} className="font-14">
                               <li>Profile</li>
                             </NavLink>
                             <NavLink to="/payoutMethod" className="font-14">

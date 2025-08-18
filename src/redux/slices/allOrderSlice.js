@@ -221,23 +221,38 @@ export const AllExpertOrders = createAsyncThunk(
 
 export const AllClientOrders = createAsyncThunk(
   'order/getAllClientOrders',
-  async (_, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
+      // Expect payload to contain client_id and anything else you want to pass
+      const { client_id } = payload;
+
+      if (!client_id) {
+        throw new Error('Missing client ID in payload');
+      }
+
       const accessToken = localStorage.getItem("accessToken");
-      const response = await axios.get("order/client", {
+      if (!accessToken) {
+        throw new Error('Missing access token');
+      }
+
+      const response = await axios.get("client/order", {
+        params: { client_id },  // query parameters
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
-          "Authorization": "Bearer " + accessToken,
+          "Authorization": `Bearer ${accessToken}`,
         },
       });
-      
+
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(error?.message);
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "Something went wrong"
+      );
     }
   }
 );
+
 
 // FIXED BD Orders Thunk
 

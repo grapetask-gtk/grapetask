@@ -21,8 +21,9 @@ const SidebarLayout = ({ children }) => {
     { path: "/admin/blogs", label: "Blog", icon: <FaFolderOpen /> },
     
     { path: "/admin/projects", label: "Projects", icon: <FaFolderOpen /> },
-    { path: "/admin/payments", label: "Payments", icon: <FaMoneyCheckAlt /> },
-    { path: "/admin/bids", label: "Bids Payment", icon: <FaMoneyCheckAlt /> },
+    { path: "/admin/payments", label: "Order Deposits", icon: <FaMoneyCheckAlt /> },
+    { path: "/admin/bids", label: "Bids Deposits", icon: <FaMoneyCheckAlt /> },
+    { path: "/admin/withdraw", label: "Freelancer Withdraw Requests", icon: <FaMoneyCheckAlt /> },
 
     
     { path: "/adminInbox", label: "Inbox", icon: <FaRocketchat /> },

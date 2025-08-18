@@ -1,16 +1,14 @@
-// src/redux/slices/jobInvitationSlice.js
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import axios from "../../utils/axios";
 
-// --- INITIAL STATE ---
 const initialState = {
   invitations: [],
   isLoadingInvitations: false,
   error: null,
 };
 
-// --- THUNKS ---
+// ✅ Fetch job invitations
 export const fetchJobInvitations = createAsyncThunk(
   "jobInvitation/fetchAll",
   async (_, { rejectWithValue }) => {
@@ -19,138 +17,115 @@ export const fetchJobInvitations = createAsyncThunk(
       const userDataRaw = localStorage.getItem("UserData");
       const userId = userDataRaw ? JSON.parse(userDataRaw).id : null;
 
-      const { data } = await axios.get(
-        `/expert/${userId}/job-invitations`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-     
+      if (!userId) throw new Error("User ID not found");
 
-      return data; // payload for fulfilled
+      const { data } = await axios.get(`/expert/${userId}/job-invitations`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      if (!data?.job_invitations) {
+        throw new Error("Invalid response structure");
+      }
+
+      return data.job_invitations;
     } catch (err) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to load job invitations"
-      );
+      return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
 
+// ✅ Accept job invitation
 export const acceptJobInvitation = createAsyncThunk(
   "jobInvitation/accept",
   async (invitationId, { rejectWithValue }) => {
     try {
       const accessToken = localStorage.getItem("accessToken");
-      await axios.post(
+      if (!accessToken) throw new Error("Authentication required");
+
+      const { data } = await axios.post(
         `/expert/job-invitations/${invitationId}/accept`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
+        { invitation_id: invitationId },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-      return invitationId;
+
+      if (!data?.message) {
+        throw new Error("Invalid response structure");
+      }
+
+      return { message: data.message, invitationId };
     } catch (err) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to accept invitation"
-      );
+      return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
 
-
-// export const sendMessage = createAsyncThunk(
-//   "message/send",
-//   async (message, { rejectWithValue }) => {
-//     try {
-//       const accessToken = localStorage.getItem("accessToken");
-//       await axios.post(
-//         `message/create`,
-//         {},
-//         {
-//           headers: { Authorization: `Bearer ${accessToken}` },
-//         }
-//       );
-//       return message;
-//     } catch (err) {
-//       return rejectWithValue(
-//         err.response?.data?.message || "Failed to send message"
-//       );
-//     }
-//   }
-// );
-
+// ✅ Reject job invitation
 export const rejectJobInvitation = createAsyncThunk(
   "jobInvitation/reject",
   async ({ invitationId, reason }, { rejectWithValue }) => {
     try {
       const accessToken = localStorage.getItem("accessToken");
-      await axios.post(
+      if (!accessToken) throw new Error("Authentication required");
+      if (!reason.trim()) throw new Error("Rejection reason is required");
+
+      const { data } = await axios.post(
         `/expert/job-invitations/${invitationId}/reject`,
-        { reason },
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
+        { reason, invitation_id: invitationId },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-      return { invitationId, reason };
+
+      if (!data?.message) {
+        throw new Error("Invalid response structure");
+      }
+
+      return { message: data.message, invitationId, reason };
     } catch (err) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to reject invitation"
-      );
+      return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
 
-// --- SLICE ---
 const jobInvitationSlice = createSlice({
   name: "jobInvitation",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    // FETCH
     builder
+      // FETCH
       .addCase(fetchJobInvitations.pending, (state) => {
         state.isLoadingInvitations = true;
         state.error = null;
       })
       .addCase(fetchJobInvitations.fulfilled, (state, action) => {
-        state.invitations = action.payload.job_invitations; // ✅ Assign the actual array
+        state.invitations = action.payload; // ✅ payload is already array
         state.isLoadingInvitations = false;
       })
-      
-      // .addCase(fetchJobInvitations.fulfilled, (state, action) => {
-      //   state.invitations = action.payload;
-      //   state.isLoadingInvitations = false;
-      // })
       .addCase(fetchJobInvitations.rejected, (state, action) => {
         state.error = action.payload;
         state.isLoadingInvitations = false;
-      });
+        toast.error(action.payload); // ✅ Added toast for fetch errors too
+      })
 
-    // ACCEPT
-    builder
+      // ACCEPT
       .addCase(acceptJobInvitation.pending, (state) => {
         state.isLoadingInvitations = true;
         state.error = null;
       })
       .addCase(acceptJobInvitation.fulfilled, (state, action) => {
-        // mark that invitation as accepted in the list
+        const { invitationId } = action.payload; // ✅ FIXED bug
         state.invitations = state.invitations.map((inv) =>
-          inv.id === action.payload ? { ...inv, status: "accepted" } : inv
+          inv.id === invitationId ? { ...inv, status: "accepted" } : inv
         );
         state.isLoadingInvitations = false;
-        toast.success("Invitation accepted!");
+        toast.success("Invitation accepted!"); // ✅ kept toast
       })
       .addCase(acceptJobInvitation.rejected, (state, action) => {
         state.error = action.payload;
         state.isLoadingInvitations = false;
-        toast.error(action.payload);
-      });
+        toast.error(action.payload); // ✅ kept toast
+      })
 
-    // REJECT
-    builder
+      // REJECT
       .addCase(rejectJobInvitation.pending, (state) => {
         state.isLoadingInvitations = true;
         state.error = null;
@@ -163,12 +138,12 @@ const jobInvitationSlice = createSlice({
             : inv
         );
         state.isLoadingInvitations = false;
-        toast.success("Invitation rejected.");
+        toast.success("Invitation rejected."); // ✅ kept toast
       })
       .addCase(rejectJobInvitation.rejected, (state, action) => {
         state.error = action.payload;
         state.isLoadingInvitations = false;
-        toast.error(action.payload);
+        toast.error(action.payload); // ✅ kept toast
       });
   },
 });

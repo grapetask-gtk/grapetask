@@ -109,6 +109,119 @@ export const sendMessage = createAsyncThunk(
   }
 );
 
+// New async thunks for real-time features
+export const handleTypingIndicator = createAsyncThunk(
+  "message/handleTypingIndicator",
+  async ({ receiver_id, is_typing }, { rejectWithValue }) => {
+    try {
+       const accessToken = localStorage.getItem("accessToken");
+    const response = await axios.post(
+  "/messages/typing",
+  { receiver_id, is_typing },
+  {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to send typing indicator");
+    }
+  }
+);
+
+export const markMessagesAsRead = createAsyncThunk(
+  "message/markMessagesAsRead",
+  async ({ conversation_id, message_ids }, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+     const response = await axios.post(
+  "/messages/mark-read",
+  { conversation_id, message_ids },
+  {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
+
+      return { conversation_id, message_ids, ...response.data };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to mark messages as read");
+    }
+  }
+);
+
+export const setUserOnline = createAsyncThunk(
+  "message/setUserOnline",
+  async (_, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+     const response = await axios.post(
+  "/chat/online",
+  {},
+  {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to set online status");
+    }
+  }
+);
+
+export const setUserOffline = createAsyncThunk(
+  "message/setUserOffline",
+  async (_, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+    const response = await axios.post(
+  "/chat/offline",
+  {},
+  {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to set offline status");
+    }
+  }
+);
+
+export const getOnlineStatus = createAsyncThunk(
+  "message/getOnlineStatus",
+  async ({ conversation_id }, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const response = await axios.get(`/chat/online-status?conversation_id=${conversation_id}`,{
+         headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+      return response.data.participants;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to get online status");
+    }
+  }
+);
+
+
+
 // ✅ UPDATED: Download function with CORS handling
 export const downloadAuthenticatedFile = createAsyncThunk(
   'message/downloadAuthenticatedFile',

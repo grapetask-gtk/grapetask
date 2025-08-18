@@ -43,7 +43,8 @@ const handleSubmit = async (e) => {
 };
 
 const handleResponse = async (data) => {
-  if (data?.status) {
+ if (data?.status) {
+    // ✅ Store access token from backend
     localStorage.setItem("accessToken", data?.access_token);
     localStorage.setItem("UserData", JSON.stringify(data?.data));
     localStorage.setItem("Role", data?.data.role);

@@ -2,7 +2,7 @@ import { Download, FileDownload, Handshake } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress, Modal, Typography } from "@mui/material";
-import IconButton from '@mui/material/IconButton';
+import IconButton from "@mui/material/IconButton";
 import Paper from '@mui/material/Paper';
 import pLimit from 'p-limit';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -10,11 +10,17 @@ import { IoMdAttach } from "react-icons/io";
 import { RiSendPlaneFill } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import Select from "react-select";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Swal from 'sweetalert2';
 import userImg from "../../../assets/chatImg.webp";
 import echo from "../../../echo";
+import {
+  OrderComplete,
+  OrderSubmit,
+  ReviewSubmit
+} from "../../../redux/slices/allOrderSlice";
 import {
   downloadAuthenticatedFile,
   downloadFileDirect,
@@ -22,27 +28,122 @@ import {
   downloadWithIframe,
   downloadWithNewWindow,
   fetchMessages,
+  handleTypingIndicator,
+  markMessagesAsRead,
   sendMessage,
+  setUserOffline,
+  setUserOnline
 } from "../../../redux/slices/messageSlice";
-// import axios from "./../";
-import axios from '../../../utils/axios';
-
 import {
   AcceptOfferRequest,
-  AssignToExpertRequest,
   CreateOfferRequest,
   RejectOfferRequest,
   getExperts,
   getOfferRequest,
-  getPersonalGigs
+  getPersonalGigs,
+  inviteToJob
 } from "../../../redux/slices/offersSlice";
+import axios from '../../../utils/axios';
 
-import {
-  OrderComplete,
-  OrderSubmit,
-  ReviewSubmit
-} from "../../../redux/slices/allOrderSlice";
+// Custom Select Component for Experts
+const ExpertSelect = ({ 
+  options, 
+  value, 
+  onChange, 
+  isLoading,
+  placeholder = "Select an expert..."
+}) => {
+  const CustomOption = ({ innerProps, label, data }) => (
+    <div {...innerProps} style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      padding: '8px 12px',
+      cursor: 'pointer'
+    }}>
+      <img 
+        src={data.image || userImg} 
+        alt={label} 
+        style={{ 
+          width: '30px', 
+          height: '30px', 
+          borderRadius: '50%', 
+          marginRight: '10px',
+          objectFit: 'cover' 
+        }}
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = userImg;
+        }}
+      />
+      <span>{label}</span>
+    </div>
+  );
 
+  const CustomSingleValue = ({ innerProps, data }) => (
+    <div {...innerProps} style={{ 
+      display: 'flex', 
+      alignItems: 'center',
+      paddingLeft: '8px'
+    }}>
+      <img 
+        src={data.image || userImg} 
+        alt={data.label} 
+        style={{ 
+          width: '30px', 
+          height: '30px', 
+          borderRadius: '50%', 
+          marginRight: '10px',
+          objectFit: 'cover' 
+        }}
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = userImg;
+        }}
+      />
+      <span>{data.label}</span>
+    </div>
+  );
+
+  return (
+    <Select
+      options={options}
+      value={options.find(option => option.value === value)}
+      onChange={(selected) => onChange(selected?.value || "")}
+      isClearable
+      isLoading={isLoading}
+      placeholder={placeholder}
+      noOptionsMessage={() => "No experts available"}
+      className="basic-single"
+      classNamePrefix="select"
+      components={{
+        Option: CustomOption,
+        SingleValue: CustomSingleValue
+      }}
+      styles={{
+        control: (base) => ({
+          ...base,
+          minHeight: '44px',
+          borderRadius: '8px',
+          border: '1px solid #ddd'
+        }),
+        option: (base) => ({
+          ...base,
+          display: 'flex',
+          alignItems: 'center',
+          padding: '8px 12px'
+        }),
+        singleValue: (base) => ({
+          ...base,
+          display: 'flex',
+          alignItems: 'center',
+          marginLeft: '4px'
+        })
+      }}
+    />
+  );
+};
+
+// Main Chatting Component
 const Chatting = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -50,17 +151,23 @@ const Chatting = () => {
   const scrollRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
-  const { selectedConversation, messages, loading, typingUsers } = useSelector((s) => s.message);
-  const { offers } = useSelector((s) => s.offers);
-  const currentUser = JSON.parse(localStorage.getItem("UserData") || "{}");
+  // Redux selectors
   const {
     personalGigs,
     experts,
     isLoadingExperts
   } = useSelector((state) => state.offers);
+  const { 
+    selectedConversation, 
+    messages, 
+    loading, 
+    typingUsers,
+    onlineUsers 
+  } = useSelector((s) => s.message);
+  const { offers } = useSelector((s) => s.offers);
 
-  // Memoized user data to prevent unnecessary re-renders
-  const UserData = useMemo(() => {
+  // Current user data
+  const currentUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem("UserData")) || {};
     } catch (error) {
@@ -69,42 +176,48 @@ const Chatting = () => {
     }
   }, []);
 
-  const UserRole = UserData?.role;
-  const userId = UserData?.id;
+  const UserRole = currentUser?.role;
+  const userId = currentUser?.id;
 
+  // Conversation data
+  const receiver = selectedConversation?.user ||
+    selectedConversation?.users?.find((u) => u.id !== currentUser.id);
+  const receiverId = receiver?.id;
+
+  // State management
   const [inputVal, setInputVal] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [downloadingFileId, setDownloadingFileId] = useState(null);
+  const [isUserTyping, setIsUserTyping] = useState(false);
 
-  // Offer modal state
+  // Offer related states
   const [buyerId, setBuyerId] = useState(null);
   const [description, setDescription] = useState("");
   const [offerPrice, setOfferPrice] = useState("");
   const [offerDate, setOfferDate] = useState("");
   const [expertId, setExpertId] = useState("");
+  const [offerExpertId, setOfferExpertId] = useState("");
+  const [assignExpertId, setAssignExpertId] = useState("");
   const [gigRadio, setGigRadio] = useState("");
   const [offerLoader, setOfferLoader] = useState(false);
   const [open, setOpen] = useState(false);
 
-  // Order submission state
+  // Order related states
   const [orderSubmissionModal, setOrderSubmissionModal] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [orderFiles, setOrderFiles] = useState([]);
   const [orderDescription, setOrderDescription] = useState("");
   const [submittingOrder, setSubmittingOrder] = useState(false);
-  // const [uploadProgress, setUploadProgress] = useState({});
-  // const [submittingOrder, setSubmittingOrder] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({});
 
-  // Order completion state - ADDED
+  // Completion and review states
   const [orderCompletionModal, setOrderCompletionModal] = useState(false);
   const [completingOrder, setCompletingOrder] = useState(false);
-
-  // Offer details modal
   const [offerDetailsModal, setOfferDetailsModal] = useState(false);
   const [offerDetails, setOfferDetails] = useState(null);
 
-  // Payment modal state
+  // Payment states
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedOfferId, setSelectedOfferId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('fast-checkout');
@@ -117,9 +230,8 @@ const Chatting = () => {
     file: null
   });
   const [selectedImagePreview, setSelectedImagePreview] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState({});
 
-  // Assign modal state
+  // Assignment states
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [assignmentFormData, setAssignmentFormData] = useState({
@@ -127,7 +239,7 @@ const Chatting = () => {
     assignmentNotes: ''
   });
 
-  // review modal
+  // Review states
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewFormData, setReviewFormData] = useState({
     rating: 0,
@@ -135,29 +247,59 @@ const Chatting = () => {
   });
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
-
   // Toast state
   const [toastState, setToastState] = useState({ show: false, message: '', type: 'success' });
-  // const [submissionStage, setSubmissionStage] = useState<'idle' | 'uploading' | 'submitting' | 'done'>('idle');
-
-  const receiver = selectedConversation?.user ||
-    selectedConversation?.users?.find((u) => u.id !== currentUser.id);
-  const receiverId = receiver?.id;
 
   // User role checks
-  const isFreelancer = currentUser.role?.toLowerCase().includes('expert/freelancer') ||
-    currentUser.role?.toLowerCase().includes('freelancer');
+  const isFreelancer = useMemo(() => 
+    currentUser.role?.toLowerCase().includes('expert/freelancer') ||
+    currentUser.role?.toLowerCase().includes('freelancer'),
+    [currentUser.role]
+  );
 
-  const isBd = currentUser.role?.toLowerCase().includes('bidder/company representative/middleman') ||
+  const isBd = useMemo(() => 
+    currentUser.role?.toLowerCase().includes('bidder/company representative/middleman') ||
     currentUser.role?.toLowerCase().includes('middleman') ||
-    currentUser.role?.toLowerCase().includes('company representative');
+    currentUser.role?.toLowerCase().includes('company representative'),
+    [currentUser.role]
+  );
 
-  const isBuyer = currentUser.role?.toLowerCase().includes('client') ||
-    currentUser.user_type?.toLowerCase().includes('client');
+  const isBuyer = useMemo(() => 
+    currentUser.role?.toLowerCase().includes('client') ||
+    currentUser.user_type?.toLowerCase().includes('client'),
+    [currentUser.role, currentUser.user_type]
+  );
 
   const isSeller = isFreelancer || isBd;
 
-  // Effects - Optimized to run only when necessary
+  // Memoized expert options
+  const expertOptions = useMemo(() => 
+    experts?.map(ex => ({
+      value: ex.id,
+      label: `${ex.fname} ${ex.lname}`,
+      image: ex.image 
+    })) || [],
+    [experts]
+  );
+
+  // Check if receiver is online
+  const isReceiverOnline = useMemo(() => {
+    if (!receiverId || !onlineUsers) return false;
+    const receiverStatus = onlineUsers.find(user => user.user_id === receiverId);
+    return receiverStatus?.status === 'online';
+  }, [receiverId, onlineUsers]);
+
+// Check if receiver is typing
+const isReceiverTyping = useMemo(() => {
+  if (!receiverId || !selectedConversation?.id || !typingUsers) return false;
+
+  const convoTyping = typingUsers[selectedConversation.id]; // object of users for this conversation
+  if (!convoTyping) return false;
+
+  return !!convoTyping[receiverId]; // true if receiverId exists and is typing
+}, [receiverId, typingUsers, selectedConversation?.id]);
+
+  // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -177,111 +319,298 @@ const Chatting = () => {
     fetchData();
   }, [dispatch, UserRole, userId, isBd]);
 
-  // Fetch messages periodically
+  // Set user online when component mounts
   useEffect(() => {
-    if (!selectedConversation?.id || !receiverId) return;
-    const interval = setInterval(() => {
-      dispatch(fetchMessages({ receiverId, silent: true }));
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [dispatch, selectedConversation?.id, receiverId]);
+    if (userId) {
+      dispatch(setUserOnline());
+    }
 
-  // Scroll to bottom on new messages
-  // useEffect(() => {
-  //   scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  // }, [messages]);
+    // Set user offline when component unmounts or page unloads
+    const handleBeforeUnload = () => {
+      if (userId) {
+        dispatch(setUserOffline());
+      }
+    };
 
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
-  const openReviewModal = () => setShowReviewModal(true);
-  const closeReviewModal = () => {
-    setReviewFormData({ rating: 0, comment: '' });
-    setShowReviewModal(false);
-  };
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (userId) {
+        dispatch(setUserOffline());
+      }
+    };
+  }, [dispatch, userId]);
 
-  const handleReviewInputChange = (e) => {
-    setReviewFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+  // Real-time messaging setup with all events
+  useEffect(() => {
+    if (!selectedConversation?.id) return;
 
-const handleReviewSubmit = async (e) => {
-  e.preventDefault();
-  setIsSubmittingReview(true);
+    const conversationChannel = `conversation.${selectedConversation.id}`;
+    const presenceChannel = 'user.presence';
 
-  const formData = new FormData();
-  formData.append('rating', reviewFormData.rating);
-  formData.append('comment', reviewFormData.comment);
-  formData.append('offer_id', selectedOffer?.id);
-  formData.append('order_id', selectedOffer?.order?.id);
+   
+    // Fetch messages once when conversation changes
+    dispatch(fetchMessages({ receiverId, silent: true }));
 
-  try {
-    await dispatch(ReviewSubmit(formData)).unwrap();
-    toast.success("Review submitted successfully!");
-    closeReviewModal();
-  } catch (error) {
-    console.error(error);
-    toast.error(error?.message || "Failed to submit review.");
-  } finally {
-    setIsSubmittingReview(false);
-  }
+    // Subscribe to conversation channel for messages, typing, and read receipts
+   const conversationChannelInstance = echo.private(conversationChannel)
+  .subscribed(() => {
+    // Successfully subscribed
+  })
+  .error(() => {
+    // Handle subscription error if needed
+  })
+  .listen('.message.sent', (event) => {
+    // Only add message if it's not from current user (to avoid duplicates)
+    if (event.sender_id !== currentUser.id) {
+      dispatch({
+        type: 'message/addNewMessage',
+        payload: event
+      });
+
+      // Auto-mark as read if conversation is active
+      setTimeout(() => {
+        dispatch(markMessagesAsRead({
+          conversation_id: selectedConversation.id,
+          message_ids: [event.id]
+        }));
+      }, 1000);
+    }
+  })
+  .listen('.user.typing', (event) => {
+    if (event.user_id !== currentUser.id) {
+      dispatch({
+        type: 'message/updateTypingUsers',
+        payload: event
+      });
+
+      // Clear typing indicator after 3 seconds if no new typing event
+      setTimeout(() => {
+        dispatch({
+          type: 'message/clearTypingUser',
+          payload: { user_id: event.user_id, conversation_id: event.conversation_id }
+        });
+      }, 3000);
+    }
+  })
+  .listen('.message.read', (event) => {
+    if (event.read_by_user_id !== currentUser.id) {
+      dispatch({
+        type: 'message/markMessagesAsReadByUser',
+        payload: event
+      });
+    }
+  });
+
+// Subscribe to presence channel for online/offline status
+const presenceChannelInstance = echo.channel(presenceChannel)
+  .subscribed(() => {
+    // Subscribed to presence
+  })
+  .error(() => {
+    // Handle presence channel error
+  })
+  .listen('.user.online', (event) => {
+    dispatch({
+      type: 'message/updateUserOnlineStatus',
+      payload: { ...event, status: 'online' }
+    });
+  })
+  .listen('.user.offline', (event) => {
+    dispatch({
+      type: 'message/updateUserOnlineStatus',
+      payload: { ...event, status: 'offline' }
+    });
+  });
+
+return () => {
+  echo.leave(conversationChannel);
+  echo.leave(presenceChannel);
 };
 
+  }, [dispatch, selectedConversation?.id, receiverId, currentUser.id]);
 
+  // Auto-scroll on new messages
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-  const handleClose = () => {
-    setOpen(false);
-    setOfferDetailsModal(false);
-    setOrderSubmissionModal(false);
-    setOrderCompletionModal(false); // ADDED
-    setShowPaymentModal(false);
-    setShowAssignModal(false);
-    resetOfferForm();
-  };
+  // Enhanced typing handler with API call
+  const handleTypingChange = useCallback(
+    (isTyping) => {
+      if (!selectedConversation?.id || !receiverId) return;
 
-  // Typing whisper logic
-  const handleTypingWhisper = useCallback((isTyping) => {
-    if (!selectedConversation?.id || !echo) return;
-    echo.private(`conversation.${selectedConversation.id}`)
-      .whisper("typing", { userId: currentUser.id, isTyping });
-  }, [selectedConversation?.id, currentUser.id]);
+      setIsUserTyping(isTyping);
 
-  // Input change + typing
-  const handleInputChange = (e) => {
+      // Clear existing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      // Send typing indicator to API
+      dispatch(handleTypingIndicator({
+        receiver_id: receiverId,
+        is_typing: isTyping
+      }));
+
+      // If user is typing, set timeout to stop typing indicator
+      if (isTyping) {
+        typingTimeoutRef.current = setTimeout(() => {
+          setIsUserTyping(false);
+          dispatch(handleTypingIndicator({
+            receiver_id: receiverId,
+            is_typing: false
+          }));
+        }, 3000);
+      }
+    },
+    [dispatch, selectedConversation?.id, receiverId]
+  );
+
+  // Enhanced input change handler
+  const handleInputChange = useCallback((e) => {
     const value = e.target.value;
     setInputVal(value);
 
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    if (value.length > 0) {
-      handleTypingWhisper(true);
-      typingTimeoutRef.current = setTimeout(() => handleTypingWhisper(false), 1000);
-    } else {
-      handleTypingWhisper(false);
+    // Handle typing indicators
+    if (value.length > 0 && !isUserTyping) {
+      handleTypingChange(true);
+    } else if (value.length === 0 && isUserTyping) {
+      handleTypingChange(false);
     }
-  };
+  }, [isUserTyping, handleTypingChange]);
 
-  // Send text or file message
-  const handleSend = useCallback(() => {
+  // Enhanced message send handler
+  const handleSend = useCallback(async () => {
     if ((!inputVal.trim() && !selectedFile) || !receiverId) return;
 
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    handleTypingWhisper(false);
-
-    dispatch(sendMessage({
+    const messageData = {
       receiver_id: receiverId,
       message_type: selectedFile ? "file" : "text",
       message: inputVal.trim(),
-      file: selectedFile || null
-    }))
-      .then(() => {
-        setInputVal("");
-        setSelectedFile(null);
+      file: selectedFile,
+    };
+
+    try {
+      // Stop typing indicator
+      if (isUserTyping) {
+        handleTypingChange(false);
+      }
+
+      // Send message
+      await dispatch(sendMessage(messageData));
+
+      // Clear input and file
+      setInputVal("");
+      setSelectedFile(null);
+      setFilePreview(null);
+
+      // Focus input
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message");
+    }
+  }, [inputVal, selectedFile, receiverId, isUserTyping, handleTypingChange, dispatch]);
+
+  // Handle Enter key press
+  const handleKeyPress = useCallback((e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  }, [handleSend]);
+
+  // File selection handler
+  const handleFileSelect = useCallback((e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      
+      // Create preview for images
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => setFilePreview(e.target.result);
+        reader.readAsDataURL(file);
+      } else {
         setFilePreview(null);
-        inputRef.current?.focus();
-        dispatch(fetchMessages({ receiverId, silent: true }));
-      })
-      .catch(error => {
-        console.error("Error sending message:", error);
-        toast.error("Failed to send message");
-      });
-  }, [inputVal, selectedFile, receiverId, dispatch, handleTypingWhisper]);
+      }
+    }
+  }, []);
+
+  // Remove selected file
+  const handleRemoveFile = useCallback(() => {
+    setSelectedFile(null);
+    setFilePreview(null);
+  }, []);
+
+  // Render typing indicator
+  const renderTypingIndicator = () => {
+    if (!isReceiverTyping) return null;
+
+    return (
+      <div className="typing-indicator" style={{ 
+        padding: '8px 16px', 
+        fontStyle: 'italic', 
+        color: '#666',
+        fontSize: '14px'
+      }}>
+        {receiver?.name || 'Someone'} is typing...
+      </div>
+    );
+  };
+
+  // Render online status
+  const renderOnlineStatus = () => {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        fontSize: '12px', 
+        color: isReceiverOnline ? '#4CAF50' : '#666'
+      }}>
+        <span style={{ 
+          width: '8px', 
+          height: '8px', 
+          backgroundColor: isReceiverOnline ? '#4CAF50' : '#ccc',
+          borderRadius: '50%',
+          marginRight: '4px'
+        }}></span>
+        {isReceiverOnline ? 'Online' : 'Offline'}
+      </div>
+    );
+  };
+  
+  // Message sending handler
+ 
+// const handleSend = useCallback(() => {
+//   if ((!inputVal.trim() && !selectedFile) || !receiverId) return;
+
+//   if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+//   handleTypingWhisper(false);
+
+//   dispatch(sendMessage({
+//     receiver_id: receiverId,
+//     message_type: selectedFile ? "file" : "text",
+//     message: inputVal.trim(),
+//     file: selectedFile || null
+//   }))
+//     .then(() => {
+//       setInputVal("");
+//       setSelectedFile(null);
+//       setFilePreview(null);
+//       inputRef.current?.focus();
+//       // ❌ remove fetchMessages — not needed now
+//     })
+//     .catch(error => {
+//       console.error("Error sending message:", error);
+//       toast.error("Failed to send message");
+//     });
+// }, [inputVal, selectedFile, receiverId, dispatch, handleTypingWhisper]);
+
 
   // File selection handler
   const handleFileChange = (e) => {
@@ -299,7 +628,7 @@ const handleReviewSubmit = async (e) => {
     }
   };
 
-  // File download handler with fallback strategy
+  // File download handler with fallback strategies
   const handleDownload = async (filePath, fileName, msgId) => {
     setDownloadingFileId(msgId);
     try {
@@ -321,7 +650,7 @@ const handleReviewSubmit = async (e) => {
     }
   };
 
-  // Offer modal control
+  // Offer modal handlers
   const openOfferModal = useCallback((buyerReq) => {
     setBuyerId(buyerReq.id);
     setOpen(true);
@@ -331,36 +660,12 @@ const handleReviewSubmit = async (e) => {
     setDescription("");
     setOfferPrice("");
     setOfferDate("");
-    setExpertId("");
+    setOfferExpertId("");
     setGigRadio("");
     setOpen(false);
   };
 
-  const handleResponseOffer = useCallback((data) => {
-    if (data?.status) {
-      setOfferLoader(false);
-      setOpen(false);
-      resetOfferForm();
-      toast.success("Offer created successfully!");
-    } else {
-      setOfferLoader(false);
-      const errorMsg = data?.message || "Offer creation failed: Please try again.";
-
-      if (data?.message === "Not enough bids! Please purchase more bids to submit an offer.") {
-        toast.error(
-          <>
-            Not enough bids! Please purchase more bids to submit an offer.
-            <br />
-            <Button onClick={() => navigate("/buy-bids")}>Buy Bids</Button>
-          </>
-        );
-      } else {
-        toast.error(errorMsg);
-      }
-    }
-  }, [navigate]);
-
-  // Submit custom offer
+  // Offer submission handler
   const handleSubmitOffer = async (e) => {
     e.preventDefault();
     setOfferLoader(true);
@@ -377,9 +682,7 @@ const handleReviewSubmit = async (e) => {
     try {
       const response = await dispatch(CreateOfferRequest(payload));
 
-      // Consistent status checking
       if (response?.status === true || response?.status === "true") {
-        // Send the offer as a chat message
         await dispatch(sendMessage({
           receiver_id: receiverId,
           offer_id: response.data?.id || response.id,
@@ -387,16 +690,12 @@ const handleReviewSubmit = async (e) => {
           message: "Custom offer",
         }));
 
-        // Success actions
         setOpen(false);
         resetOfferForm();
         toast.success("Offer created successfully!");
         dispatch(fetchMessages({ receiverId, silent: true }));
-
       } else {
-        // Handle specific error cases
         const errorMsg = response?.message || "Offer creation failed: Please try again.";
-
         if (response?.message === "Not enough bids! Please purchase more bids to submit an offer.") {
           toast.error(
             <>
@@ -417,12 +716,11 @@ const handleReviewSubmit = async (e) => {
     }
   };
 
-  // Handle offer decline
+  // Offer decline handler
   const handleDeclineOffer = async (offerId) => {
     try {
       await dispatch(RejectOfferRequest({ offer_id: offerId })).unwrap();
 
-      // Send decline message
       await dispatch(sendMessage({
         receiver_id: receiverId,
         message_type: "offer_declined",
@@ -437,13 +735,14 @@ const handleReviewSubmit = async (e) => {
       toast.error("Failed to decline offer");
     }
   };
-  // CORRECTED: Handle order completion
+
+  // Order completion handler
   const handleCompleteOrder = async (orderId) => {
     if (!orderId) {
       toast.error("Order ID is required");
       return;
     }
-console.log("order is :",orderId );
+
     setCompletingOrder(true);
 
     try {
@@ -451,10 +750,10 @@ console.log("order is :",orderId );
       formData.append('status', "completed");
       formData.append('order_id', orderId);
 
-      const result =  await dispatch(OrderComplete({
-    orderId: orderId,
-    payload: formData  // Contains status: "completed"
-  }));
+      const result = await dispatch(OrderComplete({
+        orderId: orderId,
+        payload: formData
+      }));
 
       if (OrderComplete.fulfilled.match(result)) {
         toast.success("Order completed successfully!");
@@ -463,7 +762,6 @@ console.log("order is :",orderId );
       } else {
         toast.error(result.payload || "Failed to complete order");
       }
-
     } catch (err) {
       console.error("Complete order error", err);
       toast.error("Unexpected error occurred while completing order");
@@ -472,8 +770,7 @@ console.log("order is :",orderId );
     }
   };
 
-
-
+  // File upload handler for orders
   const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
   const CONCURRENCY_LIMIT = 4;
 
@@ -507,8 +804,6 @@ console.log("order is :",orderId );
             }));
           }
         });
-
-        console.log(`Chunk ${index + 1}/${totalChunks} uploaded. Status: ${response.status}`);
       } catch (err) {
         console.error(`Error uploading chunk ${index + 1}:`, err);
         throw err;
@@ -516,7 +811,6 @@ console.log("order is :",orderId );
     };
 
     const uploadPromises = [];
-
     for (let index = 0; index < totalChunks; index++) {
       const chunkStart = index * CHUNK_SIZE;
       const chunkEnd = (index + 1) * CHUNK_SIZE;
@@ -525,10 +819,9 @@ console.log("order is :",orderId );
     }
 
     await Promise.all(uploadPromises);
-
-    console.log(`File "${file.name}" upload complete.`);
   };
 
+  // Order submission handler
   const handleSubmitOrder = async () => {
     if (!selectedOffer || !orderDescription.trim()) {
       toast.error("Please provide order description");
@@ -536,46 +829,30 @@ console.log("order is :",orderId );
     }
 
     setSubmittingOrder(true);
-    //  setSubmissionStage('uploading');
     try {
-      // Step 1: Upload all files first (if any)
       if (orderFiles && orderFiles.length > 0) {
-        console.log("Starting file uploads...");
-        console.log("Files to upload:", orderFiles);
-
         for (const file of orderFiles) {
-          console.log("Uploading file:", file.name, "size:", file.size);
           await uploadFileInChunks(file, selectedOffer.id);
         }
-        console.log("All files uploaded successfully");
       }
 
-      // setSubmissionStage('submitting');
-      // Step 2: Submit order metadata (this will finalize the order)
       const metadataForm = new FormData();
       metadataForm.append('delivery_message', orderDescription);
       metadataForm.append('offer_id', selectedOffer.id);
-
-      console.log("Submitting order metadata...");
 
       const metadataResponse = await dispatch(OrderSubmit({
         orderId: selectedOffer.id,
         payload: metadataForm,
       }));
 
-      if (metadataResponse.payload && metadataResponse.meta.requestStatus === 'fulfilled') {
-        toast.success("Order submitted successfully!");
-        setOrderSubmissionModal(false);
-        setOrderDescription("");
-        setOrderFiles([]);
-        setSelectedOffer(null);
-        setUploadProgress({});
-        //  setSubmissionStage('done');
-        dispatch(fetchMessages({ receiverId, silent: true }));
-      } else {
-        throw new Error("Failed to submit order metadata");
-      }
-
+      setTimeout(() => closePaymentModal(), 300);
+      toast.success("Order submitted successfully!");
+      setOrderSubmissionModal(false);
+      setOrderDescription("");
+      setOrderFiles([]);
+      setSelectedOffer(null);
+      setUploadProgress({});
+      dispatch(fetchMessages({ receiverId, silent: true }));
     } catch (err) {
       console.error("Submit order error", err);
       toast.error("Error submitting order");
@@ -589,8 +866,6 @@ console.log("order is :",orderId );
 
   const handleOrderFileChange = (e) => {
     const files = Array.from(e.target.files || []);
-
-    // Validate file sizes
     const oversizedFiles = files.filter(file => file.size > MAX_FILE_SIZE);
     if (oversizedFiles.length > 0) {
       toast.error(`These files exceed 5GB: ${oversizedFiles.map(f => f.name).join(', ')}`);
@@ -604,20 +879,15 @@ console.log("order is :",orderId );
     setOrderFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-
-
-
-
-
-  // View offer details
+  // Offer details view
   const viewOfferDetails = (offer) => {
     setOfferDetailsModal(true);
     setOfferDetails(offer);
   };
 
+  // Delivery days calculation
   const calculateDeliveryDays = (dateString) => {
     if (!dateString) return 0;
-
     try {
       const deliveryDate = new Date(dateString);
       const today = new Date();
@@ -629,7 +899,7 @@ console.log("order is :",orderId );
     }
   };
 
-  // Payment modal control
+  // Payment modal handlers
   const openPaymentModal = useCallback((offer) => {
     setSelectedOfferId(offer.id);
     setPaymentMethod("fast-checkout");
@@ -644,15 +914,6 @@ console.log("order is :",orderId );
     setSelectedImagePreview(null);
   }, []);
 
-  const openAssignModal = useCallback((offer) => {
-    setSelectedOfferId(offer.id);
-    setShowAssignModal(true);
-    setAssignmentFormData({
-      bdOrderId: "",
-      assignmentNotes: ""
-    });
-  }, []);
-
   const closePaymentModal = useCallback(() => {
     setShowPaymentModal(false);
     setSelectedOfferId(null);
@@ -663,23 +924,29 @@ console.log("order is :",orderId );
     }
   }, [selectedImagePreview]);
 
+  // Assignment modal handlers
+  const openAssignModal = useCallback((offer) => {
+    setSelectedOfferId(offer.id);
+    setShowAssignModal(true);
+    setAssignmentFormData({
+      bdOrderId: "",
+      assignmentNotes: ""
+    });
+  }, []);
+
   const closeAssignModal = useCallback(() => {
     setShowAssignModal(false);
     setSelectedOfferId(null);
   }, []);
 
-  // Form handlers
+  // Form input handlers
   const handlePaymentInputChange = useCallback((e) => {
     const { name, type, files, value } = e.target;
-
     if (type === 'file' && files?.[0]) {
       const selectedFile = files[0];
-
       if (selectedImagePreview) URL.revokeObjectURL(selectedImagePreview);
-
       const imageUrl = URL.createObjectURL(selectedFile);
       setSelectedImagePreview(imageUrl);
-
       setPaymentFormData(prev => ({ ...prev, [name]: selectedFile }));
     } else {
       setPaymentFormData(prev => ({ ...prev, [name]: value }));
@@ -691,25 +958,31 @@ console.log("order is :",orderId );
     setAssignmentFormData(prev => ({ ...prev, [name]: value }));
   }, []);
 
-  // Handle assign to expert
+  // Expert assignment handler
   const handleAssignToExpert = async (e) => {
     e.preventDefault();
-
-    if (!assignmentFormData.bdOrderId) {
-      setToastState({ show: true, message: "Please select a BD Order", type: "error" });
+    if (!assignExpertId) {
+      setToastState({ show: true, message: "Please select an expert", type: "error" });
       return;
     }
 
     setIsAssigning(true);
     try {
-      await dispatch(AssignToExpertRequest({
+      const payload = {
         offerId: selectedOfferId,
-        bdOrderId: assignmentFormData.bdOrderId,
-        assignmentNotes: assignmentFormData.assignmentNotes,
-      })).unwrap();
+        seller_id: assignExpertId,
+        notes: assignmentFormData.assignmentNotes
+      };
 
-      setToastState({ show: true, message: "Assigned to expert successfully!", type: "success" });
+      await dispatch(inviteToJob(payload));
+      setTimeout(() => closePaymentModal(), 300);
       closeAssignModal();
+      setToastState({ 
+        show: true, 
+        message: "Assigned to expert successfully!", 
+        type: "success" 
+      });
+      dispatch(fetchMessages({ receiverId, silent: true }));
     } catch (error) {
       setToastState({
         show: true,
@@ -721,17 +994,15 @@ console.log("order is :",orderId );
     }
   };
 
-  // Handle fast checkout
+  // Fast checkout handler
   const handleFastCheckout = async (e) => {
     e.preventDefault();
-
     if (!paymentFormData.file) {
       toast.error("Please upload a receipt");
       return;
     }
 
     setIsProcessing(true);
-
     try {
       const formData = new FormData();
       formData.append('offerId', selectedOfferId);
@@ -742,7 +1013,6 @@ console.log("order is :",orderId );
       const res = await dispatch(AcceptOfferRequest(formData));
       setTimeout(() => closePaymentModal(), 300);
       toast.success(res?.message || "Receipt submitted successfully!");
-
     } catch (error) {
       toast.error(error.message || "Transfer failed");
     } finally {
@@ -750,11 +1020,9 @@ console.log("order is :",orderId );
     }
   };
 
-  // Handle card payment
+  // Card payment handler
   const handleCardPayment = async (e) => {
     e.preventDefault();
-
-    // Validation
     const requiredFields = ['username', 'email', 'password', 'amount'];
     if (requiredFields.some(field => !paymentFormData[field])) {
       setToastState({ show: true, message: "Please fill all fields", type: "error" });
@@ -772,7 +1040,6 @@ console.log("order is :",orderId );
     }
 
     setIsProcessing(true);
-
     try {
       const paymentData = {
         offerId: selectedOfferId,
@@ -812,7 +1079,7 @@ console.log("order is :",orderId );
     }
   };
 
-  // Handle offer rejection
+  // Offer rejection handler
   const handleReject = async (offerId) => {
     const result = await Swal.fire({
       title: "Are you sure?",
@@ -824,7 +1091,6 @@ console.log("order is :",orderId );
     });
 
     if (!result.isConfirmed) return;
-
     setIsProcessing(true);
 
     try {
@@ -841,7 +1107,7 @@ console.log("order is :",orderId );
     }
   };
 
-  // CORRECTED: Handle reject delivery
+  // Delivery rejection handler
   const handleRejectDelivery = async (offerId) => {
     const result = await Swal.fire({
       title: "Are you sure?",
@@ -853,11 +1119,9 @@ console.log("order is :",orderId );
     });
 
     if (!result.isConfirmed) return;
-
     setIsProcessing(true);
 
     try {
-      // This should be a different action for rejecting delivery
       await dispatch(RejectOfferRequest({ offerId })).unwrap();
       setToastState({ show: true, message: "Delivery rejected!", type: "success" });
       dispatch(fetchMessages({ receiverId, silent: true }));
@@ -872,17 +1136,50 @@ console.log("order is :",orderId );
     }
   };
 
-  // Close toast
+  // Review modal handlers
+  const openReviewModal = () => setShowReviewModal(true);
+  const closeReviewModal = () => {
+    setReviewFormData({ rating: 0, comment: '' });
+    setShowReviewModal(false);
+  };
+
+  const handleReviewInputChange = (e) => {
+    setReviewFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmittingReview(true);
+
+    const formData = new FormData();
+    formData.append('rating', parseInt(reviewFormData.rating, 10));
+    formData.append('comment', reviewFormData.comment);
+    formData.append('offer_id', selectedOffer?.id);
+    formData.append('order_id', selectedOffer?.order?.id);
+
+    try {
+      await dispatch(ReviewSubmit(formData)).unwrap();
+      toast.success("Review submitted successfully!");
+      closeReviewModal();
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.message || "Failed to submit review.");
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
+  // Toast handler
   const handleCloseToast = useCallback(() => {
     setToastState(prev => ({ ...prev, show: false }));
   }, []);
 
+  // Download attachments component
   const DownloadAttachments = ({ offer, hasDeliveryAttachment }) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
     const buttonRef = useRef(null);
 
-    // Close dropdown when clicking outside
     useEffect(() => {
       const handleClickOutside = (event) => {
         if (dropdownRef.current && !dropdownRef.current.contains(event.target) &&
@@ -895,7 +1192,6 @@ console.log("order is :",orderId );
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Handle escape key
     useEffect(() => {
       const handleEscape = (event) => {
         if (event.key === 'Escape') {
@@ -909,45 +1205,27 @@ console.log("order is :",orderId );
       }
     }, [isOpen]);
 
-    // Helper function to get auth token (adjust based on your auth implementation)
     const getAuthToken = () => {
-      // This should return your authentication token
-      // Common approaches:
-      // return localStorage.getItem('auth_token');
-      // return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-      // return cookies.get('sanctum_token');
-      // Adjust this based on your authentication setup
-      return localStorage.getItem('accessToken'); // Example - replace with your method
+      return localStorage.getItem('accessToken');
     };
 
-    // Helper function to construct secure file URL
     const constructFileUrl = (filePath, fileName) => {
-      // Extract folder from file path or determine based on context
-      // You might need to adjust this based on how your file paths are structured
-      const folder = 'uploads'; // Default folder, you may need to determine this dynamically
-
-      // If filePath contains folder info, extract it
       const pathParts = filePath.split('/');
-      const actualFolder = pathParts.length > 1 ? pathParts[pathParts.length - 2] : folder;
-
-      // Clean filename to match backend sanitization
-      const cleanFileName = fileName.split('/').pop(); // Remove any path info
-
+      const actualFolder = pathParts.length > 1 ? pathParts[pathParts.length - 2] : 'uploads';
+      const cleanFileName = fileName.split('/').pop();
       return `/files/${actualFolder}/${cleanFileName}`;
     };
 
-    // Secure download function
     const downloadFile = async (file) => {
       try {
         const token = getAuthToken();
         const fileUrl = constructFileUrl(file.path, file.name);
 
         const response = await axios.get(fileUrl, {
-          responseType: 'blob', // IMPORTANT: tell axios to treat the response as binary
+          responseType: 'blob',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/octet-stream',
-            // 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
           }
         });
 
@@ -963,29 +1241,23 @@ console.log("order is :",orderId );
           }
         }
 
-        // Use response.data directly as it's already a Blob
         const url = window.URL.createObjectURL(response.data);
         const link = document.createElement('a');
         link.href = url;
         link.download = file.name;
         document.body.appendChild(link);
         link.click();
-
-        // Cleanup
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-
       } catch (error) {
         console.error('Download error:', error);
         alert(`Download failed: ${error.message}`);
       }
     };
 
-
     const handleDownloadAll = async () => {
       for (const file of offer.order.delivery_attachments) {
         await downloadFile(file);
-        // Add small delay between downloads to avoid overwhelming the server
         await new Promise(resolve => setTimeout(resolve, 100));
       }
     };
@@ -1039,7 +1311,6 @@ console.log("order is :",orderId );
             if (multipleFiles) {
               setIsOpen(!isOpen);
             } else {
-              // Secure download for single file
               downloadFile(attachments[0]);
             }
           }}
@@ -1049,7 +1320,6 @@ console.log("order is :",orderId );
             borderRadius: '10px',
             textTransform: 'none',
             fontWeight: 500,
-            transition: 'all 0.2s ease',
             '&:hover': {
               backgroundColor: '#F9FAFB',
               borderColor: '#9CA3AF',
@@ -1094,7 +1364,6 @@ console.log("order is :",orderId );
             role="menu"
             aria-label="Download options"
           >
-            {/* Header with download all option */}
             <Box sx={{
               padding: '12px 16px',
               borderBottom: '1px solid #E5E7EB',
@@ -1133,7 +1402,6 @@ console.log("order is :",orderId );
               </Box>
             </Box>
 
-            {/* File list */}
             <Box sx={{ padding: '8px 0' }}>
               {attachments.map((file, index) => (
                 <Box
@@ -1206,11 +1474,10 @@ console.log("order is :",orderId );
     );
   };
 
+  // Render offer message component
   const renderOfferMessage = (msg) => {
-    // Enhanced renderOfferMessage function with improved logic and UI
     const offer = msg?.offer || offers?.find(o => o.id === msg.offer_id);
 
-    // Loading state
     if (!offer) {
       return (
         <Box sx={{
@@ -1230,16 +1497,13 @@ console.log("order is :",orderId );
         </Box>
       );
     }
-    console.log("offers:", offer.status);
 
-    // Enhanced status and role checks
     const offerStatus = (offer.status).toLowerCase();
     const isOfferSent = msg.sender_id === currentUser.id;
     const isClient = currentUser.id === offer.buyer_id;
     const isSeller = currentUser.id === offer.seller_id || currentUser.id === offer.expert_id;
     const hasOrderId = offer.order_id || offer.order?.id;
 
-    // Improved logic for action availability
     const canAcceptOffer = !isOfferSent && offerStatus === 'pending' && isClient;
     const canDeclineOffer = !isOfferSent && offerStatus === 'pending' && isClient;
     const canSubmitOrder = (isOfferSent || isSeller) && offerStatus === 'accepted';
@@ -1249,14 +1513,6 @@ console.log("order is :",orderId );
     const hasDeliveryAttachment = (offerStatus === 'delivered' || offerStatus === 'completed') &&
       (offer.attachment || offer.order?.delivery_attachments);
 
-    console.log("isOfferSent ", isOfferSent);
-    console.log("isSeller ", isSeller);
-    console.log("offerStatus ", offerStatus);
-    console.log("isClient ", isClient);
-    console.log("canAcceptDelivery:", canAcceptDelivery);
-    console.log("hasOrderId ", hasOrderId);
-
-    // Enhanced status configuration
     const statusConfig = {
       pending: {
         background: '#FFF3CD',
@@ -1311,7 +1567,6 @@ console.log("order is :",orderId );
 
     const currentStatus = statusConfig[offerStatus] || statusConfig.pending;
 
-    // Helper function to calculate delivery time
     const getDeliveryInfo = () => {
       if (offer.delivery_days) {
         return `${offer.delivery_days} days`;
@@ -1323,7 +1578,6 @@ console.log("order is :",orderId );
       return 'Not specified';
     };
 
-    // Helper function to get expiry info
     const getExpiryInfo = () => {
       if (!offer.expires_at) return null;
 
@@ -1352,7 +1606,6 @@ console.log("order is :",orderId );
         overflow: 'hidden',
         transition: 'all 0.3s ease'
       }}>
-        {/* Decorative background element */}
         <Box sx={{
           position: 'absolute',
           top: 0,
@@ -1364,7 +1617,6 @@ console.log("order is :",orderId );
           transform: 'translate(30px, -30px)'
         }} />
 
-        {/* Header with improved status display */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="h6" sx={{
@@ -1411,7 +1663,6 @@ console.log("order is :",orderId );
           />
         </Box>
 
-        {/* Enhanced description */}
         <Typography variant="body1" sx={{
           color: '#4A5568',
           mb: 3,
@@ -1422,7 +1673,6 @@ console.log("order is :",orderId );
           {offer.description || 'Custom offer for your project requirements'}
         </Typography>
 
-        {/* Enhanced price and delivery info */}
         <Box sx={{
           display: 'flex',
           alignItems: 'center',
@@ -1463,7 +1713,6 @@ console.log("order is :",orderId );
           </Box>
         </Box>
 
-        {/* Expiry information */}
         {expiryInfo && (
           <Box sx={{
             display: 'flex',
@@ -1487,9 +1736,7 @@ console.log("order is :",orderId );
           </Box>
         )}
 
-        {/* Enhanced action buttons */}
         <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-          {/* View Details - Always available */}
           <Button
             variant="outlined"
             size="small"
@@ -1510,7 +1757,6 @@ console.log("order is :",orderId );
             👁️ View Details
           </Button>
 
-          {/* Accept Offer */}
           {canAcceptOffer && (
             <Button
               variant="contained"
@@ -1534,7 +1780,6 @@ console.log("order is :",orderId );
             </Button>
           )}
 
-          {/* Decline Offer */}
           {canDeclineOffer && (
             <Button
               variant="outlined"
@@ -1557,7 +1802,6 @@ console.log("order is :",orderId );
             </Button>
           )}
 
-          {/* Submit Order */}
           {canSubmitOrder && (
             <Button
               variant="contained"
@@ -1580,11 +1824,10 @@ console.log("order is :",orderId );
                 }
               }}
             >
-              📤 Submit Order
+              Submit Order
             </Button>
           )}
 
-          {/* Accept Delivery */}
           {canAcceptDelivery && (
             <Button
               variant="contained"
@@ -1611,7 +1854,6 @@ console.log("order is :",orderId );
             </Button>
           )}
 
-          {/* Reject Delivery */}
           {canRejectDelivery && (
             <Button
               variant="outlined"
@@ -1634,41 +1876,11 @@ console.log("order is :",orderId );
             </Button>
           )}
 
-          {/* Enhanced Download Attachments Component */}
           <DownloadAttachments
             offer={offer}
             hasDeliveryAttachment={hasDeliveryAttachment}
           />
 
-          {/* Write Review */}
-          {canWriteReview && (
-            <Button
-              variant="outlined"
-              size="small"
-                            onClick={() => {
-                setSelectedOffer(offer);
-                openReviewModal(offer);
-              }}
-              
-              
-              sx={{
-                borderColor: '#8B5CF6',
-                color: '#8B5CF6',
-                borderRadius: '10px',
-                textTransform: 'none',
-                fontWeight: 500,
-                '&:hover': {
-                  backgroundColor: '#F3E8FF',
-                  borderColor: '#7C3AED',
-                  transform: 'translateY(-1px)'
-                }
-              }}
-            >
-              ⭐ Write Review
-            </Button>
-          )}
-
-          {/* BD Assignment (if applicable) */}
           {canSubmitOrder && isBd && offerStatus === 'accepted' && (
             <Button
               variant="outlined"
@@ -1687,12 +1899,11 @@ console.log("order is :",orderId );
                 }
               }}
             >
-              👨‍💼 Assign to Expert
+              Assign to Expert
             </Button>
           )}
         </Box>
 
-        {/* Loading overlay for actions */}
         {(offerLoader || isProcessing) && (
           <Box sx={{
             position: 'absolute',
@@ -1714,11 +1925,12 @@ console.log("order is :",orderId );
     );
   };
 
-
+  // Typing indicators
   const typingUserIds = typingUsers?.[selectedConversation?.id] || {};
   const isSomeoneTyping = Object.entries(typingUserIds)
     .some(([uid, t]) => t && uid !== currentUser.id.toString());
 
+  // No conversation selected view
   if (!selectedConversation) {
     return (
       <Box sx={{
@@ -1744,9 +1956,9 @@ console.log("order is :",orderId );
     );
   }
 
+  // Main chat UI
   return (
     <>
-      {/* Chat header */}
       <div className="chat-container d-flex flex-column h-100">
         <div className="chat-header p-3 bg-light rounded-top d-flex align-items-center justify-content-between">
           <div className="d-flex align-items-center">
@@ -1763,11 +1975,8 @@ console.log("order is :",orderId );
               <small className="text-muted">{isSomeoneTyping ? "Typing..." : "Online"}</small>
             </div>
           </div>
-
-
         </div>
 
-        {/* Messages */}
         <div className="flex-grow-1 overflow-auto p-3">
           {loading ? (
             <div className="text-center py-3">
@@ -1786,13 +1995,10 @@ console.log("order is :",orderId );
                       backgroundColor: isSender ? 'bg-white' : undefined,
                     }}
                   >
-
-                    {/* Regular message */}
                     {msg.message && msg.message_type !== 'offer' && (
                       <div className="mb-1">{msg.message}</div>
                     )}
 
-                    {/* File attachment */}
                     {msg.file_path && (
                       <div className="mt-2">
                         <button
@@ -1811,10 +2017,8 @@ console.log("order is :",orderId );
                       </div>
                     )}
 
-                    {/* Offer message */}
                     {msg.message_type === 'offer' && renderOfferMessage(msg)}
 
-                    {/* Status messages */}
                     {(msg.message_type === 'offer_accepted' ||
                       msg.message_type === 'offer_declined' ||
                       msg.message_type === 'order_submitted') && (
@@ -1843,7 +2047,6 @@ console.log("order is :",orderId );
           <div ref={scrollRef} />
         </div>
 
-        {/* Send input */}
         <div className="chat-input p-3 bg-light rounded-bottom">
           <div className="input-group">
             {(isFreelancer || isBd) && (
@@ -1961,28 +2164,16 @@ console.log("order is :",orderId );
 
             {UserRole === "bidder/company representative/middleman" && (
               <div className="col-12 prof-fields mt-4">
-                <label htmlFor="expertId" className="form-label font-18 poppins blackcolor">
-                  Select Expert (Optional)
+                <label htmlFor="offerExpertId" className="form-label font-18 poppins blackcolor">
+                  Select Expert
                 </label>
-                <select
-                  className="form-control p-3 border-0 font-16 poppins"
-                  value={expertId}
-                  onChange={(e) => setExpertId(e.target.value)}
-                  id="expertId"
-                >
-                  <option value="">-- Select an Expert --</option>
-                  {experts?.length > 0 ? (
-                    experts.map((ex) => (
-                      <option key={ex.id} value={ex.id}>
-                        {ex.fname} {ex.lname}
-                      </option>
-                    ))
-                  ) : (
-                    <option disabled>
-                      {isLoadingExperts ? "Loading experts..." : "No experts available"}
-                    </option>
-                  )}
-                </select>
+                <ExpertSelect 
+                  options={expertOptions}
+                  value={offerExpertId}
+                  onChange={setOfferExpertId}
+                  isLoading={isLoadingExperts}
+                  placeholder="-- Select an Expert --"
+                />
                 <small className="text-muted">
                   If selected, this will invite the expert and update the order status to "Project Started".
                 </small>
@@ -1998,7 +2189,6 @@ console.log("order is :",orderId );
                       style={{ backgroundColor: "#f5f5ff" }}
                     >
                       <input
-                        required
                         checked={gigRadio === gig.id}
                         type="radio"
                         value={gig.id}
@@ -2080,18 +2270,15 @@ console.log("order is :",orderId );
           {orderFiles.length > 0 && (
             <div className="mb-3">
               <h6>Selected Files:</h6>
-
               {orderFiles.map((file, index) => (
                 <div key={index} className="d-flex align-items-center justify-content-between p-2 border rounded mb-2">
                   <span className="me-2">{file.name}</span>
-
                   <div className="flex-grow-1 me-2">
                     <LinearProgress
                       variant="determinate"
                       value={uploadProgress[file.name] || 0}
                     />
                   </div>
-
                   <Button
                     size="small"
                     color="error"
@@ -2102,7 +2289,6 @@ console.log("order is :",orderId );
                   </Button>
                 </div>
               ))}
-
             </div>
           )}
         </DialogContent>
@@ -2115,7 +2301,6 @@ console.log("order is :",orderId );
           >
             submit
           </Button>
-
         </DialogActions>
       </Dialog>
 
@@ -2397,30 +2582,33 @@ console.log("order is :",orderId );
         </Box>
       </Modal>
 
-{/* Order Completion Modal - ADDED */}
-<Dialog
-  open={orderCompletionModal}
-  onClose={() => setOrderCompletionModal(false)}
->
-  <DialogTitle>Complete Order</DialogTitle>
-  <DialogContent>
-    <Typography variant="body1" sx={{ mb: 2 }}>
-      Are you sure you want to mark this order as completed?
-    </Typography>
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={() => setOrderCompletionModal(false)}>Cancel</Button>
-    <Button
-      onClick={() => handleCompleteOrder(selectedOffer.order.id)}
-      variant="contained"
-      disabled={completingOrder}
-    >
-      {completingOrder ? 'Completing...' : 'Complete Order'}
-    </Button>
-  </DialogActions>
-</Dialog>
+      {/* Order Completion Modal */}
+      <Dialog
+        open={orderCompletionModal}
+        onClose={() => setOrderCompletionModal(false)}
+      >
+        <DialogTitle>Complete Order</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Are you sure you want to mark this order as completed?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOrderCompletionModal(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              setSelectedOffer(selectedOffer);
+              openReviewModal(selectedOffer);
+            }}
+            variant="contained"
+            disabled={completingOrder}
+          >
+            {completingOrder ? 'Completing...' : 'Complete Order'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-
+      {/* Review Modal */}
       <Modal
         open={showReviewModal}
         onClose={closeReviewModal}
@@ -2528,26 +2716,20 @@ console.log("order is :",orderId );
 
             <form onSubmit={handleAssignToExpert}>
               <div className="row">
-                <div className="col-12 mb-3">
-                  <label htmlFor="bdOrderId" className="form-label">
-                    Select BD Order *
+                <div className="col-12 prof-fields mt-4">
+                  <label htmlFor="assignExpertId" className="form-label font-18 poppins blackcolor">
+                    Select Expert
                   </label>
-                  <select
-                    id="bdOrderId"
-                    name="bdOrderId"
-                    className="form-select"
-                    value={assignmentFormData.bdOrderId}
-                    onChange={handleAssignmentInputChange}
-                    required
-                    disabled={isAssigning}
-                  >
-                    <option value="">Select a BD Order</option>
-                    {/* Replace with actual BD orders */}
-                    <option value="1">BD Order #1</option>
-                    <option value="2">BD Order #2</option>
-                  </select>
+                  <ExpertSelect 
+                    options={expertOptions}
+                    value={assignExpertId}
+                    onChange={setAssignExpertId}
+                    isLoading={isLoadingExperts}
+                  />
+                  <small className="text-muted">
+                    If selected, this will invite the expert and update the order status to "Project Started".
+                  </small>
                 </div>
-
                 <div className="col-12 mb-3">
                   <label htmlFor="assignmentNotes" className="form-label">
                     Assignment Notes (Optional)
