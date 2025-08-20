@@ -15,7 +15,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import "../App.css";
 import dropdownimg from "../assets/grapetask.webp";
 import logo1 from "../assets/logo.webp";
-import { fetchNotifications } from "../redux/slices/notificationsSlice";
+
 import NotificationPopup from "./NotificationPopup"; // File in same folder
 
 const Navbar = (props) => {
@@ -70,36 +70,10 @@ try {
   const notificationsState = useSelector((state) => state.notifications) || {};
   const { notifications = [] } = notificationsState;
 
-  // Fetch notifications on mount
-  useEffect(() => {
-    dispatch(fetchNotifications());
-  }, [dispatch]);
 
   
 
-  // Accept invitation handler called from NotificationPopup
-  const handleAcceptInvitation = async (notif) => {
-    try {
-      const accessToken = localStorage.getItem("accessToken");
-      // Assuming notif.data includes offer_id and order_id
-      const { offer_id, order_id } = notif.data;
-      await axios.post(
-        "/api/accept-offer-invitation",
-        { offer_id, order_id },
-        {
-          headers: {
-            "Authorization": "Bearer " + accessToken,
-          },
-        }
-      );
-      alert("Invitation accepted. Order has started!");
-      setSelectedNotification(null);
-      // Optionally, dispatch(fetchNotifications()) to refresh the list
-    } catch (err) {
-      console.error("Failed to accept invitation", err);
-      alert("Failed to accept invitation. Please try again.");
-    }
-  };
+  
 
   const handleLogout = () => {
     localStorage.clear();
@@ -310,7 +284,7 @@ try {
                   <div style={{ display: props.SecondNav }}>
                     <div className="d-flex align-items-center">
                       {/* Notifications Dropdown */}
-                      <div className="dropdown-center notifaction-dropdon">
+                      {/* <div className="dropdown-center notifaction-dropdon">
                         <div
                           className="dropdown-toggle"
                           type="button"
@@ -355,7 +329,7 @@ try {
                             onAccepted={handleAcceptInvitation}
                           />
                         )}
-                      </div>
+                      </div> */}
                       <div>
                         <Link to="/Inbox">
                           <FaRegEnvelope color="#74767E" size={25} className="mx-4" />
