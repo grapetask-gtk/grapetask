@@ -25,7 +25,7 @@ const GigCard = ({ gig }) => {
             }
             heading={gig?.title || "Untitled Gig"}
             projectNumber="0"
-            price={gig?.package?.[0]?.total || 0}
+            price={gig?.packages?.[0]?.total || 0}
           />
         </div>
       </div>

@@ -228,7 +228,7 @@ const Gigs2 = () => {
                     personalGigs.map((gig, index) => {
                       const avgRating = Number(gig.ratings_avg_ratings) || 0;
                       const ratingCount = Number(gig.ratings_coun) || 0;
-                      const deliveryTime = gig?.package?.[0]?.delivery_time || "N/A";
+                      const deliveryTime = gig?.packages?.[0]?.delivery_time || "N/A";
                       const stars = Array.from({ length: 5 }, (_, i) =>
                         avgRating > i ? "#F16336" : "#D4D4D4"
                       );
@@ -239,7 +239,7 @@ const Gigs2 = () => {
                             handleNavigate={() => handleGigNavigate(gig)}
                             imges={getGigImage(gig.media)}
                             heading={gig?.title}
-                            price={gig.package?.[0]?.total}
+                            price={gig.packages?.[0]?.total}
                             seller={getSellerName(gig.seller)}
                             rating={avgRating}
                             ratingCount={ratingCount}
@@ -316,7 +316,7 @@ const Gigs2 = () => {
                 {Real_Freelancer.slice(0, 8).map((gig, index) => {
                   const avgRating = Number(gig.ratings_avg_ratings) || 0;
                   const ratingCount = Number(gig.ratings_coun) || 0;
-                  const deliveryTime = gig?.package?.[0]?.delivery_time || "N/A";
+                  const deliveryTime = gig?.packages?.[0]?.delivery_time || "N/A";
                   const stars = Array.from({ length: 5 }, (_, i) =>
                     avgRating > i ? "#F16336" : "#D4D4D4"
                   );
@@ -336,7 +336,7 @@ const Gigs2 = () => {
                         star4={stars[3]}
                         star5={stars[4]}
                         delivery={deliveryTime}
-                        price={gig.package?.[0]?.total}
+                        price={gig.packages?.[0]?.total}
                       />
                     </div>
                   );

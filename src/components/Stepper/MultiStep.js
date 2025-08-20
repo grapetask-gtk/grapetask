@@ -206,11 +206,11 @@ export default function MultiStep() {
       setTags(tags);
 
       // Initialize package data if available
-      if (gigData.package && Array.isArray(gigData.package) && gigData.package.length >= 3) {
+      if (gigData.packages  && Array.isArray(gigData.packages ) && gigData.packages .length >= 3) {
         // Find packages by type or use index as fallback
-        const basicPkg = gigData.package.find(p => p.type === "basic") || gigData.package[0];
-        const standardPkg = gigData.package.find(p => p.type === "standard") || gigData.package[1];
-        const premiumPkg = gigData.package.find(p => p.type === "premium") || gigData.package[2];
+        const basicPkg = gigData.packages .find(p => p.type === "basic") || gigData.packages [0];
+        const standardPkg = gigData.packages .find(p => p.type === "standard") || gigData.packages [1];
+        const premiumPkg = gigData.packages .find(p => p.type === "premium") || gigData.packages [2];
 
         if (basicPkg) {
           setBasicPackage(basicPkg.title || "");
