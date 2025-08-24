@@ -7,10 +7,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Loader from "../assets/LoaderImg.gif";
 import search from "../assets/searchbar.webp";
 import Footer from "../components/Footer";
-import GigCard from "../components/GigCard";
+import Freelancer from "../components/Freelancer";
 import Navbar from "../components/Navbar";
 import { geAllGigs } from "../redux/slices/allGigsSlice";
 import { useDispatch, useSelector } from "../redux/store/store";
+
+import { titleToSlug } from "../utils/helpers";
+
 const SearchGigsMainBanner = () => {
   const location = useLocation();
   // const receivedData = location.state.data || 'No data received';
@@ -41,12 +44,33 @@ const SearchGigsMainBanner = () => {
     //     gig.title.toLowerCase().includes(searchKeyword.toLowerCase())))
     // });
   });
+
+const getGigImage = (media) => {
+  if (!media) return null;
+  return media.image1 || media.image2 || media.image3 || null;
+};
+
+const getSellerName = (seller) => {
+  if (Array.isArray(seller)) {
+    return seller[0]?.fname || 'seller';
+  }
+  return seller?.fname || 'seller';
+};
+
   //   console.log(SearchGigs);
   function stripHtmlTags(html) {
     const tempElement = document.createElement("div");
     tempElement.innerHTML = html;
     return tempElement.textContent || tempElement.innerText || "";
   }
+
+  const handleGigNavigate = (gig) => {
+      const slug = titleToSlug(gig.title);
+      const sellerName = getSellerName(gig.seller);
+      navigate(`/g/${slug}/${sellerName}/${gig.id}`);
+    };
+
+
   return (
     <>
       {isPreLoading ? (
@@ -94,21 +118,46 @@ const SearchGigsMainBanner = () => {
                   {searchKeyword ? searchKeyword : "All "} Gigs
                 </span>
               </h3>
-              {SearchGigs.length > 0 ? (
-                SearchGigs.filter(
-                  (innerValue) =>
-                    (innerValue.title &&
-                      innerValue.title
-                        .toLowerCase()
-                        .includes(searchKeyword.toLowerCase())) || // Filter by title
-                    (innerValue.description &&
-                      innerValue.description
-                        .toLowerCase()
-                        .includes(searchKeyword.toLowerCase()))
-                ).map((innerValue) => <GigCard gig={innerValue} />)
-              ) : (
-                <h3 className="cocon">Not Found</h3>
-              )}
+             {SearchGigs.length > 0 ? (
+  SearchGigs.filter(
+    (innerValue) =>
+      (innerValue.title &&
+        innerValue.title.toLowerCase().includes(searchKeyword.toLowerCase())) || // Filter by title
+      (innerValue.description &&
+        innerValue.description.toLowerCase().includes(searchKeyword.toLowerCase()))
+  ).map((innerValue ) => {
+    const avgRating = Number(innerValue.ratings_avg_ratings) || 0;
+    const ratingCount = Number(innerValue.ratings_coun) || 0;
+    const deliveryTime = innerValue?.packages?.[0]?.delivery_time || "N/A";
+    const stars = Array.from({ length: 5 }, (_, i) =>
+      avgRating > i ? "#F16336" : "#D4D4D4"
+    );
+
+    return (
+       <div className="col-lg-4 col-md-4 col-sm-6 col-12 mt-4" key={innerValue.id}  >
+                       
+      <Freelancer
+        handleNavigate={() => handleGigNavigate(innerValue)}
+        imges={getGigImage(innerValue.media)}
+        heading={innerValue?.title}
+        seller={getSellerName(innerValue.seller)}
+        rating={avgRating}
+        ratingCount={ratingCount}
+        star1={stars[0]}
+        star2={stars[1]}
+        star3={stars[2]}
+        star4={stars[3]}
+        star5={stars[4]}
+        delivery={deliveryTime}
+        price={innerValue.packages?.[0]?.total}
+      />
+    </div>
+    );
+  })
+) : (
+  <h3 className="cocon">Not Found</h3>
+)}
+
             </div>
           </div>
           <Footer />

@@ -109,12 +109,16 @@ const Freelancer = (props) => {
         </div>
 
         {/* Meta */}
-        <div className="d-flex justify-content-between">
-          <small className="text-muted">
-            <FiClock className="align-middle me-1" />
-            4 Day Delivery
-          </small>
-        </div>
+       {/* Meta */}
+<div className="d-flex justify-content-between">
+  <small className="text-muted">
+    <FiClock className="align-middle me-1" />
+    {props.delivery && props.delivery !== "N/A"
+      ? `${props.delivery} Day${props.delivery > 1 ? "s" : ""} Delivery`
+      : "Delivery N/A"}
+  </small>
+</div>
+
       </div>
     </div>
   );
