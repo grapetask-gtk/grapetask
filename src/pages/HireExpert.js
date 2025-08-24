@@ -209,15 +209,9 @@ const HireExpert = () => {
       <>
         <Navbar FirstNav="none" />
         <div className="container-fluid p-4 pt-5">
-          <div className="alert alert-danger" role="alert">
-            <h4 className="alert-heading">Error!</h4>
-            <p>Failed to load freelancers: {error}</p>
-            <button 
-              className="btn btn-primary" 
-              onClick={() => dispatch(getAllFreelancers())}
-            >
-              Try Again
-            </button>
+          <div className="alert alert-successs" role="alert">
+
+            <p>No freelancers: {error}</p>
           </div>
         </div>
       </>

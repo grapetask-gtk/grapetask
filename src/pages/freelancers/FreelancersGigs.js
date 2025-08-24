@@ -112,7 +112,7 @@ useEffect(() => {
 
   const handlePackageSelection = useCallback((packageId) => {
     if (!singleGigDetail?.seller?.id || !singleGigDetail?.id) return;
-    navigate(`/order/payment?seller_id=${singleGigDetail.user.id}&gig_id=${singleGigDetail.id}&package_id=${packageId}`);
+    navigate(`/order/payment?seller_id=${singleGigDetail.seller.id}&gig_id=${singleGigDetail.id}&package_id=${packageId}`);
   }, [singleGigDetail, navigate]);
 
   const handleBasic = useCallback(() => filteredBasic[0]?.id && handlePackageSelection(filteredBasic[0].id), [filteredBasic, handlePackageSelection]);
@@ -359,7 +359,7 @@ useEffect(() => {
                 <div className="d-flex ms-2 align-items-center flex-wrap">
                   <div>
                     <h6 className="ms-2 font-14 mb-0 inter cursor-pointer" 
-                      onClick={() => navigate(`/profileOtherPerson/${singleGigDetail.user?.fname}`, 
+                      onClick={() => navigate(`/profileOtherPerson/${singleGigDetail.seller?.fname}`, 
                       { state: { userId: singleGigDetail.user_id } })}>
                       {singleGigDetail?.seller?.fname}
                     </h6>

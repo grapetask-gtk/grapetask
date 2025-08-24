@@ -832,15 +832,9 @@ const handleConfirmAccept = useCallback(async () => {
   if (error) {
     return (
       <div className="container mt-5">
-        <Alert variant="danger">
-          <Alert.Heading>Error Loading Job Invitations</Alert.Heading>
-          <p>{error}</p>
-          <Button 
-            variant="outline-danger" 
-            onClick={() => dispatch(fetchJobInvitations())}
-          >
-            Try Again
-          </Button>
+        <Alert variant="success">
+          <Alert.Heading>No Invites Yet? Dont't Worry, Good Things Take Time! </Alert.Heading>
+         
         </Alert>
       </div>
     );
