@@ -1,6 +1,6 @@
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { BsChevronLeft } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -12,18 +12,18 @@ import video2 from "../../assets/video/Freelance3.mp4";
 import video3 from "../../assets/video/Freelance8.mp4";
 import video1 from "../../assets/video/Freelance9.mp4";
 import videoPlay from "../../assets/VideoPlay.webp";
-import BdCard from "../../components/BdCard";
-import ExpertCard from "../../components/ExpertCard";
-import GigCard from "../../components/GigCard";
-import Freelancer from "../../components/Freelancer";
 import Navbar from "../../components/Navbar";
 import Profilreviw from "../../components/Profilreviw";
 import { geAllGigs } from "../../redux/slices/allGigsSlice";
 import { getBds } from "../../redux/slices/buyerRequestSlice";
 import { getCategory } from "../../redux/slices/gigsSlice";
 import { getAllFreelancers } from "../../redux/slices/userSlice";
-import { paginateArray } from "../../utils/helpers";
-import { titleToSlug } from "../../utils/helpers"; // Fixed path
+import { paginateArray, titleToSlug } from "../../utils/helpers";
+
+// Lazy load heavy components
+const BdCard = lazy(() => import("../../components/BdCard"));
+const ExpertCard = lazy(() => import("../../components/ExpertCard"));
+const Freelancer = lazy(() => import("../../components/Freelancer"));
 
 // Utility functions
 const stripHtmlTags = (html) => {
@@ -66,18 +66,18 @@ const handleGigNavigate = (gig, navigate) => {
 };
 
 // UserCard component for displaying BDs and Experts
-const UserCard = ({ user, type, canOrder, userRole }) => {
+const UserCard = React.memo(({ user, type, canOrder, userRole }) => {
   const navigate = useNavigate();
   
-  const handleViewProfile = () => {
+  const handleViewProfile = useCallback(() => {
     navigate(`/profile/${user.id}`);
-  };
+  }, [navigate, user.id]);
 
-  const handleContact = () => {
+  const handleContact = useCallback(() => {
     if (canOrder) {
       navigate(`/order/${user.id}`);
     }
-  };
+  }, [canOrder, navigate, user.id]);
 
   const displayName = user.fname || user.username || (type === "bds" ? "Business Developer" : "Expert");
 
@@ -151,11 +151,31 @@ const UserCard = ({ user, type, canOrder, userRole }) => {
       </div>
     </div>
   );
+});
+
+UserCard.displayName = 'UserCard';
+
+// Debounce hook
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
 };
 
 const Freelancers = () => {
   // State management
   const [searchKeyword, setSearchKeyword] = useState("");
+  const debouncedSearchKeyword = useDebounce(searchKeyword, 300);
   const [selectCategory, setSelectCategory] = useState("");
   const [searchType, setSearchType] = useState("services");
   const [page, setPage] = useState(1);
@@ -165,18 +185,21 @@ const Freelancers = () => {
   const [bdDetail, setBdDetail] = useState(null);
   const [expertModal, setExpertModal] = useState(false);
   const [bdModal, setBdModal] = useState(false);
+  const [activeVideo, setActiveVideo] = useState(0);
   
   const dispatch = useDispatch();
   const navigate = useNavigate();
   
-  // Redux selectors
+  // Redux selectors with specific field selection to minimize re-renders
   const { gigsDetail, isLoading } = useSelector((state) => state.allGigs);
   const { userCategory } = useSelector((state) => state.gig);
-  const { userDetail, userList: freelancers, isLoading: freelancersLoading } = useSelector((state) => state.user);
+  const { userDetail, userList: freelancers, isLoading: freelancersLoading } = useSelector(
+    (state) => state.user
+  );
   const { bdList, bdListLoading } = useSelector((state) => state.buyer);
 
   // User data and role determination
-  const UserData = getUserData();
+  const UserData = useMemo(() => getUserData(), []);
   const userRole = userDetail?.role || UserData?.role || "client";
 
   const safeGetBdList = useCallback(() => {
@@ -187,9 +210,9 @@ const Freelancers = () => {
   const getBdsFilteredData = useCallback(() => {
     const bds = safeGetBdList();
     
-    if (!searchKeyword.trim()) return bds;
+    if (!debouncedSearchKeyword.trim()) return bds;
 
-    const keyword = searchKeyword.toLowerCase().trim();
+    const keyword = debouncedSearchKeyword.toLowerCase().trim();
     return bds.filter(bd => {
       const name = (bd.fname || bd.username || bd.fname || "").toLowerCase();
       const skills = (bd.skills || "").toLowerCase();
@@ -197,7 +220,7 @@ const Freelancers = () => {
       const country = (bd.country || bd.location || "").toLowerCase();
       return name.includes(keyword) || skills.includes(keyword) || bio.includes(keyword) || country.includes(keyword);
     });
-  }, [safeGetBdList, searchKeyword]);
+  }, [safeGetBdList, debouncedSearchKeyword]);
 
   const safeGetFreelancersList = useCallback(() => {
     if (freelancers?.data && Array.isArray(freelancers.data)) return freelancers.data;
@@ -244,11 +267,11 @@ const Freelancers = () => {
       return isExpert;
     });
 
-    if (searchKeyword.trim() === '') {
+    if (debouncedSearchKeyword.trim() === '') {
       return experts;
     }
     
-    const keyword = searchKeyword.toLowerCase().trim();
+    const keyword = debouncedSearchKeyword.toLowerCase().trim();
     return experts.filter((item) => {
       const name = (
         item?.name ||
@@ -272,7 +295,7 @@ const Freelancers = () => {
         expertise.includes(keyword)
       );
     });
-  }, [safeGetFreelancersList, searchKeyword, isExpertRole]);
+  }, [safeGetFreelancersList, debouncedSearchKeyword, isExpertRole]);
 
   const expertCurrentData = useMemo(() => getExpertCurrentData(), [getExpertCurrentData]);
   const expertTotalPages = useMemo(() => Math.ceil(expertCurrentData.length / limit), [expertCurrentData.length, limit]);
@@ -336,8 +359,8 @@ const Freelancers = () => {
           );
         }
 
-        if (searchKeyword.trim()) {
-          const keyword = searchKeyword.toLowerCase().trim();
+        if (debouncedSearchKeyword.trim()) {
+          const keyword = debouncedSearchKeyword.toLowerCase().trim();
           filteredGigs = filteredGigs.filter(gig => {
             const title = gig.title?.toLowerCase() || "";
             const description = stripHtmlTags(gig.description || "").toLowerCase();
@@ -361,22 +384,30 @@ const Freelancers = () => {
     }
 
     return [];
-  }, [gigsDetail, searchType, selectCategory, searchKeyword]);
+  }, [gigsDetail, searchType, selectCategory, debouncedSearchKeyword]);
 
   useEffect(() => {
     let isMounted = true;
     
     const fetchData = async () => {
-      dispatch(geAllGigs());
-      dispatch(getCategory());
+      // Only fetch data if we don't have it already
+      if (!gigsDetail || gigsDetail.length === 0) {
+        dispatch(geAllGigs());
+      }
+      
+      if (!userCategory || userCategory.length === 0) {
+        dispatch(getCategory());
+      }
       
       const role = normalizeRole(userRole);
       
-      if (role.includes("client") || isBdRole(userRole) || role.includes("bidder/company representative/middleman")) {
+      if ((role.includes("client") || isBdRole(userRole) || role.includes("bidder/company representative/middleman")) &&
+          (!bdList || bdList.length === 0)) {
         dispatch(getBds());
       }
       
-      if (isBdRole(userRole) || role.includes("bidder") || isExpertRole(userRole)) {
+      if ((isBdRole(userRole) || role.includes("bidder") || isExpertRole(userRole)) &&
+          (!freelancers || freelancers.length === 0)) {
         dispatch(getAllFreelancers());
       }
     };
@@ -388,30 +419,32 @@ const Freelancers = () => {
     return () => {
       isMounted = false;
     };
-  }, [dispatch, userRole, isBdRole, isExpertRole]);
+  }, [dispatch, userRole, isBdRole, isExpertRole, gigsDetail, userCategory, bdList, freelancers]);
 
   useEffect(() => {
     setPage(1);
     setBdPage(1);
-  }, [searchKeyword, searchType]);
+  }, [debouncedSearchKeyword, searchType, selectCategory]);
 
+  // Video carousel effect
   useEffect(() => {
     const interval = setInterval(() => {
-      const nextButton = document.querySelector('[data-bs-slide="next"]');
-      if (nextButton) nextButton.click();
+      setActiveVideo(prev => (prev + 1) % 3);
     }, 5000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const handleSearchSubmit = (e) => e.preventDefault();
-  const handleCategoryChange = (e) => setSelectCategory(e.target.value);
-  const handleSearchChange = (e) => setSearchKeyword(e.target.value);
-  const handleSearchTypeChange = (e) => {
+  const videos = useMemo(() => [video1, video2, video3], []);
+
+  const handleSearchSubmit = useCallback((e) => e.preventDefault(), []);
+  const handleCategoryChange = useCallback((e) => setSelectCategory(e.target.value), []);
+  const handleSearchChange = useCallback((e) => setSearchKeyword(e.target.value), []);
+  const handleSearchTypeChange = useCallback((e) => {
     setSearchType(e.target.value);
     setSearchKeyword("");
     setSelectCategory("");
-  };
+  }, []);
 
   const handleChangeExpertPagination = useCallback((event, newPage) => {
     setPage(newPage);
@@ -438,15 +471,15 @@ const Freelancers = () => {
     setBdDetail(null);
   }, []);
 
-  const getSearchPlaceholder = () => {
+  const getSearchPlaceholder = useCallback(() => {
     switch (searchType) {
       case "bds": return "Search Business Developers...";
       case "experts": return "Search Experts...";
       default: return "Search services...";
     }
-  };
+  }, [searchType]);
 
-  const getPageTitle = () => {
+  const getPageTitle = useCallback(() => {
     const role = normalizeRole(userRole);
     
     if (role.includes("client")) return "Find the Perfect Service for Your Business";
@@ -454,7 +487,7 @@ const Freelancers = () => {
     if (isExpertRole(userRole)) return "Explore Services and Connect with Peers";
     
     return "Discover Amazing Services";
-  };
+  }, [userRole, isBdRole, isExpertRole]);
 
   const isAnyLoading = isLoading || 
     (searchType === "bds" && bdListLoading) || 
@@ -466,7 +499,6 @@ const Freelancers = () => {
       <div>
         <div className="container-fluid blogVideoSection py-lg-0 py-md-0 py-5">
           <div
-            id="carouselExampleFade"
             className="carousel slide carousel-fade w-100 h-100 d-lg-block d-md-block d-none"
             style={{
               objectFit: "cover",
@@ -477,67 +509,25 @@ const Freelancers = () => {
             }}
           >
             <div className="carousel-inner h-100">
-              <div className="carousel-item active h-100">
-                <div className="container-fluid p-0 poppins h-100">
-                  <video
-                    width={"100%"}
-                    height={"100%"}
-                    style={{ objectFit: "cover", objectPosition: "center" }}
-                    muted
-                    loop
-                    autoPlay
-                  >
-                    <source src={video1} type="video/mp4" />
-                  </video>
+              {videos.map((video, index) => (
+                <div key={index} className={`carousel-item h-100 ${index === activeVideo ? 'active' : ''}`}>
+                  <div className="container-fluid p-0 poppins h-100">
+                    <video
+                      width={"100%"}
+                      height={"100%"}
+                      style={{ objectFit: "cover", objectPosition: "center" }}
+                      muted
+                      loop
+                      autoPlay
+                      playsInline
+                      preload={index === 0 ? "auto" : "metadata"}
+                    >
+                      <source src={video} type="video/mp4" />
+                    </video>
+                  </div>
                 </div>
-              </div>
-              <div className="carousel-item h-100">
-                <div className="container-fluid p-0 poppins h-100">
-                  <video
-                    width={"100%"}
-                    height={"100%"}
-                    style={{ objectFit: "cover", objectPosition: "center" }}
-                    muted
-                    loop
-                    autoPlay
-                  >
-                    <source src={video2} type="video/mp4" />
-                  </video>
-                </div>
-              </div>
-              <div className="carousel-item h-100">
-                <div className="container-fluid p-0 poppins h-100">
-                  <video
-                    width={"100%"}
-                    height={"100%"}
-                    style={{ objectFit: "cover", objectPosition: "center" }}
-                    muted
-                    loop
-                    autoPlay
-                  >
-                    <source src={video3} type="video/mp4" />
-                  </video>
-                </div>
-              </div>
+              ))}
             </div>
-            <button
-              className="carousel-control-prev d-none"
-              type="button"
-              data-bs-target="#carouselExampleFade"
-              data-bs-slide="prev"
-            >
-              <span className="carousel-control-prev-icon" aria-hidden="true" />
-              <span className="visually-hidden">Previous</span>
-            </button>
-            <button
-              className="carousel-control-next d-none"
-              type="button"
-              data-bs-target="#carouselExampleFade"
-              data-bs-slide="next"
-            >
-              <span className="carousel-control-next-icon" aria-hidden="true" />
-              <span className="visually-hidden">Next</span>
-            </button>
           </div>
           <h3 className="text-center fw-semibold font-38 poppins">
             {getPageTitle()}
@@ -563,8 +553,9 @@ const Freelancers = () => {
               width={80}
               height={80}
               alt="Play video"
+              loading="lazy"
             />
-            <img src={videoImg} alt="Video thumbnail" className="w-100 rounded-4" />
+            <img src={videoImg} alt="Video thumbnail" className="w-100 rounded-4" loading="lazy" />
           </div>
 
           <div
@@ -636,7 +627,7 @@ const Freelancers = () => {
           <div className="col-lg-5 col-md-6 col-sm-6 col-12 mt-lg-0 mt-md-0 mt-sm-0 mt-4 pe-lg-0">
             <form className="input-group p-2 h-100" role="search" onSubmit={handleSearchSubmit}>
               <span className="input-group-text pt-0 pb-0" id="basic-addon1">
-                <img src={search} width={16} alt="Search icon" />
+                <img src={search} width={16} alt="Search icon" loading="lazy" />
               </span>
               <input
                 type="search"
@@ -654,7 +645,7 @@ const Freelancers = () => {
       {/* MAIN CONTENT */}
       {isAnyLoading ? (
         <div className="text-center">
-          <img src={Loader} width={200} height={200} alt="Loading..." />
+          <img src={Loader} width={200} height={200} alt="Loading..." loading="lazy" />
         </div>
       ) : searchType === "experts" ? (
         <div className="container haifwhitecard rounded-3 pb-5 px-4 mt-3 pt-5">
@@ -665,26 +656,27 @@ const Freelancers = () => {
             
             <div className="mb-3">
               <p className="text-muted">
-                {searchKeyword 
-                  ? `Found ${expertCurrentData.length} experts matching "${searchKeyword}"` 
+                {debouncedSearchKeyword 
+                  ? `Found ${expertCurrentData.length} experts matching "${debouncedSearchKeyword}"` 
                   : `Showing ${paginatedExperts.length} of ${expertCurrentData.length} experts`}
               </p>
             </div>
             
             {expertCurrentData?.length > 0 ? (
               paginatedExperts.map((val, index) => (
-                <ExpertCard
-                  key={val.id || val._id || index}
-                  user={val}
-                  showExpertDetail={showExpertDetail}
-                />
+                <Suspense key={val.id || val._id || index} fallback={<div>Loading...</div>}>
+                  <ExpertCard
+                    user={val}
+                    showExpertDetail={showExpertDetail}
+                  />
+                </Suspense>
               ))
             ) : (
               <div className="text-center py-5">
                 <h5>No freelancers found</h5>
                 <p className="text-muted">
-                  {searchKeyword 
-                    ? `No freelancers match your search "${searchKeyword}". Try different keywords.`
+                  {debouncedSearchKeyword 
+                    ? `No freelancers match your search "${debouncedSearchKeyword}". Try different keywords.`
                     : "No freelancers available at the moment."
                   }
                 </p>
@@ -738,20 +730,21 @@ const Freelancers = () => {
             
             <div className="mb-3">
               <p className="text-muted">
-                {searchKeyword 
-                  ? `Found ${bdCurrentData.length} BDs matching "${searchKeyword}"` 
+                {debouncedSearchKeyword 
+                  ? `Found ${bdCurrentData.length} BDs matching "${debouncedSearchKeyword}"` 
                   : `Showing ${paginatedBDs.length} of ${bdCurrentData.length} BDs`}
               </p>
             </div>
             
             {bdCurrentData.length > 0 ? (
               paginatedBDs.map((bd, index) => (
-                <BdCard 
-                  key={bd.id || bd._id || index}
-                  user={bd}
-                  bd={bd}
-                  showBdDetail={showBdDetail}
-                />
+                <Suspense key={bd.id || bd._id || index} fallback={<div>Loading...</div>}>
+                  <BdCard 
+                    user={bd}
+                    bd={bd}
+                    showBdDetail={showBdDetail}
+                  />
+                </Suspense>
               ))
             ) : (
               <div className="text-center py-5">
@@ -759,8 +752,8 @@ const Freelancers = () => {
                 <p className="text-muted">
                   {bdListLoading
                     ? "Loading BDs..."
-                    : searchKeyword 
-                      ? `No BDs match your search "${searchKeyword}"`
+                    : debouncedSearchKeyword 
+                      ? `No BDs match your search "${debouncedSearchKeyword}"`
                       : "No Business Developers available"}
                 </p>
               </div>
@@ -768,7 +761,7 @@ const Freelancers = () => {
 
             <div
               className={`offcanvas offcanvas-end p-3 ${bdModal ? "show" : ""}`}
-              tabIndex="-1"
+              tabIndex={-1}
               id="offcanvasRightBd"
               aria-labelledby="offcanvasRightBdLabel"
               style={{ visibility: bdModal ? "visible" : "hidden" }}
@@ -809,7 +802,7 @@ const Freelancers = () => {
           <div className="row">
             <div className="col-12 mt-4">
               <p className="text-center font-24 poppins fw-semibold">
-                {searchKeyword.trim() || selectCategory 
+                {debouncedSearchKeyword.trim() || selectCategory 
                   ? `No ${searchType === "services" ? "services" : searchType} found matching your search`
                   : `No ${searchType === "services" ? "services" : searchType} available`}
               </p>
@@ -831,26 +824,53 @@ const Freelancers = () => {
                     : `Available Experts`}
                 {searchType === "services" && <span className="colororing">{category.name}</span>}
               </h4>
-              {category.gigs.map((item, itemIndex) => (
-                <div key={item.id || itemIndex} className="col-lg-4 col-md-6 col-12 mb-4">
-                  <Freelancer
-                    handleNavigate={() => handleGigNavigate(item, navigate)}
-                    imges={getGigImage(item.media)}
-                    heading={item?.title}
-                    price={item.package?.[0]?.total}
-                  />
-                </div>
-              ))}
+   
+{category.gigs.map((item, itemIndex) => {
+  const avgRating = Number(item.ratings_avg_ratings) || 0;
+  const ratingCount = Number(item.ratings_count || item.ratings_coun) || 0;
+  const deliveryTime = item?.packages?.[0]?.delivery_time || "N/A";
+  const price = item?.packages?.[0]?.total || item?.package?.[0]?.total || 0;
+  const stars = Array.from({ length: 5 }, (_, i) =>
+    avgRating > i ? "#F16336" : "#D4D4D4"
+  );
+  
+  return (
+    <div key={item.id || itemIndex} className="col-lg-4 col-md-6 col-12 mb-4">
+      <Suspense fallback={<div>Loading...</div>}>
+        <Freelancer
+          handleNavigate={() => handleGigNavigate(item, navigate)}
+          imges={getGigImage(item.media)}
+          heading={item?.title}
+          price={price}
+          seller={getSellerName(item?.seller)}
+          rating={avgRating}
+          ratingCount={ratingCount}
+          star1={stars[0]}
+          star2={stars[1]}
+          star3={stars[2]}
+          star4={stars[3]}
+          star5={stars[4]}
+          delivery={deliveryTime}
+          gigId={item?.id}
+          gigData={item}
+          gigStatus={item?.status}
+          isPro={item?.seller?.isPro || false}
+          sellerAvatar={item?.seller?.image}
+        />
+      </Suspense>
+    </div>
+  );
+})}
             </div>
           </div>
         ))
       )}
 
       <div className="container justify-content-center px-0 p-5">
-        <img src={NewWay} className="w-100 rounded-3" alt="New way banner" />
+        <img src={NewWay} className="w-100 rounded-3" alt="New way banner" loading="lazy" />
       </div>
     </>
   );
 };
 
-export default Freelancers;
+export default React.memo(Freelancers);

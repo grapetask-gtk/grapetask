@@ -5,7 +5,7 @@ import StepLabel from "@mui/material/StepLabel";
 import Stepper from "@mui/material/Stepper";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Spinner } from "reactstrap";
 import {
@@ -175,7 +175,7 @@ export default function MultiStep() {
   const handleResponsePublish = (data) => {
     if (data?.status) {
       setIsLoading(false);
-      navigate("/" + (UserData?.username || ""));
+      navigate("/gig");
     } else {
       setIsLoading(false);
     }

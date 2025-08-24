@@ -274,7 +274,7 @@ useEffect(() => {
             Continue
           </Button>
           <Button className="btn-stepper-border poppins w-100 mt-3 font-16" 
-            onClick={() => handleStartChat(singleGigDetail?.user)} disabled={creatingConversation}>
+            onClick={() => handleStartChat(singleGigDetail?.seller)} disabled={creatingConversation}>
             Contact with seller
           </Button>
         </div>
@@ -307,7 +307,7 @@ useEffect(() => {
                 Proceed to checkout
               </Button>
               <Button className="btn-stepper-border poppins w-100 mt-3 font-16" 
-                onClick={() => handleStartChat(singleGigDetail?.user)} disabled={creatingConversation}>
+                onClick={() => handleStartChat(singleGigDetail?.seller)} disabled={creatingConversation}>
                 Contact with seller
               </Button>
             </div>
@@ -398,7 +398,7 @@ useEffect(() => {
                         <p className="ms-2 fw-medium mb-0 colororing">({overallAverageRating.toFixed(1)})</p>
                       </div>
                       <Button className="btn-stepper-border poppins px-3 mt-2 font-16" 
-                        onClick={() => handleStartChat(singleGigDetail?.user)} disabled={creatingConversation}>
+                        onClick={() => handleStartChat(singleGigDetail?.seller)} disabled={creatingConversation}>
                         Contact Me
                       </Button>
                     </div>

@@ -187,7 +187,10 @@ setShowAssignModal(false)
                   <h6 className='colororing font-18 font-500 poppins'>
                     {expertDetail?.fname} {expertDetail?.lname}
                   </h6>
-                  <p className='colororing mb-0 font-14 poppins'>New Seller</p>
+                  <p className='colororing mb-0 font-14 poppins'>{expertDetail?.role} </p>
+                  <p className='font-12 poppins'>  
+                  {expertDetail?.level}
+                   </p>
                   <p className='font-12 poppins'>
                     <MdLocationOn className='colororing' />Pakistan
                   </p>

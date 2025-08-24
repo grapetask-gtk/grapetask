@@ -3,6 +3,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress, Modal, Typography } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+
 import Paper from '@mui/material/Paper';
 import pLimit from 'p-limit';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -1503,6 +1505,7 @@ return () => {
     const isClient = currentUser.id === offer.buyer_id;
     const isSeller = currentUser.id === offer.seller_id || currentUser.id === offer.expert_id;
     const hasOrderId = offer.order_id || offer.order?.id;
+    const pendingVerification =offerStatus === 'pending_verification';
 
     const canAcceptOffer = !isOfferSent && offerStatus === 'pending' && isClient;
     const canDeclineOffer = !isOfferSent && offerStatus === 'pending' && isClient;
@@ -1515,6 +1518,13 @@ return () => {
 
     const statusConfig = {
       pending: {
+        background: '#FFF3CD',
+        color: '#856404',
+        border: '#FFEAA7',
+        icon: '⏳',
+        label: 'Pending'
+      },
+       pending_verification: {
         background: '#FFF3CD',
         color: '#856404',
         border: '#FFEAA7',
@@ -1565,7 +1575,7 @@ return () => {
       }
     };
 
-    const currentStatus = statusConfig[offerStatus] || statusConfig.pending;
+    const currentStatus = statusConfig[offerStatus] || '';
 
     const getDeliveryInfo = () => {
       if (offer.delivery_days) {
@@ -1757,28 +1767,45 @@ return () => {
             👁️ View Details
           </Button>
 
-          {canAcceptOffer && (
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => openPaymentModal(offer)}
-              sx={{
-                backgroundColor: '#10B981',
-                color: '#fff',
-                fontWeight: 600,
-                borderRadius: '10px',
-                textTransform: 'none',
-                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
-                '&:hover': {
-                  backgroundColor: '#059669',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 20px rgba(16, 185, 129, 0.4)'
-                }
-              }}
-            >
-              ✅ Accept ${offer.price}
-            </Button>
-          )}
+       
+{canAcceptOffer && (
+  <Tooltip
+    title={pendingVerification ? "Wait for verification..." : ""}
+    arrow
+  >
+    <span> {/* 👈 wrapper needed because Tooltip doesn’t work directly on disabled Button */}
+      <Button
+        variant="contained"
+        size="small"
+        onClick={() => openPaymentModal(offer)}
+        disabled={pendingVerification}
+        sx={{
+          backgroundColor: pendingVerification ? '#9CA3AF' : '#10B981',
+          color: '#fff',
+          fontWeight: 600,
+          borderRadius: '10px',
+          textTransform: 'none',
+          cursor: pendingVerification ? 'not-allowed' : 'pointer',
+          boxShadow: pendingVerification
+            ? '0 4px 10px rgba(156, 163, 175, 0.3)'
+            : '0 4px 14px rgba(16, 185, 129, 0.3)',
+          '&:hover': {
+            backgroundColor: pendingVerification ? '#9CA3AF' : '#059669',
+            transform: pendingVerification ? 'none' : 'translateY(-2px)',
+            boxShadow: pendingVerification
+              ? '0 4px 10px rgba(156, 163, 175, 0.3)'
+              : '0 6px 20px rgba(16, 185, 129, 0.4)'
+          }
+        }}
+      >
+        {pendingVerification
+          ? "⏳ Pending Verification"
+          : `✅ Accept $${offer.price}`}
+      </Button>
+    </span>
+  </Tooltip>
+)}
+
 
           {canDeclineOffer && (
             <Button
