@@ -8,7 +8,8 @@ const initialState = {
   tokenValidated: false,
   authLoading: false,  // Separate loading state for auth checks
   authError: null,
-  
+    isLoadingCategories: false,  
+  categories: [],    
   // Existing user state
   isLoading: false,
   isLoadingRegister: false,
@@ -199,7 +200,34 @@ const userSlice = createSlice({
         state.isLoading = false;
         state.getError = action.payload;
         state.userList = [];
-      });
+      })
+
+
+ // Fetch Users
+     
+      // .addCase(fetchUsers.fulfilled, (state, action) => {
+      //   state.isLoadingUsers = false;
+      //   // Extract users from the response based on your API structure
+      //   state.users = action.payload.data.users || [];
+      // })
+
+
+       // Fetch Categories
+    .addCase(getCategories.pending, (state) => {
+      state.isLoadingCategories = true;
+      state.error = null;
+    })
+    .addCase(getCategories.fulfilled, (state, action) => {
+      state.isLoadingCategories = false;
+      state.categories = action.payload || [];
+    })
+    .addCase(getCategories.rejected, (state, action) => {
+      state.isLoadingCategories = false;
+      state.error = action.payload;
+    });
+
+
+
   }
 });
 
@@ -378,6 +406,24 @@ export const getAllUsers = createAsyncThunk(
   }
 );
 
+// Fetch Categories
+export const getCategories = createAsyncThunk(
+  "user/getCategories",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get("category"); 
+      if (response.data.status) {
+        return response.data.categories; // assuming API returns { status: true, categories: [...] }
+      } else {
+        toast.error(response.data.message || "Failed to fetch categories.");
+        return rejectWithValue(response.data.message);
+      }
+    } catch (error) {
+      toast.error("Error fetching categories.");
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
 export const toggleUserStatus = createAsyncThunk(
   "users/toggleUserStatus",
   async ({ userId, status }, { rejectWithValue }) => {

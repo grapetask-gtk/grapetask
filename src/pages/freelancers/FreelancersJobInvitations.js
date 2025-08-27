@@ -721,7 +721,7 @@ const handleConfirmAccept = useCallback(async () => {
     setProcessingInvitations(prev => [...prev, invitationId]);
     
     try {
-      const result = await dispatch(acceptJobInvitation(invitationId)).unwrap();
+      const result = await dispatch(acceptJobInvitation(invitationId));
       dispatch(fetchJobInvitations());
       showToast(result?.message || 'Job invitation accepted successfully!', 'success');
     } catch (error) {

@@ -7,13 +7,14 @@ import { useDispatch, useSelector } from "react-redux";
 import ExpertCard from "../components/ExpertCard";
 import Navbar from "../components/Navbar";
 import Profilreviw from "../components/Profilreviw";
-import { getAllFreelancers } from "../redux/slices/userSlice";
+
+import { getAllFreelancers, getCategories } from "../redux/slices/userSlice";
 import { paginateArray } from "../utils/helpers";
 
 const HireExpert = () => {
   const dispatch = useDispatch();
   const { userList, isLoading: loading, getError: error } = useSelector((state) => state.user);
-  
+
   // State management
   const [filteredData, setFilteredData] = useState([]);
   const [page, setPage] = useState(1);
@@ -21,97 +22,114 @@ const HireExpert = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [expertDetail, setExpertDetail] = useState(null);
   const [expertModal, setExpertModal] = useState(false);
-
+  
+  const categories = useSelector((state) => state.user.categories || []);
+  const isCategoriesLoading = useSelector((state) => state.user.isLoadingCategories);
+  
   // Filter states
   const [locationSearch, setLocationSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedJobSuccess, setSelectedJobSuccess] = useState("any");
-  const [selectedEnglishLevel, setSelectedEnglishLevel] = useState("any");
 
   // Available filter options
-  const categories = [
-    "Design & Creative",
-    "IT & Networking", 
-    "Sales & Marketing",
-    "Writing"
-  ];
-
   const jobSuccessOptions = [
     { value: "any", label: "Any job success" },
     { value: "80", label: "80% & up" },
     { value: "90", label: "90% & up" }
   ];
 
-  const englishLevels = [
-    { value: "any", label: "Any Level" },
-    { value: "basic", label: "Basic" },
-    { value: "conversational", label: "Conversational" },
-    { value: "fluent", label: "Fluent" }
-  ];
-
   // Memoized filtered data based on all filters
   const getCurrentData = useCallback(() => {
     if (!userList || userList.length === 0) return [];
-    
+
     let filtered = [...userList];
 
-    // Apply search query filter
+    // Apply search query filter - FIXED
     if (searchQuery.trim() !== '') {
       const searchLower = searchQuery.toLowerCase();
-      filtered = filtered.filter((item) =>
-        item?.fname?.toLowerCase().includes(searchLower) ||
-        item?.lname?.toLowerCase().includes(searchLower) ||
-        item?.description?.toLowerCase().includes(searchLower) ||
-        item?.skills?.some(skill => skill.toLowerCase().includes(searchLower)) ||
-        item?.category?.toLowerCase().includes(searchLower)
-      );
+      filtered = filtered.filter((item) => {
+        // Check name fields
+        if (item?.fname?.toLowerCase().includes(searchLower) || 
+            item?.lname?.toLowerCase().includes(searchLower) ||
+            item?.user_name?.toLowerCase().includes(searchLower)) {
+          return true;
+        }
+        
+        // Check skills
+        if (Array.isArray(item?.skills) && 
+            item.skills.some(skill => 
+              typeof skill === "string" && 
+              skill.toLowerCase().includes(searchLower)
+            )) {
+          return true;
+        }
+        
+        // Check gig titles and descriptions
+        if (item.gigs && item.gigs.some(gig => 
+          (gig.title && gig.title.toLowerCase().includes(searchLower)) ||
+          (gig.description && gig.description.toLowerCase().includes(searchLower)) ||
+          (gig.tags && gig.tags.some(tag => 
+            typeof tag === "string" && tag.toLowerCase().includes(searchLower)
+          ))
+        )) {
+          return true;
+        }
+        
+        return false;
+      });
     }
 
-    // Apply location filter
+    // Apply location filter - FIXED
     if (locationSearch.trim() !== '') {
       const locationLower = locationSearch.toLowerCase();
-      filtered = filtered.filter((item) =>
-        item?.location?.toLowerCase().includes(locationLower) ||
-        item?.city?.toLowerCase().includes(locationLower) ||
-        item?.country?.toLowerCase().includes(locationLower)
-      );
+      filtered = filtered.filter((item) => {
+        const city = item?.city || '';
+        const country = item?.country || '';
+        const state = item?.state || '';
+        
+        return city.toLowerCase().includes(locationLower) ||
+               country.toLowerCase().includes(locationLower) ||
+               state.toLowerCase().includes(locationLower);
+      });
     }
 
-    // Apply category filter
+    // Apply category filter - FIXED
     if (selectedCategories.length > 0) {
       filtered = filtered.filter((item) =>
-        selectedCategories.some(category => 
-          item?.category?.toLowerCase() === category.toLowerCase()
-        )
+        selectedCategories.some(category => {
+          if (item.gigs && item.gigs.length > 0) {
+            return item.gigs.some(gig => 
+              gig.category && 
+              gig.category.name && 
+              gig.category.name.toLowerCase().includes(category.toLowerCase())
+            );
+          }
+          return false;
+        })
       );
     }
 
-    // Apply job success filter
+    // Apply job success filter - FIXED
     if (selectedJobSuccess !== "any") {
       const minSuccess = parseInt(selectedJobSuccess);
       filtered = filtered.filter((item) => {
-        const successRate = item?.jobSuccessRate || 0;
+        // Use success_ratio instead of jobSuccessRate
+        const successRate = item?.success_ratio || 0;
         return successRate >= minSuccess;
       });
     }
 
-    // Apply English level filter
-    if (selectedEnglishLevel !== "any") {
-      filtered = filtered.filter((item) =>
-        item?.englishLevel?.toLowerCase() === selectedEnglishLevel.toLowerCase()
-      );
-    }
-
     return filtered;
-  }, [userList, searchQuery, locationSearch, selectedCategories, selectedJobSuccess, selectedEnglishLevel]);
+  }, [userList, searchQuery, locationSearch, selectedCategories, selectedJobSuccess]);
 
   // Memoized current data and total pages
   const currentData = useMemo(() => getCurrentData(), [getCurrentData]);
   const totalPages = useMemo(() => Math.ceil(currentData.length / limit), [currentData.length, limit]);
 
-  // Fetch freelancers on component mount
+  // Fetch freelancers and categories on component mount
   useEffect(() => {
     dispatch(getAllFreelancers());
+    dispatch(getCategories());
   }, [dispatch]);
 
   // Update filtered data when dependencies change
@@ -127,7 +145,7 @@ const HireExpert = () => {
   // Reset to first page when any filter changes
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, locationSearch, selectedCategories, selectedJobSuccess, selectedEnglishLevel]);
+  }, [searchQuery, locationSearch, selectedCategories, selectedJobSuccess]);
 
   // Event handlers
   const handleChangePagination = useCallback((event, newPage) => {
@@ -154,16 +172,11 @@ const HireExpert = () => {
     setSelectedJobSuccess(value);
   }, []);
 
-  const handleEnglishLevelChange = useCallback((value) => {
-    setSelectedEnglishLevel(value);
-  }, []);
-
   const clearAllFilters = useCallback(() => {
     setSearchQuery("");
     setLocationSearch("");
     setSelectedCategories([]);
     setSelectedJobSuccess("any");
-    setSelectedEnglishLevel("any");
   }, []);
 
   const showExpertDetail = useCallback((data) => {
@@ -182,9 +195,9 @@ const HireExpert = () => {
     if (locationSearch.trim() !== '') count++;
     if (selectedCategories.length > 0) count++;
     if (selectedJobSuccess !== "any") count++;
-    if (selectedEnglishLevel !== "any") count++;
+
     return count;
-  }, [locationSearch, selectedCategories, selectedJobSuccess, selectedEnglishLevel]);
+  }, [locationSearch, selectedCategories, selectedJobSuccess]);
 
   // Loading state
   if (loading) {
@@ -210,7 +223,6 @@ const HireExpert = () => {
         <Navbar FirstNav="none" />
         <div className="container-fluid p-4 pt-5">
           <div className="alert alert-successs" role="alert">
-
             <p>No freelancers: {error}</p>
           </div>
         </div>
@@ -302,7 +314,12 @@ const HireExpert = () => {
                     aria-controls="collapseTwo"
                   >
                     <h6 className="byerLine font-22 font-500 cocon blackcolor">
-                      Categories {selectedCategories.length > 0 && <span className="badge bg-success ms-2">{selectedCategories.length}</span>}
+                      Categories{" "}
+                      {selectedCategories.length > 0 && (
+                        <span className="badge bg-success ms-2">
+                          {selectedCategories.length}
+                        </span>
+                      )}
                     </h6>
                   </button>
                 </div>
@@ -313,19 +330,31 @@ const HireExpert = () => {
                 >
                   <div className="accordion-body px-0">
                     <div className="Revie font-15 poppins mt-3">
-                      {categories.map((category) => (
-                        <p 
-                          key={category}
-                          className="cursor-pointer d-flex align-items-center"
-                          onClick={() => handleCategoryToggle(category)}
-                          style={{ cursor: 'pointer', userSelect: 'none' }}
-                        >
-                          <BsCircleFill 
-                            className={`me-3 ${selectedCategories.includes(category) ? 'colororing' : 'dote-gray'}`} 
-                          />
-                          {category}
-                        </p>
-                      ))}
+                      {isCategoriesLoading ? (
+                        <div className="text-center">
+                          <div className="spinner-border spinner-border-sm" role="status">
+                            <span className="visually-hidden">Loading categories...</span>
+                          </div>
+                        </div>
+                      ) : (
+                        categories?.map((cat) => (
+                          <p
+                            key={cat.id || cat.name}
+                            className="cursor-pointer d-flex align-items-center"
+                            onClick={() => handleCategoryToggle(cat.name)}
+                            style={{ cursor: "pointer", userSelect: "none" }}
+                          >
+                            <BsCircleFill
+                              className={`me-3 ${
+                                selectedCategories.includes(cat.name)
+                                  ? "colororing"
+                                  : "dote-gray"
+                              }`}
+                            />
+                            {cat.name}
+                          </p>
+                        ))
+                      )}
                     </div>
                   </div>
                   <hr />
@@ -373,49 +402,6 @@ const HireExpert = () => {
                     </div>
                   </div>
                   <hr />
-                </div>
-              </div>
-            </div>
-
-            {/* English Level Filter */}
-            <div className="accordion" id="accordionfor">
-              <div className="">
-                <div className="accordion-header">
-                  <button
-                    className="accordion-button px-0 collapsed"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#collapsefor"
-                    aria-expanded="false"
-                    aria-controls="collapsefor"
-                  >
-                    <h6 className="byerLine font-22 font-500 cocon blackcolor">
-                      English level {selectedEnglishLevel !== "any" && <span className="badge bg-success ms-2">1</span>}
-                    </h6>
-                  </button>
-                </div>
-                <div
-                  id="collapsefor"
-                  className="accordion-collapse collapse show"
-                  data-bs-parent="#accordionfor"
-                >
-                  <div className="accordion-body px-0">
-                    <div className="Revie font-15 poppins">
-                      {englishLevels.map((level) => (
-                        <p 
-                          key={level.value}
-                          className="cursor-pointer d-flex align-items-center"
-                          onClick={() => handleEnglishLevelChange(level.value)}
-                          style={{ cursor: 'pointer', userSelect: 'none' }}
-                        >
-                          <BsCircleFill 
-                            className={`me-3 ${selectedEnglishLevel === level.value ? 'colororing' : 'dote-gray'}`} 
-                          />
-                          {level.label}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -486,16 +472,6 @@ const HireExpert = () => {
                           className="btn-close btn-close-white ms-2"
                           style={{ fontSize: '0.7em' }}
                           onClick={() => setSelectedJobSuccess("any")}
-                        ></button>
-                      </span>
-                    )}
-                    {selectedEnglishLevel !== "any" && (
-                      <span className="badge bg-info d-flex align-items-center">
-                        English: {selectedEnglishLevel}
-                        <button 
-                          className="btn-close btn-close-white ms-2"
-                          style={{ fontSize: '0.7em' }}
-                          onClick={() => setSelectedEnglishLevel("any")}
                         ></button>
                       </span>
                     )}

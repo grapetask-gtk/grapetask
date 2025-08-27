@@ -5,8 +5,11 @@ import axios from '../../utils/axios';
 const initialState = {
   isLoadingRegister: false,
   isLoadingUsers: false,
+   // ✅ new
   user: null,
   users: [], // ✅ important fix
+  
+  
   error: null,
 };
 
@@ -80,6 +83,8 @@ export const fetchUsers = createAsyncThunk(
 );
 
 
+
+
 const userSlice = createSlice({
   name: "user",
   initialState,
@@ -113,15 +118,7 @@ const userSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Fetch Users
      
-      .addCase(fetchUsers.fulfilled, (state, action) => {
-        state.isLoadingUsers = false;
-        // Extract users from the response based on your API structure
-        state.users = action.payload.data.users || [];
-      })
-
-
   },
 });
 

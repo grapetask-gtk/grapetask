@@ -878,11 +878,11 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 // ============================================================================
 
 // Core Components (Keep these as regular imports for faster initial load)
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Signin from "../components/Signin";
 import Index from "../pages/Index";
 import Login from "../pages/Login";
 import NotFound from "../pages/NotFound";
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 // Admin Components - Lazy Loaded
 const AdminDashboard = lazy(() => import("../pages/admin-panel"));
@@ -1591,13 +1591,13 @@ function AppRoutes() {
 
             {/* Business Routes - Client/Bidder specific */}
             <Route path="/userBuyerRequest" element={
-              <RoleProtectedRoute allowedRoles={[USER_ROLES.CLIENT, USER_ROLES.BIDDER, USER_ROLES.COMPANY_REP, USER_ROLES.MIDDLEMAN]}>
+              <RoleProtectedRoute allowedRoles={[USER_ROLES.CLIENT, USER_ROLES.BIDDER, USER_ROLES.COMPANY_REP, USER_ROLES.MIDDLEMAN,USER_ROLES.FREELANCER, USER_ROLES.EXPERT]}>
                 <UserBuyerRequest />
               </RoleProtectedRoute>
             } />
             
             <Route path="/buy-bids" element={
-              <RoleProtectedRoute allowedRoles={[USER_ROLES.CLIENT, USER_ROLES.BIDDER, USER_ROLES.COMPANY_REP, USER_ROLES.MIDDLEMAN]}>
+              <RoleProtectedRoute allowedRoles={[USER_ROLES.CLIENT, USER_ROLES.BIDDER, USER_ROLES.COMPANY_REP, USER_ROLES.MIDDLEMAN ,USER_ROLES.FREELANCER, USER_ROLES.EXPERT]}>
                 <BuyBids />
               </RoleProtectedRoute>
             } />

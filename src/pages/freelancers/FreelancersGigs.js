@@ -1,6 +1,6 @@
 import { Button } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Offcanvas } from 'react-bootstrap';
 import { AiFillStar } from 'react-icons/ai';
 import { BiTime } from 'react-icons/bi';
@@ -36,6 +36,13 @@ import { onMessageListener } from '../firebase';
 import '../../style/frelancer.scss';
 import '../../style/imgSlider.scss';
 
+// Constants for package types
+const PACKAGE_TYPES = {
+  BASIC: 'basic',
+  STANDARD: 'standard',
+  PREMIUM: 'premium'
+};
+
 const FreelancersGigs = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -48,51 +55,81 @@ const FreelancersGigs = () => {
   const [showChatModal, setShowChatModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [joinedTime, setJoinedTime] = useState({ hours: 0 });
-  const [nav1, setNav1] = useState(null);
-  const [nav2, setNav2] = useState(null);
+  const mainSliderRef = useRef(null);
+  const thumbnailSliderRef = useRef(null);
 
- useEffect(() => {
-  dispatch(getGigDetail(gigId));
-  dispatch(geAllGigs());
-  
-  onMessageListener()
-    .then((payload) => {
-      toast.success(payload?.notification?.title, {
-        position: 'top-right',
-        autoClose: 2000,
-      });
-    })
-    .catch((err) => console.log('failed: ', err));
-}, [dispatch, gigId]);
+  // Fetch gig details and all gigs on component mount
+  useEffect(() => {
+    dispatch(getGigDetail(gigId));
+    dispatch(geAllGigs());
+    
+    onMessageListener()
+      .then((payload) => {
+        toast.success(payload?.notification?.title, {
+          position: 'top-right',
+          autoClose: 2000,
+        });
+      })
+      .catch((err) => console.error('Failed to get message: ', err));
+  }, [dispatch, gigId]);
 
-useEffect(() => {
-  if (singleGigDetail?.user?.created_at) {
-    const createdAtDate = new Date(singleGigDetail.user.created_at);
-    const currentTime = new Date();
-    const timeDifference = Math.abs(currentTime - createdAtDate);
-    const hours = Math.floor((timeDifference % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
-    setJoinedTime({ hours });
-  }
-}, [singleGigDetail]);
+  // Calculate joined time
+  useEffect(() => {
+    if (singleGigDetail?.user?.created_at) {
+      const createdAtDate = new Date(singleGigDetail.user.created_at);
+      const currentTime = new Date();
+      const timeDifference = Math.abs(currentTime - createdAtDate);
+      const hours = Math.floor((timeDifference % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+      setJoinedTime({ hours });
+    }
+  }, [singleGigDetail]);
 
-  const filterByType = useCallback((array, targetType) => array?.filter((obj) => obj.type === targetType) || [], []);
-  const filteredBasic = filterByType(singleGigDetail?.packages, 'basic');
-  const filteredStandard = filterByType(singleGigDetail?.packages, 'standard');
-  const filteredPremium = filterByType(singleGigDetail?.packages, 'premium');
+  // Memoized data processing
+  const { filteredBasic, filteredStandard, filteredPremium } = useMemo(() => {
+    const filterByType = (array, targetType) => 
+      array?.filter((obj) => obj.type === targetType) || [];
+    
+    return {
+      filteredBasic: filterByType(singleGigDetail?.packages, PACKAGE_TYPES.BASIC),
+      filteredStandard: filterByType(singleGigDetail?.packages, PACKAGE_TYPES.STANDARD),
+      filteredPremium: filterByType(singleGigDetail?.packages, PACKAGE_TYPES.PREMIUM)
+    };
+  }, [singleGigDetail?.packages]);
 
-  const getRatingsArray = useCallback(() => 
-    !singleGigDetail?.rating ? [] : Array.isArray(singleGigDetail.rating) ? singleGigDetail.rating : [singleGigDetail.rating]
-  , [singleGigDetail]);
+  // Calculate ratings
+  const { overallAverageRating, ratingPercentages } = useMemo(() => {
+    const getRatingsArray = () => {
+      if (!singleGigDetail?.rating) return [];
+      return Array.isArray(singleGigDetail.rating) 
+        ? singleGigDetail.rating 
+        : [singleGigDetail.rating];
+    };
 
-  const ratings = getRatingsArray().map((item) => parseFloat(item.ratings));
-  const validRatings = ratings.filter((value) => !isNaN(value));
-  const overallAverageRating = validRatings.length > 0 ? validRatings.reduce((acc, rating) => acc + rating, 0) / validRatings.length : 0;
-  const ratingPercentages = [5, 4, 3].map((star) => {
-    const count = ratings.filter((value) => Math.round(value) === star).length;
-    return ratings.length > 0 ? (count / ratings.length) * 100 : 0;
-  });
+    const ratings = getRatingsArray().map((item) => parseFloat(item.ratings));
+    const validRatings = ratings.filter((value) => !isNaN(value));
+    
+    const average = validRatings.length > 0 
+      ? validRatings.reduce((acc, rating) => acc + rating, 0) / validRatings.length 
+      : 0;
+    
+    const percentages = [5, 4, 3].map((star) => {
+      const count = ratings.filter((value) => Math.round(value) === star).length;
+      return ratings.length > 0 ? (count / ratings.length) * 100 : 0;
+    });
 
+    return {
+      overallAverageRating: average,
+      ratingPercentages: percentages
+    };
+  }, [singleGigDetail]);
+
+  // Handle chat initiation
   const handleStartChat = useCallback(async (client) => {
+    if (!client?.id) {
+      toast.error('Invalid client information');
+      return;
+    }
+    
     setSelectedClient(client);
     dispatch(clearConversationError());
     try {
@@ -110,24 +147,46 @@ useEffect(() => {
     setSelectedClient(null);
   }, []);
 
+  // Handle package selection
   const handlePackageSelection = useCallback((packageId) => {
-    if (!singleGigDetail?.seller?.id || !singleGigDetail?.id) return;
+    if (!singleGigDetail?.seller?.id || !singleGigDetail?.id) {
+      toast.error('Missing required information for package selection');
+      return;
+    }
+    
     navigate(`/order/payment?seller_id=${singleGigDetail.seller.id}&gig_id=${singleGigDetail.id}&package_id=${packageId}`);
   }, [singleGigDetail, navigate]);
 
-  const handleBasic = useCallback(() => filteredBasic[0]?.id && handlePackageSelection(filteredBasic[0].id), [filteredBasic, handlePackageSelection]);
-  const handleStandard = useCallback(() => filteredStandard[0]?.id && handlePackageSelection(filteredStandard[0].id), [filteredStandard, handlePackageSelection]);
-  const handlePremium = useCallback(() => filteredPremium[0]?.id && handlePackageSelection(filteredPremium[0].id), [filteredPremium, handlePackageSelection]);
+  // Package handlers
+  const handleBasic = useCallback(() => {
+    if (filteredBasic[0]?.id) {
+      handlePackageSelection(filteredBasic[0].id);
+    }
+  }, [filteredBasic, handlePackageSelection]);
 
-  const NextArrow = (props) => (
+  const handleStandard = useCallback(() => {
+    if (filteredStandard[0]?.id) {
+      handlePackageSelection(filteredStandard[0].id);
+    }
+  }, [filteredStandard, handlePackageSelection]);
+
+  const handlePremium = useCallback(() => {
+    if (filteredPremium[0]?.id) {
+      handlePackageSelection(filteredPremium[0].id);
+    }
+  }, [filteredPremium, handlePackageSelection]);
+
+  // Slider arrows components
+  const NextArrow = useCallback((props) => (
     <div className="arrow-next rounded-5" onClick={props.onClick}><FaAngleRight /></div>
-  );
+  ), []);
 
-  const PrevArrow = (props) => (
+  const PrevArrow = useCallback((props) => (
     <div className="arrow-prev rounded-5" onClick={props.onClick}><FaAngleLeft /></div>
-  );
+  ), []);
 
-  const settingsMain = {
+  // Slider settings
+  const settingsMain = useMemo(() => ({
     dots: false,
     infinite: true,
     nextArrow: <NextArrow />,
@@ -135,24 +194,29 @@ useEffect(() => {
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
-    asNavFor: nav2,
-  };
+    asNavFor: thumbnailSliderRef.current,
+    ref: mainSliderRef
+  }), [NextArrow, PrevArrow]);
 
-  const settingsThumbs = {
+  const settingsThumbs = useMemo(() => ({
     dots: false,
     infinite: true,
     speed: 500,
     slidesToShow: 4,
     slidesToScroll: 1,
     focusOnSelect: true,
-    asNavFor: nav1,
-  };
+    asNavFor: mainSliderRef.current,
+    ref: thumbnailSliderRef
+  }), []);
 
-  const RecomendedGigsArray = gigsDetail.flatMap((category) => 
-    category.gigs?.filter((gig) => gig.category_id === singleGigDetail?.category_id) || []
+  // Recommended gigs
+  const RecomendedGigsArray = useMemo(() => 
+    gigsDetail.flatMap((category) => 
+      category.gigs?.filter((gig) => gig.category_id === singleGigDetail?.category_id) || []
+    ), [gigsDetail, singleGigDetail?.category_id]
   );
 
-  const settings = {
+  const settings = useMemo(() => ({
     dots: false,
     autoplay: true,
     autoplaySpeed: 5000,
@@ -174,16 +238,18 @@ useEffect(() => {
         settings: { slidesToShow: 1, slidesToScroll: 1 },
       },
     ],
-  };
+  }), []);
 
-  const stripHtmlTags = (html) => {
+  // Utility function to strip HTML tags
+  const stripHtmlTags = useCallback((html) => {
     if (!html) return '';
     const tempElement = document.createElement('div');
     tempElement.innerHTML = html;
     return tempElement.textContent || tempElement.innerText || '';
-  };
+  }, []);
 
-  const renderMediaSlider = () => {
+  // Media slider component
+  const renderMediaSlider = useCallback(() => {
     const media = singleGigDetail?.media || {};
     const mediaItems = [
       media.image1 && { type: 'image', src: media.image1 },
@@ -197,11 +263,16 @@ useEffect(() => {
     return (
       <>
         <div className="main-slider-img">
-          <Slider {...settingsMain} ref={(slider) => setNav1(slider)}>
+          <Slider {...settingsMain}>
             {mediaItems.map((item, index) => (
               <div key={index} className="inner-slider-img w-100 rounded-4">
                 {item.type === 'image' ? (
-                  <img className="w-100 rounded-4 h-100 object-fit-cover" src={item.src} alt={`Gig media ${index + 1}`} />
+                  <img 
+                    className="w-100 rounded-4 h-100 object-fit-cover" 
+                    src={item.src} 
+                    alt={`Gig media ${index + 1}`} 
+                    loading="lazy"
+                  />
                 ) : (
                   <video className="w-100 h-100 object-fit-cover rounded-4" controls>
                     <source src={item.src} type="video/mp4" />
@@ -212,11 +283,16 @@ useEffect(() => {
           </Slider>
         </div>
         <div className="main-slider-thumbnail-img mt-2">
-          <Slider {...settingsThumbs} ref={(slider) => setNav2(slider)}>
+          <Slider {...settingsThumbs}>
             {mediaItems.map((item, index) => (
               <div key={index} className="inner-slider-thumbnail-img rounded-3">
                 {item.type === 'image' ? (
-                  <img className="w-100 h-100 rounded-3 object-fit-cover cursor-pointer" src={item.src} alt={`Thumbnail ${index + 1}`} />
+                  <img 
+                    className="w-100 h-100 rounded-3 object-fit-cover cursor-pointer" 
+                    src={item.src} 
+                    alt={`Thumbnail ${index + 1}`} 
+                    loading="lazy"
+                  />
                 ) : (
                   <div className="inner-slider-thumbnail-img rounded-3 position-relative">
                     <BsFillPlayCircleFill className="thumb-play cursor-pointer" size={20} />
@@ -231,37 +307,39 @@ useEffect(() => {
         </div>
       </>
     );
-  };
+  }, [singleGigDetail?.media, settingsMain, settingsThumbs]);
 
-  const renderPackageContent = (packageData) => (
+  // Package content component
+  const renderPackageContent = useCallback((packageData) => (
     <>
       <div className="d-flex justify-content-between poppins">
-        <h6 className="font-16 fw-semibold" style={{ color: '#404145' }}>{packageData.type.toUpperCase()} PROMO</h6>
-        <h6 className="graycolor font-16 fw-semibold" style={{ color: '#404145' }}>${packageData.total}</h6>
+        <h6 className="font-16 fw-semibold text-dark">{packageData.type.toUpperCase()} PROMO</h6>
+        <h6 className="font-16 fw-semibold text-dark">${packageData.total}</h6>
       </div>
       <div className="mt-3">
-        <p className="font-14 inter takegraycolor">{stripHtmlTags(packageData.title)}</p>
+        <p className="font-14 inter text-secondary">{stripHtmlTags(packageData.title)}</p>
       </div>
-      <div className="d-flex graycolor mt-2">
-        <div className="ms-1 takegraycolor font-14 fw-semibold">
+      <div className="d-flex text-secondary mt-2">
+        <div className="ms-1 font-14 fw-semibold">
           <p><BiTime className="me-2" size={16} />{packageData.delivery_time} Days Delivery</p>
         </div>
-        <div className="ms-4 takegraycolor font-14 fw-semibold">
+        <div className="ms-4 font-14 fw-semibold">
           <p><TfiReload className="me-2" size={16} />{packageData.ravision} Revision</p>
         </div>
       </div>
       <div>
         {packageData.features?.map((feature, idx) => (
           <p key={idx} className="font-12" style={{ color: feature.included ? '#95979D' : '#D4D4D4' }}>
-            <FaCheck className={feature.included ? "colororing me-3" : "me-3 text-muted"} />
+            <FaCheck className={feature.included ? "text-primary me-3" : "me-3 text-muted"} />
             {feature.description}
           </p>
         ))}
       </div>
     </>
-  );
+  ), [stripHtmlTags]);
 
-  const renderPackageTab = (type, filteredPackages, handleSelect) => {
+  // Package tab component
+  const renderPackageTab = useCallback((type, filteredPackages, handleSelect) => {
     const packageData = filteredPackages[0];
     if (!packageData) return null;
 
@@ -269,34 +347,52 @@ useEffect(() => {
       <div>
         {renderPackageContent(packageData)}
         <div>
-          <Button className="btn-stepper poppins w-100 font-16" data-bs-toggle="offcanvas" 
-            data-bs-target={`#offcanvas${type}`} aria-controls={`offcanvas${type}`}>
+          <Button 
+            className="btn-stepper poppins w-100 font-16" 
+            data-bs-toggle="offcanvas" 
+            data-bs-target={`#offcanvas${type}`} 
+            aria-controls={`offcanvas${type}`}
+          >
             Continue
           </Button>
-          <Button className="btn-stepper-border poppins w-100 mt-3 font-16" 
-            onClick={() => handleStartChat(singleGigDetail?.seller)} disabled={creatingConversation}>
+          <Button 
+            className="btn-stepper-border poppins w-100 mt-3 font-16" 
+            onClick={() => handleStartChat(singleGigDetail?.seller)} 
+            disabled={creatingConversation}
+          >
             Contact with seller
           </Button>
         </div>
       </div>
     );
-  };
+  }, [renderPackageContent, handleStartChat, singleGigDetail?.seller, creatingConversation]);
 
-  const renderPackageOffcanvas = (type, filteredPackages, handleSelect) => {
+  // Package offcanvas component
+  const renderPackageOffcanvas = useCallback((type, filteredPackages, handleSelect) => {
     const packageData = filteredPackages[0];
     if (!packageData) return null;
 
     return (
-      <div className="offcanvas offcanvas-end p-3" style={{ width: '45%' }} tabIndex={-1} 
-        id={`offcanvas${type}`} aria-labelledby={`offcanvas${type}Label`}>
+      <div 
+        className="offcanvas offcanvas-end p-3" 
+        style={{ width: '45%' }} 
+        tabIndex={-1} 
+        id={`offcanvas${type}`} 
+        aria-labelledby={`offcanvas${type}Label`}
+      >
         <div className="offcanvas-header">
-          <h5 className="offcanvas-title" id="offcanvasRightLabel" data-bs-dismiss="offcanvas" 
-            aria-label="Close" style={{ cursor: 'pointer' }}>
-            <BsChevronLeft className="colororing" />
+          <h5 
+            className="offcanvas-title" 
+            id="offcanvasRightLabel" 
+            data-bs-dismiss="offcanvas" 
+            aria-label="Close" 
+            style={{ cursor: 'pointer' }}
+          >
+            <BsChevronLeft className="text-primary" />
           </h5>
         </div>
         <div className="offcanvas-body pe-0">
-          <h6 className="font-28 fw-semibold" style={{ color: '#404145' }}>Service Details</h6>
+          <h6 className="font-28 fw-semibold text-dark">Service Details</h6>
           <p className="frelancer-ofcanva-text poppins mt-3 w-100 mb-0 font-18 fw-medium text-center p-3 mt-2">
             {type}
           </p>
@@ -306,8 +402,11 @@ useEffect(() => {
               <Button onClick={handleSelect} className="btn-stepper poppins w-100 font-16">
                 Proceed to checkout
               </Button>
-              <Button className="btn-stepper-border poppins w-100 mt-3 font-16" 
-                onClick={() => handleStartChat(singleGigDetail?.seller)} disabled={creatingConversation}>
+              <Button 
+                className="btn-stepper-border poppins w-100 mt-3 font-16" 
+                onClick={() => handleStartChat(singleGigDetail?.seller)} 
+                disabled={creatingConversation}
+              >
                 Contact with seller
               </Button>
             </div>
@@ -315,8 +414,20 @@ useEffect(() => {
         </div>
       </div>
     );
-  };
+  }, [renderPackageContent, handleStartChat, singleGigDetail?.seller, creatingConversation]);
 
+  // Format user registration date
+  const userRegisterDate = useMemo(() => {
+    if (!UserDetail?.created_at) return { month: '', year: '' };
+    
+    const UserRegister = new Date(UserDetail.created_at);
+    return {
+      month: UserRegister.toLocaleString('en-us', { month: 'long' }),
+      year: UserRegister.getFullYear()
+    };
+  }, [UserDetail]);
+
+  // Loading state
   if (isPreLoading) {
     return (
       <div className="preloder text-center d-flex align-items-center justify-content-center">
@@ -328,21 +439,26 @@ useEffect(() => {
     );
   }
 
-  if (!singleGigDetail) return <div>No gig data found</div>;
-
-  const UserRegister = new Date(UserDetail?.created_at);
-  const month = UserRegister.toLocaleString('en-us', { month: 'long' });
-  const year = UserRegister.getFullYear();
+  // Error state
+  if (!singleGigDetail) {
+    return (
+      <div className="container mt-5 text-center">
+        <h2>No gig data found</h2>
+        <Button onClick={() => navigate(-1)}>Go Back</Button>
+      </div>
+    );
+  }
 
   return (
     <>
       <ToastContainer />
       <Navbar FirstNav="none" />
+      
       <div className="container mt-5">
         <div className="row mt-5">
           <div className="col-lg-8 col-12">
             <div className="d-flex justify-content-between flex-wrap poppins align-items-center">
-              <div className="colororing d-flex align-items-center">
+              <div className="text-primary d-flex align-items-center">
                 <p className="mb-0 font-16">{singleGigDetail?.category?.name}</p>
                 <span><img src={icone} className="mx-3" alt="" /></span>
                 <p className="mb-0 font-16">{singleGigDetail?.subcategory?.name}</p>
@@ -350,79 +466,140 @@ useEffect(() => {
             </div>
           </div>
         </div>
+        
         <div className="row mt-3 justify-content-center">
+          {/* Main Content Column */}
           <div className="col-lg-8 col-12 mt-4">
             <div className="Revie p-3">
               <div><h3 className="font-24 poppins">{singleGigDetail?.title}</h3></div>
+              
+              {/* Seller Info */}
               <div className="d-flex align-items-lg-center align-items-md-center align-items-start inter mb-lg-0 mb-3">
-                <img src={singleGigDetail?.seller?.image} className="rounded-circle" width={30} height={30} alt="User" />
+                <img 
+                  src={singleGigDetail?.seller?.image} 
+                  className="rounded-circle" 
+                  width={30} 
+                  height={30} 
+                  alt="User" 
+                />
                 <div className="d-flex ms-2 align-items-center flex-wrap">
                   <div>
-                    <h6 className="ms-2 font-14 mb-0 inter cursor-pointer" 
+                    <h6 
+                      className="ms-2 font-14 mb-0 inter cursor-pointer" 
                       onClick={() => navigate(`/profileOtherPerson/${singleGigDetail.seller?.fname}`, 
-                      { state: { userId: singleGigDetail.user_id } })}>
+                        { state: { userId: singleGigDetail.user_id } })}
+                    >
                       {singleGigDetail?.seller?.fname}
                     </h6>
                   </div>
                   <div>
-                    <p className="graycolor font-14 ms-2 mb-0">{singleGigDetail?.seller?.role}</p>
+                    <p className="text-secondary font-14 ms-2 mb-0">{singleGigDetail?.seller?.role}</p>
                   </div>
                   <div className="d-flex flex-wrap">
                     {[...Array(5)].map((_, i) => (
                       <img key={i} src={ster} width={14} height={14} className="ms-2" alt="Star" />
                     ))}
-                    <p className="ms-2 font-14 colororing mb-0">0</p>
+                    <p className="ms-2 font-14 text-primary mb-0">0</p>
                   </div>
                 </div>
               </div>
+              
+              {/* Media Slider */}
               <div className="mt-3">{renderMediaSlider()}</div>
+              
+              {/* Gig Description */}
               <div className="mt-2 poppins">
                 <h6 className="font-16 font-700">About This Gig</h6>
-                <p className="font-14 mb-1 dark-gray">{stripHtmlTags(singleGigDetail?.description)}</p>
+                <p className="font-14 mb-1 text-dark">{stripHtmlTags(singleGigDetail?.description)}</p>
                 <hr className="border-0 mt-1 mb-1" style={{ height: '1.5px', opacity: '50%', backgroundColor: '#667085' }} />
-                <p className="font-14 takegraycolor mb-0 poppins mt-3">Product type</p>
+                
+                <p className="font-14 text-secondary mb-0 poppins mt-3">Product type</p>
                 <p className="font-14 poppins">{singleGigDetail?.category?.name}</p>
+                
+                {/* Seller Information */}
                 <div className="mt-lg-5">
                   <h3 className="font-20 mt-4 fw-bold">About The Seller</h3>
                   <div className="d-flex">
                     <div>
-                      <img src={singleGigDetail?.seller?.image} className="rounded-circle" width={100} height={100} alt="User" />
+                      <img 
+                        src={singleGigDetail?.seller?.image} 
+                        className="rounded-circle" 
+                        width={100} 
+                        height={100} 
+                        alt="User" 
+                      />
                     </div>
                     <div className="ms-3">
-                      <p className="font-14 fw-bold dark-gray mb-2">{singleGigDetail?.seller?.fname}</p>
+                      <p className="font-14 fw-bold text-dark mb-2">{singleGigDetail?.seller?.fname}</p>
                       <div className="d-flex">
                         {[...Array(5)].map((_, i) => (
-                          <AiFillStar key={i} size={22} 
-                            color={i < Math.round(overallAverageRating) ? 'rgba(253, 176, 34, 1)' : '#D4D4D4'} />
+                          <AiFillStar 
+                            key={i} 
+                            size={22} 
+                            color={i < Math.round(overallAverageRating) ? 'rgba(253, 176, 34, 1)' : '#D4D4D4'} 
+                          />
                         ))}
-                        <p className="ms-2 fw-medium mb-0 colororing">({overallAverageRating.toFixed(1)})</p>
+                        <p className="ms-2 fw-medium mb-0 text-primary">({overallAverageRating.toFixed(1)})</p>
                       </div>
-                      <Button className="btn-stepper-border poppins px-3 mt-2 font-16" 
-                        onClick={() => handleStartChat(singleGigDetail?.seller)} disabled={creatingConversation}>
+                      <Button 
+                        className="btn-stepper-border poppins px-3 mt-2 font-16" 
+                        onClick={() => handleStartChat(singleGigDetail?.seller)} 
+                        disabled={creatingConversation}
+                      >
                         Contact Me
                       </Button>
                     </div>
                   </div>
                 </div>
-                <div className="row justify-content-between">
+                
+                {/* Seller Details */}
+                <div className="row justify-content-between mt-3">
                   <div className="col-6 text-start">
-                    <p className="font-14 takegraycolor mb-0">From</p>
-                    <p className="font-14 fw-bold dark-gray">{singleGigDetail?.seller?.country}</p>
-                    <p className="font-14 takegraycolor mb-0">Avg. response time</p>
-                    <p className="font-14 fw-bold dark-gray">
+                    <p className="font-14 text-secondary mb-0">From</p>
+<p className="font-14 fw-bold text-dark">
+  {singleGigDetail?.seller?.country
+    ? singleGigDetail.seller.country.charAt(0).toUpperCase() + singleGigDetail.seller.country.slice(1)
+    : "Seller has not added their country"}
+</p>
+
+                    <p className="font-14 text-secondary mb-0">Avg. response time</p>
+                    <p className="font-14 fw-bold text-dark">
                       {joinedTime.hours > 0 ? `${joinedTime.hours} hour${joinedTime.hours !== 1 ? 's' : ''} ago` : 'Recently'}
                     </p>
-                    <p className="font-14 takegraycolor mb-0">Languages</p>
-                    <p className="font-14 fw-bold dark-gray">{singleGigDetail?.seller?.language}</p>
+                    
+                    <p className="font-14 text-secondary mb-0">Languages</p>
+                    <p className="font-14 fw-bold text-dark">{singleGigDetail?.seller?.language ?? "English"}</p>
                   </div>
                   <div className="col-6">
-                    <p className="font-14 takegraycolor mb-0">Member since</p>
-                    <p className="font-14 fw-bold dark-gray">{month} {year}</p>
-                    <p className="font-14 takegraycolor mb-0">Last delivery</p>
-                    <p className="font-14 fw-bold dark-gray"></p>
-                  </div>
+                    <p className="font-14 text-secondary mb-0">Member since</p>
+                    <p className="font-14 fw-bold text-dark">{singleGigDetail?.seller 
+    ? new Date(singleGigDetail?.seller?.created_at).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : ''  }</p>
+                    
+                    <p className="font-14 text-secondary mb-0">Last delivery</p>
+
+<p className="font-14 fw-bold text-dark">
+  {singleGigDetail?.last_delivery 
+    ? new Date(singleGigDetail.last_delivery.updated_at).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : 'No delivery info'}
+</p> </div>
                 </div>
+                
                 <hr className="border-0 mt-1 mb-1" style={{ height: '1.5px', opacity: '50%', backgroundColor: '#667085' }} />
+                
+                {/* Ratings & Reviews */}
                 <h5 className="font-20 fw-bold mt-4 inter">Rating & Reviews</h5>
                 <div className="row justify-content-between mt-4">
                   <div className="col-lg-5 col-md-5 col-sm-6 col-12 pe-lg-4">
@@ -439,11 +616,14 @@ useEffect(() => {
                       {[5, 4, 3].map((stars, index) => (
                         <div key={stars} className="row align-items-center mt-4">
                           <div className="col-2">
-                            <p className="mb-0 font-14 takegraycolor">{stars}&nbsp;Stars</p>
+                            <p className="mb-0 font-14 text-secondary">{stars}&nbsp;Stars</p>
                           </div>
                           <div className="col-10">
                             <div className="progress w-100" style={{ height: '8px' }} role="progressbar">
-                              <div className="progress-bar" style={{ width: `${ratingPercentages[index]}%` }}></div>
+                              <div 
+                                className="progress-bar" 
+                                style={{ width: `${ratingPercentages[index]}%` }}
+                              ></div>
                             </div>
                           </div>
                         </div>
@@ -451,22 +631,30 @@ useEffect(() => {
                     </div>
                   </div>
                 </div>
-                {getRatingsArray().map((value, index) => (
+                
+                {/* Individual Reviews */}
+                {singleGigDetail.rating?.map((value, index) => (
                   <div className="mt-3" key={index}>
                     <div className="d-flex justify-content-between mt-5">
                       <div className="d-flex">
                         <div>
-                          <img src={value.user?.image} className="rounded-circle" width={50} height={50} alt="Reviewer" />
+                          <img 
+                            src={value.user?.image} 
+                            className="rounded-circle" 
+                            width={50} 
+                            height={50} 
+                            alt="Reviewer" 
+                          />
                         </div>
                         <p className="ms-2 font-16 fw-medium">{value.user?.name || 'Anonymous'}</p>
                       </div>
                     </div>
-                    <p className="mb-0 font-16 mt-3 takegraycolor text-capitalize">
+                    <p className="mb-0 font-16 mt-3 text-secondary text-capitalize">
                       {value.comments || 'No comment provided'}
                     </p>
                     <div className="d-flex justify-content-end align-items-center">
                       <img src={timepes} width={20} height={20} alt="Time" />
-                      <p className="font-14 ms-1 fw-medium takegraycolor mb-0">
+                      <p className="font-14 ms-1 fw-medium text-secondary mb-0">
                         {formatDistanceToNow(new Date(value.created_at || new Date()), { addSuffix: true })}
                       </p>
                     </div>
@@ -475,6 +663,8 @@ useEffect(() => {
               </div>
             </div>
           </div>
+          
+          {/* Package Selection Column */}
           <div className="col-lg-4 col-12 mt-4 gigi-tabs poppins">
             <div className="Revie container-fluid pt-0 mt-1">
               <ul className="nav nav-pills mb-3 row" id="pills-tab" role="tablist">
@@ -495,25 +685,45 @@ useEffect(() => {
                   </li>
                 ))}
               </ul>
+              
               <div className="tab-content" id="pills-tabContent">
-                <div className="tab-pane fade show active" id="pills-basic" role="tabpanel" 
-                  aria-labelledby="pills-basic-tab" tabIndex={0}>
+                <div 
+                  className="tab-pane fade show active" 
+                  id="pills-basic" 
+                  role="tabpanel" 
+                  aria-labelledby="pills-basic-tab" 
+                  tabIndex={0}
+                >
                   {renderPackageTab('basic', filteredBasic, handleBasic)}
                 </div>
-                <div className="tab-pane fade" id="pills-standard" role="tabpanel" 
-                  aria-labelledby="pills-standard-tab" tabIndex={0}>
+                
+                <div 
+                  className="tab-pane fade" 
+                  id="pills-standard" 
+                  role="tabpanel" 
+                  aria-labelledby="pills-standard-tab" 
+                  tabIndex={0}
+                >
                   {renderPackageTab('standard', filteredStandard, handleStandard)}
                 </div>
-                <div className="tab-pane fade" id="pills-premium" role="tabpanel" 
-                  aria-labelledby="pills-premium-tab" tabIndex={0}>
+                
+                <div 
+                  className="tab-pane fade" 
+                  id="pills-premium" 
+                  role="tabpanel" 
+                  aria-labelledby="pills-premium-tab" 
+                  tabIndex={0}
+                >
                   {renderPackageTab('premium', filteredPremium, handlePremium)}
                 </div>
               </div>
             </div>
           </div>
+          
+          {/* Recommended Gigs */}
           {RecomendedGigsArray.length >= 3 && (
-            <div>
-              <h3 className="font-28 takegraycolor cocon mt-5">Recommended for you</h3>
+            <div className="mt-5">
+              <h3 className="font-28 text-secondary cocon">Recommended for you</h3>
               <div className="container position-relative mb-5 gigs-slider mt-4">
                 <div className="row">
                   <div className="gigs-slider-bg"></div>
@@ -553,6 +763,7 @@ useEffect(() => {
         </div>
       </div>
 
+      {/* Package Offcanvases */}
       {['Basic', 'Standard', 'Premium'].map((type) => 
         renderPackageOffcanvas(type.toLowerCase(), 
           type === 'Basic' ? filteredBasic : 
@@ -561,6 +772,7 @@ useEffect(() => {
           type === 'Standard' ? handleStandard : handlePremium)
       )}
 
+      {/* Chat Modal */}
       <Offcanvas show={showChatModal} onHide={closeChatModal} placement="end" style={{ width: '450px' }}>
         <Offcanvas.Header closeButton>
           <Offcanvas.Title>

@@ -9,4 +9,5 @@
 
 // new server
  export const HOST_API="https://portal.grapetask.co/api/";
+ 
    export const PUSHER_HOST = "https://portal.grapetask.co/broadcasting/auth";
