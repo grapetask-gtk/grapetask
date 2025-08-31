@@ -25,7 +25,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import axios from 'axios';
+import axios from "../../utils/axios";
 import pLimit from 'p-limit';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
