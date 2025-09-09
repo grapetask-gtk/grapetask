@@ -18,10 +18,10 @@ import imagarrow from "../assets/imgarrow2.webp";
 import timepes from "../assets/time (1).webp";
 import Dashboardright from "../components/Dashboardright";
 import Navbar from "../components/Navbar";
+import { fetchUserStats } from "../redux/slices/dashboardSlice";
 import { sellerRating } from "../redux/slices/ratingSlice";
 import { useDispatch, useSelector } from "../redux/store/store";
 import axios from "../utils/axios";
-import { addUserTag, fetchUserActivities, fetchUserStats, fetchUserTags } from "../redux/slices/dashboardSlice";
 
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
@@ -117,24 +117,35 @@ const Earning = () => {
   }, [dispatch]);
 
   // Fetch summary data
-  useEffect(() => {
-    const fetchSummary = async () => {
-      try {
-        const accessToken = localStorage.getItem("accessToken");
-        const res = await axios.get("/earnings/summary", {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        setSummaryData(res.data);
-      } catch (err) {
-        console.error("Error fetching earnings summary:", err);
-      } finally {
-        setLoadingSummary(false);
-      }
-    };
-    fetchSummary();
-  }, []);
+// Fetch summary data
+useEffect(() => {
+  const fetchSummary = async () => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const res = await axios.get("/earnings/summary", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // ✅ force balance into number
+      setSummaryData({
+        referral_earning: res.data.referral_earning || 0,
+        balance: parseFloat(res.data.balance) || 0,
+        gross_earnings: res.data.gross_earnings || 0,
+        net_earnings: res.data.net_earnings || 0,
+        total_sales: res.data.total_sales || 0
+      });
+
+    } catch (err) {
+      console.error("Error fetching earnings summary:", err);
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+  fetchSummary();
+}, []);
+
 
   // Fetch chart data
   useEffect(() => {
@@ -230,11 +241,12 @@ const Earning = () => {
           : 'Withdrawal request submitted successfully! We will process it within 2-3 business days.'
       );
 
-      // Update the balance locally
-      setSummaryData(prev => ({
-        ...prev,
-        balance: prev.balance - amount
-      }));
+   
+// Update the balance locally
+setSummaryData(prev => ({
+  ...prev,
+  balance: parseFloat(prev.balance) - amount
+}));
 
       // Clear form
       setWithdrawAmount('');
@@ -724,15 +736,16 @@ const Earning = () => {
                     ${amount}
                   </Button>
                 ))}
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => setWithdrawAmount(summaryData.balance.toString())}
-                  disabled={isWithdrawing || summaryData.balance < 10}
-                  sx={{ fontSize: '12px' }}
-                >
-                  Max
-                </Button>
+               <Button
+  size="small"
+  variant="outlined"
+  onClick={() => setWithdrawAmount(summaryData.balance.toString())}
+  disabled={isWithdrawing || summaryData.balance < 10}
+  sx={{ fontSize: '12px' }}
+>
+  Max
+</Button>
+
               </div>
             </div>
 

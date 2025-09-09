@@ -1,8 +1,7 @@
-import { Autocomplete, Chip, TextField } from "@mui/material";
-import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "../../redux/store/store";
+import { Autocomplete, CircularProgress, TextField } from "@mui/material";
+import { useEffect, useMemo } from "react";
 import { getCategory, getSubCategory } from "../../redux/slices/gigsSlice";
-// import "../style/userByer.scss";
+import { useDispatch, useSelector } from "../../redux/store/store";
 
 const StepOne = ({
   gigTitle,
@@ -17,37 +16,49 @@ const StepOne = ({
   isError,
 }) => {
   const dispatch = useDispatch();
-  const { userCategory, userSubCategory } = useSelector((state) => state.gig);
+  const { userCategory, userSubCategory, loading } = useSelector((state) => state.gig);
 
-  // If you plan to use a local state to filter subcategories, you can use:
-  // const [subSubCategory, setSubSubCategory] = useState([]);
- 
-  // Update subcategory state and filter subcategories based on selected category
+  // Fetch categories and subcategories
+  useEffect(() => {
+    if (!userCategory?.length) dispatch(getCategory());
+    if (!userSubCategory?.length) dispatch(getSubCategory());
+  }, [dispatch, userCategory, userSubCategory]);
+
+  // Memoize filtered subcategories
+  const filteredSubCategories = useMemo(() => {
+    if (!category) return [];
+    return userSubCategory.filter(
+      (sub) => parseInt(sub.category_id) === parseInt(category)
+    );
+  }, [userSubCategory, category]);
+
+  // Handlers
   const handleChangeSubCategory = (e) => {
     const selected = e.target.value;
     setSubCategory(selected);
-    // Optional: If you want to maintain a separate state for sub-subcategories
-    // setSubSubCategory(userSubCategory.filter((sub) => sub.parent_id === selected));
   };
 
-  // Filter subcategories based on the selected category
-  const filteredSubCategories = userSubCategory.filter(
-    (sub) => parseInt(sub.category_id) === parseInt(category)
-  );
-  
-  useEffect(() => {
-    console.log("gigTitle:", gigTitle, "category is:", category, "subCategory is:", subCategory, "tags are:", tags);
-  });
+  const handleTagsChange = (event, newValue) => {
+    const updatedTags = newValue.slice(0, 5);
+    setTags(updatedTags);
+  };
 
-  useEffect(() => {
-  
-    dispatch(getCategory());
-    dispatch(getSubCategory());
-  }, [dispatch]);
+  const handleTagBlur = (e) => {
+    const val = e.target.value?.trim();
+    if (val && !tags.includes(val)) {
+      setTags([...tags, val].slice(0, 5));
+    }
+  };
 
-  if (userCategory.loading || userSubCategory.loading) {
-    return <div>Loading categories...</div>;
+  // Loading state
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center py-5">
+        <CircularProgress />
+      </div>
+    );
   }
+
   return (
     <>
       <div
@@ -66,8 +77,7 @@ const StepOne = ({
                   value={gigTitle}
                   className="form-control fw-medium font-18 p-4 px-3 mt-2"
                   id="gig"
-                  placeholder=""
-                  defaultValue=""
+                  placeholder="I will..."
                 />
                 <p className="text-end font-12 mt-2 takegraycolor">
                   {gigTitle.length} / 80 max
@@ -76,6 +86,8 @@ const StepOne = ({
             </div>
           </div>
         </div>
+
+        {/* Category Section */}
         <div className="container-fluid">
           <p className="blackcolor font-18 poppins fw-medium">Category</p>
           <div className="row">
@@ -87,27 +99,28 @@ const StepOne = ({
             <div className="col-lg-7 col-12 pe-lg-0">
               <div className="container-fluid">
                 <div className="row poppins">
-                  <div className="col-lg-4 col-12 ps-0 pe-lg-2 pe-0">
-                  <select
-  value={category}
-  onChange={(e) => setCategory(e.target.value)}
-  className="form-select takegraycolor font-14 pt-2 pb-2"
->
-  <option value="">Select A Category</option>
-  {userCategory.map((cat) => (
-    <option key={cat.id} value={cat.id.toString()}> {/* Convert to string */}
-      {cat.name}
-    </option>
-  ))}
-</select>
+                  <div className="col-lg-4 col-12 ps-0 pe-lg-2 pe-0 mb-3 mb-lg-0">
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="form-select takegraycolor font-14 pt-2 pb-2"
+                      aria-label="Select category"
+                    >
+                      <option value="">Select A Category</option>
+                      {userCategory.map((cat) => (
+                        <option key={cat.id} value={cat.id.toString()}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <div className="col-lg-4 col-12 pe-0 ps-lg-2 ps-0 mt-lg-0 mt-3">
+                  <div className="col-lg-4 col-12 pe-0 ps-lg-2 ps-0">
                     <select
                       value={subCategory}
                       onChange={handleChangeSubCategory}
-                      className="form-select"
-                      required
+                      className="form-select takegraycolor font-14 pt-2 pb-2"
                       disabled={!category}
+                      aria-label="Select subcategory"
                     >
                       <option value="">Select Subcategory</option>
                       {filteredSubCategories.map((sub) => (
@@ -117,14 +130,15 @@ const StepOne = ({
                       ))}
                     </select>
                   </div>
-                  <div className="col-lg-4 col-12 pe-0 ps-lg-2 ps-0 mt-lg-0 mt-3">
-                    {/* You can use this third column for additional selection if needed */}
-                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <p className="blackcolor font-18 poppins fw-medium">Search Tags</p>
+
+          {/* Tags Section */}
+          <p className="blackcolor font-18 poppins fw-medium mt-4">
+            Search Tags
+          </p>
           <div className="row">
             <div className="col-lg-5 col-12">
               <p className="font-14 takegraycolor inter">
@@ -133,29 +147,23 @@ const StepOne = ({
               </p>
             </div>
             <div className="col-lg-7 col-12 poppins pe-lg-0">
-              <div className="devices-tag-add">
               <Autocomplete
-  multiple
-  freeSolo
-  id="tags"
-  options={[]}
-  value={tags}
-  onChange={(e, newValue) => {
-    console.log("onChange newValue:", newValue);
-    setTags(newValue.slice(0, 5));
-  }}
-  onBlur={(e) => {
-    // Optionally, if the user leaves the field, commit the current input if it’s non-empty
-    if (e.target.value && !tags.includes(e.target.value)) {
-      setTags([...tags, e.target.value].slice(0, 5));
-    }
-  }}
-  renderInput={(params) => (
-    <TextField {...params} variant="outlined" placeholder="Add tags..." />
-  )}
-/>
-
-              </div>
+                multiple
+                freeSolo
+                id="tags"
+                options={[]}
+                value={tags}
+                onChange={handleTagsChange}
+                onBlur={handleTagBlur}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    variant="outlined"
+                    placeholder="Add tags..."
+                    fullWidth
+                  />
+                )}
+              />
               <p className="mb-0 font-12 takegraycolor mt-2">
                 5 tags maximum. Use letters and numbers only.
               </p>
@@ -163,8 +171,12 @@ const StepOne = ({
           </div>
         </div>
       </div>
+
       {isError && (
-        <div className="alert alert-danger mt-3 poppins text-center" role="alert">
+        <div
+          className="alert alert-danger mt-3 poppins text-center"
+          role="alert"
+        >
           {isErrorShow}
         </div>
       )}

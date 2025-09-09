@@ -26,24 +26,15 @@ const Dashboardright = () => {
   const { tagsList, isLoading, userStats, activities, error } = useSelector((state) => state.dashboard);
   const UserData = JSON.parse(localStorage.getItem("UserData"));
 
-  // Add debugging
-  console.log('🔍 Component Debug Info:');
-  console.log('- isLoading:', isLoading);
-  console.log('- userStats:', userStats);
-  console.log('- activities:', activities);
-  console.log('- error:', error);
-  console.log('- Full dashboard state:', useSelector((state) => state.dashboard));
-
+ 
   // Get user role from userDetail or UserData
   const userRole = userDetail?.role || UserData?.role || "Client";
 
   // Real progress data from userStats
   const getProgressData = () => {
-    console.log('🎯 Getting progress data for role:', userRole);
-    console.log('🎯 UserStats in getProgressData:', userStats);
     
     if (!userStats) {
-      console.log('⚠️ No userStats available');
+
       return { percentage1: 0, percentage2: 0, percentage3: 0 };
     }
 
@@ -54,7 +45,7 @@ const Dashboardright = () => {
           percentage2: userStats.totalOrders || 0,
           percentage3: userStats.completeOrders || 0,
         };
-        console.log('👨‍💼 Expert data:', expertData);
+       
         return expertData;
       case "bd":
       case "bidder/company representative/middleman":
@@ -63,7 +54,7 @@ const Dashboardright = () => {
           percentage2: userStats.totalLeads || 0,
           percentage3: userStats.convertedLeads || 0,
         };
-        console.log('🏢 BD data:', bdData);
+      
         return bdData;
       case "client":
       default:
@@ -72,7 +63,7 @@ const Dashboardright = () => {
           percentage2: userStats.activeProjects || 0,
           percentage3: userStats.completedProjects || 0,
         };
-        console.log('👤 Client data:', clientData);
+   
         return clientData;
     }
   };
@@ -96,25 +87,19 @@ const Dashboardright = () => {
   };
   // Check if the API calls are being made
   useEffect(() => {
-    console.log('🚀 Component mounted, dispatching API calls...');
+ 
     
     const data = {
       device_token: "123456789",
     };
-    
-    console.log('📞 Dispatching userProfile...');
     dispatch(userProfile(data));
     
-    console.log('📞 Dispatching fetchUserStats...');
     dispatch(fetchUserStats()).then((result) => {
-      console.log('🎉 fetchUserStats completed:', result);
     }).catch((error) => {
       console.error('💥 fetchUserStats failed:', error);
     });
     
-    console.log('📞 Dispatching fetchUserActivities...');
     dispatch(fetchUserActivities()).then((result) => {
-      console.log('🎉 fetchUserActivities completed:', result);
     }).catch((error) => {
       console.error('💥 fetchUserActivities failed:', error);
     });
@@ -127,10 +112,6 @@ const Dashboardright = () => {
   }, [userDetail]);
 
   useEffect(() => {
-    console.log('📊 Data updated:');
-    console.log('- User Stats:', userStats);
-    console.log('- Activities:', activities);
-    console.log('- Progress data:', { percentage1, percentage2, percentage3 });
   }, [userStats, activities, percentage1, percentage2, percentage3]);
 
  
@@ -144,30 +125,23 @@ const Dashboardright = () => {
     setShowModal(!showModal);
   };
 
-  const handleTagsAdd = (e) => {
+const handleTagsAdd = (e) => {
   e.preventDefault();
-  
-  // Add validation
-  console.log('Tags to send:', tags);
-  
+
   if (!tags || tags.length === 0) {
-    console.warn('No skills to add');
     setShowModal(false);
     return;
   }
-  
+
   setShowModal(false);
-  
+
   let requestData = {
     skill: tags,
   };
-  
-  // ✅ Fix: Wrap data in an object with 'data' property
+
   dispatch(addUserTag({ data: requestData }))
     .unwrap()
-    .then((response) => {
-      console.log('Skills added successfully:', response);
-      // Refresh the tags list
+    .then(() => {
       dispatch(fetchUserTags());
     })
     .catch((error) => {
@@ -481,6 +455,7 @@ const Dashboardright = () => {
 
   const { title: modalTitle, placeholder: modalPlaceholder, description: modalDescription } = getModalContent();
 
+  // Place the return statement and everything after it INSIDE the Dashboardright function, just before its closing brace
   return (
     <>
       <div className="container">
@@ -499,8 +474,9 @@ const Dashboardright = () => {
                   type="button"
                   data-bs-toggle="modal"
                   data-bs-target="#staticBackdrop"
+                  style={{ cursor: "pointer", textDecoration: "none" }}
                 >
-                  <h6 className="font-22 font-500 poppins mt-3">
+                  <h6 className="font-22 font-500 poppins mt-3" style={{ display: "inline-block" }}>
                     {firstName}
                     <span>
                       <img
@@ -518,10 +494,11 @@ const Dashboardright = () => {
                 {userDetail ? userDetail.role : userRole}
               </p>
               {/* Enhanced user level display */}
-              <UserLevelDisplayComponent userDetail={userDetail} userRole={userRole} />
-              
-              <div className="d-flex mt-5 pb-5 text-center poppins">
-                <div className="loader1">
+              <div className="my-3">
+                <UserLevelDisplayComponent userDetail={userDetail} userRole={userRole} />
+              </div>
+              <div className="d-flex justify-content-between">
+                <div className="loader3">
                   <CircularProgressbar
                     className="w-75"
                     value={percentage1}
@@ -531,7 +508,7 @@ const Dashboardright = () => {
                     {label1}
                   </h6>
                 </div>
-                <div className="loader2">
+                <div className="loader3">
                   <CircularProgressbar
                     className="w-75"
                     value={percentage2}
@@ -552,8 +529,7 @@ const Dashboardright = () => {
                   </h6>
                 </div>
               </div>
-              
-              <div className="d-flex justify-content-between">
+              <div className="d-flex justify-content-between mt-4">
                 <div>
                   <h6 className="font-18 font-500 poppins blackcolor">
                     Last Activities
@@ -708,6 +684,7 @@ const Dashboardright = () => {
       </div>
     </>
   );
-};
+}
+
 
 export default Dashboardright;

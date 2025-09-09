@@ -128,24 +128,67 @@ export function Overview(data, handleClose) {
   };
 }
 //GIG Pricing
+// GIG Pricing - Updated to include additional details
 export function Pricing(data, handleClose) {
   return async () => {
     let accessToken = localStorage.getItem("accessToken");
 
     dispatch(gigSlice.actions.startLoading());
     try {
-      const response = await axios.post("gig-package", data, {
+      // Prepare the complete data object with all fields
+      const pricingData = {
+        // Basic package fields
+        title_basic: data.title_basic,
+        source_file_basic: data.source_file_basic,
+        resulation_basic: data.resulation_basic,
+        ravision_basic: data.ravision_basic,
+        delivery_time_basic: data.delivery_time_basic,
+        total_basic: data.total_basic,
+        
+        // Standard package fields
+        title_standard: data.title_standard,
+        source_file_standard: data.source_file_standard,
+        resulation_standard: data.resulation_standard,
+        ravision_standard: data.ravision_standard,
+        delivery_time_standard: data.delivery_time_standard,
+        total_standard: data.total_standard,
+        
+        // Premium package fields
+        title_premium: data.title_premium,
+        source_file_premium: data.source_file_premium,
+        resulation_premium: data.resulation_premium,
+        ravision_premium: data.ravision_premium,
+        delivery_time_premium: data.delivery_time_premium,
+        total_premium: data.total_premium,
+        
+        // Additional service details
+        experience_level: data.experience_level,
+        languages: JSON.stringify(data.languages), // Convert array to string for API
+        skills: JSON.stringify(data.skills), // Convert array to string for API
+        availability: data.availability,
+        response_time: data.response_time,
+        supported_formats: JSON.stringify(data.supported_formats), // Convert array to string
+        usage_rights: data.usage_rights,
+        revisions_included: data.revisions_included ? 1 : 0, // Convert boolean to number
+        support_included: data.support_included ? 1 : 0, // Convert boolean to number
+        
+        // Gig ID
+        gig_id: data.gig_id
+      };
+
+      const response = await axios.post("gig-package", pricingData, {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
           Authorization: "Bearer " + accessToken,
         },
       });
+      
       handleClose(response.data);
       if (!response.data.status) {
         dispatch(gigSlice.actions.hasGetError(response?.data?.message));
       }
-      // console.log(JSON.stringify(response?.data?.data))
+      
       dispatch(gigSlice.actions.getUserDetailsSuccess(response.data.data));
     } catch (error) {
       handleClose(error);
@@ -153,6 +196,7 @@ export function Pricing(data, handleClose) {
     }
   };
 }
+
 //GIG Description
 export function Description(data, handleClose) {
   return async () => {
@@ -355,34 +399,78 @@ export function GigOverViewUpdate(data, handleClose) {
     }
   };
 }
+
+
+// GIG Pricing Update - Updated to include additional details
 export function GigPricingUpdate(data, handleClose) {
   return async () => {
-    let accessToken = localStorage.getItem('accessToken')
+    let accessToken = localStorage.getItem('accessToken');
 
     dispatch(gigSlice.actions.startLoading());
     try {
-      const response = await axios.post('update-gig-package',
-        data, {
+      // Prepare the complete data object with all fields
+      const pricingData = {
+        // Basic package fields
+        title_basic: data.title_basic,
+        source_file_basic: data.source_file_basic,
+        resulation_basic: data.resulation_basic,
+        ravision_basic: data.ravision_basic,
+        delivery_time_basic: data.delivery_time_basic,
+        total_basic: data.total_basic,
+        
+        // Standard package fields
+        title_standard: data.title_standard,
+        source_file_standard: data.source_file_standard,
+        resulation_standard: data.resulation_standard,
+        ravision_standard: data.ravision_standard,
+        delivery_time_standard: data.delivery_time_standard,
+        total_standard: data.total_standard,
+        
+        // Premium package fields
+        title_premium: data.title_premium,
+        source_file_premium: data.source_file_premium,
+        resulation_premium: data.resulation_premium,
+        ravision_premium: data.ravision_premium,
+        delivery_time_premium: data.delivery_time_premium,
+        total_premium: data.total_premium,
+        
+        // Additional service details
+        experience_level: data.experience_level,
+        languages: JSON.stringify(data.languages), // Convert array to string for API
+        skills: JSON.stringify(data.skills), // Convert array to string for API
+        availability: data.availability,
+        response_time: data.response_time,
+        supported_formats: JSON.stringify(data.supported_formats), // Convert array to string
+        usage_rights: data.usage_rights,
+        revisions_included: data.revisions_included ? 1 : 0, // Convert boolean to number
+        support_included: data.support_included ? 1 : 0, // Convert boolean to number
+        
+        // Gig ID
+        gig_id: data.gig_id
+      };
+
+      const response = await axios.post('update-gig-package', pricingData, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + accessToken
-
         }
       });
+      
       handleClose(response.data);
       if (!response.data.status) {
         dispatch(gigSlice.actions.hasGetError(response?.data?.message));
       }
 
-      // console.log(JSON.stringify(response?.data?.data))
-      // dispatch(gigSlice.actions.getGigOverView(response.data.data));
+      dispatch(gigSlice.actions.getUserDetailsSuccess(response.data.data));
     } catch (error) {
       handleClose(error);
       dispatch(gigSlice.actions.hasGetError(error?.message));
     }
   };
 }
+
+
 export function GigDescriptionUpdate(data, handleClose) {
   return async () => {
     let accessToken = localStorage.getItem('accessToken')

@@ -30,11 +30,12 @@ const SidebarLayout = ({ children }) => {
     { path: "/admin/settings", label: "Settings", icon: <FaCog /> },
   ];
 
-  const handleLogout = () => {
-    // Clear auth data, tokens, etc.
-    localStorage.removeItem("token"); // or your auth key
-    navigate("/login");
-  };
+   const handleLogout = () => {
+     localStorage.clear();
+     navigate("/");
+     window.location.reload();
+   };
+ 
 
   return (
     <Container fluid>

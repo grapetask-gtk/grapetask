@@ -25,7 +25,6 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import axios from 'axios';
 import pLimit from 'p-limit';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -40,6 +39,7 @@ import {
   ReviewSubmit,
 } from '../../redux/slices/allOrderSlice';
 import { downloadAuthenticatedFile } from '../../redux/slices/messageSlice';
+import axios from "../../utils/axios";
 import Navbar from '../Navbar';
 
 // Constants
@@ -73,6 +73,7 @@ const STATUS_DISPLAY = new Map([
   ['Project Started', 'In Progress'],
   ['delivered', 'Delivered'],
   ['submitted', 'Submitted'],
+    ['submitted_to_bd', 'Submitted to BD'],
   ['completed', 'Completed'],
   ['accepted', 'Accepted'],
   ['pending_verification', 'Pending Verification'],
@@ -89,6 +90,7 @@ const STATUS_BADGE_CLASSES = new Map([
   ['Project Started', 'bg-primary'],
   ['delivered', 'bg-info text-dark'],
   ['Delivered', 'bg-info text-dark'],
+  ['submitted_to_bd', 'bg-warning text-dark'],
   ['completed', 'bg-success'],
   ['Completed', 'bg-success'],
   ['pending_verification', 'bg-warning text-dark'],
@@ -442,7 +444,7 @@ const OrderTableTab = React.memo(({
 }) => {
   const hasDeliveredOrCompleted = useMemo(() => 
     orders.some(order => 
-      ['delivered', 'completed'].includes((order.status || '').toLowerCase())
+      ['delivered', 'completed', 'submitted_to_bd'].includes((order.status || '').toLowerCase())
     ),
     [orders]
   );
@@ -465,6 +467,11 @@ const OrderTableTab = React.memo(({
                     <TableCell className="font-16 poppins fw-medium ps-4">
                       {userRole === 'Client' ? 'Seller' : 'Buyer'}
                     </TableCell>
+
+                             <TableCell className="font-16 poppins fw-medium ps-4">
+  BD
+</TableCell>
+
                     <TableCell className="font-16 poppins fw-medium" align="center">
                       Gig
                     </TableCell>
@@ -772,6 +779,10 @@ const Order = () => {
     [selectedOrders, filterOrders]
   );
 
+const handleActionMenuClose = useCallback(() => {
+    setAnchorEl(null);
+  }, []);
+
   // Optimized file upload handling with progress tracking
   const uploadFileInChunks = useCallback(
     async (file, offerId) => {
@@ -925,6 +936,40 @@ const Order = () => {
       setCompletingOrder(false);
     }
   }, [selectedOrder, accessToken, user?.role, user?.id, dispatch]);
+
+const handleApproveToBD = useCallback(async () => {
+  if (!selectedOrder) return;
+
+  setActionLoading(true);
+  try {
+    await axios.post(
+      `/order/approve-bd`,
+      {
+        order_id: selectedOrder.id,
+        action: 'approve_and_submit_to_client'
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    toast.success('Order approved and submitted to client successfully!');
+    handleActionMenuClose();
+
+    // Refresh orders
+    if (user?.role === 'bidder/company representative/middleman') {
+      await dispatch(AllBdOrders()).unwrap();
+    }
+  } catch (error) {
+    console.error('Error approving order:', error);
+    toast.error(error.response?.data?.message || 'Failed to approve order');
+  } finally {
+    setActionLoading(false);
+  }
+}, [selectedOrder, accessToken, handleActionMenuClose, user?.role, dispatch]);
+
 
   const handleRequestRevision = useCallback(async () => {
     if (!selectedOrder || !revisionInstructions.trim()) {
@@ -1105,9 +1150,7 @@ const Order = () => {
     });
   }, []);
 
-  const handleActionMenuClose = useCallback(() => {
-    setAnchorEl(null);
-  }, []);
+  
 
   const handleOpenSubmissionDialog = useCallback(() => {
     if (!selectedOrder) {
@@ -1120,65 +1163,78 @@ const Order = () => {
   }, [selectedOrder, handleActionMenuClose]);
 
   // Optimized action buttons
-  const renderActionButton = useCallback(
-    (order) => {
-      if (!order?.status) return null;
+const renderActionButton = useCallback(
+  (order) => {
+    if (!order?.status) return null;
 
-      const orderStatus = order.status.toLowerCase();
+    const orderStatus = order.status.toLowerCase();
 
-      if (user?.role === 'expert/freelancer') {
-        if (
-          ['active', 'project started', 'revision_requested', 'in revision'].includes(
-            orderStatus
-          )
-        ) {
-          return (
-            <Button
-              style={{ backgroundColor: '#f16336', color: 'white' }}
-              variant="contained"
-              startIcon={<FileUploadIcon style={{ color: 'white' }} />}
-              onClick={(e) => handleActionMenuOpen(e, order)}
-              size="small"
-            >
-              Submit
-            </Button>
-          );
-        }
-      }
-
+    if (user?.role === 'expert/freelancer') {
       if (
-        user?.role === 'Client' ||
-        user?.role === 'bidder/company representative/middleman'
+        ['active', 'project started', 'revision_requested', 'in revision'].includes(
+          orderStatus
+        )
       ) {
-        if (['submitted', 'delivered'].includes(orderStatus)) {
-          return (
-            <Button
-              variant="outlined"
-              onClick={(e) => handleActionMenuOpen(e, order)}
-              size="small"
-            >
-              Actions
-            </Button>
-          );
-        } else if (['completed', 'accepted'].includes(orderStatus)) {
-          return (
-            <Button variant="text" color="success" size="small" disabled>
-              Completed
-            </Button>
-          );
-        } else if (orderStatus === 'disputed') {
-          return (
-            <Button variant="outlined" color="error" size="small" disabled>
-              Disputed
-            </Button>
-          );
-        }
+        return (
+          <Button
+            style={{ backgroundColor: '#f16336', color: 'white' }}
+            variant="contained"
+            startIcon={<FileUploadIcon style={{ color: 'white' }} />}
+            onClick={(e) => handleActionMenuOpen(e, order)}
+            size="small"
+          >
+            Submit
+          </Button>
+        );
       }
+    }
 
-      return null;
-    },
-    [user?.role, handleActionMenuOpen]
-  );
+    if (
+      user?.role === 'Client' ||
+      user?.role === 'bidder/company representative/middleman'
+    ) {
+      // Special handling for BD role with submitted_to_bd status
+      if (user?.role === 'bidder/company representative/middleman' && orderStatus === 'submitted_to_bd') {
+        return (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={(e) => handleActionMenuOpen(e, order)}
+            size="small"
+          >
+            BD Actions
+          </Button>
+        );
+      } else if (['submitted_to_bd'].includes(orderStatus)) {
+        return (
+          <Button
+            variant="outlined"
+            onClick={(e) => handleActionMenuOpen(e, order)}
+            size="small"
+          >
+            Actions
+          </Button>
+        );
+      } else if (['completed', 'accepted'].includes(orderStatus)) {
+        return (
+          <Button variant="text" color="success" size="small" disabled>
+            Completed
+          </Button>
+        );
+      } else if (orderStatus === 'disputed') {
+        return (
+          <Button variant="outlined" color="error" size="small" disabled>
+            Disputed
+          </Button>
+        );
+      }
+    }
+
+    return null;
+  },
+  [user?.role, handleActionMenuOpen]
+);
+
 
   // Optimized order row component
   const renderOrderRow = useCallback(
@@ -1187,7 +1243,7 @@ const Order = () => {
 
       const orderStatus = (order.status || '').toLowerCase();
       const hasDeliveryAttachment =
-        (orderStatus === 'delivered' || orderStatus === 'completed') &&
+        (orderStatus === 'delivered' || orderStatus === 'completed' || orderStatus === 'submitted_to_bd') &&
         (order.attachment || order?.delivery_attachments?.length > 0);
 
       const statusDisplay = STATUS_DISPLAY.get(order.status) || order.status;
@@ -1223,6 +1279,26 @@ const Order = () => {
               </span>
             </div>
           </TableCell>
+
+       {/* BD column */}
+        <TableCell className="ps-4">
+          <div className="d-flex align-items-center">
+            <img
+              src={order?.bd?.image || DefaultImage}
+              alt="BD"
+              width={40}
+              height={40}
+              className="rounded-circle me-2"
+              style={{ objectFit: 'cover' }}
+              onError={(e) => {
+                if (e.target.src !== DefaultImage) e.target.src = DefaultImage;
+              }}
+            />
+            <span>
+              {`${order?.bd?.fname || ''} ${order?.bd?.lname || ''}`.trim() || 'Unknown BD'}
+            </span>
+          </div>
+        </TableCell>
 
           {/* Gig column */}
           <TableCell align="center">
@@ -1276,20 +1352,21 @@ const Order = () => {
           </TableCell>
 
           {/* Files column only for Delivered/Completed */}
-          {(orderStatus === 'delivered' || orderStatus === 'completed') && (
-            <TableCell align="center">
-              <div className="d-flex justify-content-center gap-2 flex-wrap">
-                {hasDeliveryAttachment ? (
-                  <DownloadAttachments
-                    offer={order}
-                    hasDeliveryAttachment={true}
-                  />
-                ) : (
-                  <span className="text-muted">N/A</span>
-                )}
-              </div>
-            </TableCell>
-          )}
+{(['delivered', 'completed', 'submitted_to_bd'].includes(orderStatus)) && (
+  <TableCell align="center">
+    <div className="d-flex justify-content-center gap-2 flex-wrap">
+      {(hasDeliveryAttachment || orderStatus === 'submitted_to_bd') ? (
+        <DownloadAttachments
+          offer={order}
+          hasDeliveryAttachment={true}
+        />
+      ) : (
+        <span className="text-muted">N/A</span>
+      )}
+    </div>
+  </TableCell>
+)}
+
 
           {/* Actions column */}
           <TableCell align="center">
@@ -1570,65 +1647,94 @@ const Order = () => {
       </div>
 
       {/* Action Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleActionMenuClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-      >
-        {user?.role === 'expert/freelancer' && (
-          <MenuItem onClick={handleOpenSubmissionDialog} disabled={actionLoading}>
-            <FileUploadIcon fontSize="small" className="me-2" />
-            Submit Work
+<Menu
+  anchorEl={anchorEl}
+  open={Boolean(anchorEl)}
+  onClose={handleActionMenuClose}
+  anchorOrigin={{
+    vertical: 'bottom',
+    horizontal: 'right',
+  }}
+  transformOrigin={{
+    vertical: 'top',
+    horizontal: 'right',
+  }}
+>
+  {user?.role === 'expert/freelancer' && (
+    <MenuItem onClick={handleOpenSubmissionDialog} disabled={actionLoading}>
+      <FileUploadIcon fontSize="small" className="me-2" />
+      Submit Work
+    </MenuItem>
+  )}
+  {(user?.role === 'Client' ||
+    user?.role === 'bidder/company representative/middleman') && (
+    <>
+      {/* Special menu items for BD role with submitted_to_bd status */}
+      {user?.role === 'bidder/company representative/middleman' && 
+       selectedOrder?.status === 'submitted_to_bd' ? (
+        <>
+          <MenuItem
+            onClick={handleApproveToBD}
+            disabled={actionLoading}
+          >
+            Approve & Submit to Client
           </MenuItem>
-        )}
-        {(user?.role === 'Client' ||
-          user?.role === 'bidder/company representative/middleman') && (
-          <>
-            {selectedOrder?.status === 'Disputed' ? (
-              <MenuItem disabled>Order is Disputed</MenuItem>
-            ) : (
-              <>
-                <MenuItem
-                  onClick={() => {
-                    setOrderCompletionModal(true);
-                    handleActionMenuClose();
-                  }}
-                  disabled={actionLoading}
-                >
-                  Approve & Complete
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    setRevisionDialogOpen(true);
-                    handleActionMenuClose();
-                  }}
-                  disabled={actionLoading}
-                >
-                  Request Revision
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    setDisputeDialogOpen(true);
-                    handleActionMenuClose();
-                  }}
-                  disabled={actionLoading}
-                >
-                  Dispute Order
-                </MenuItem>
-              </>
-            )}
-            <MenuItem onClick={handleActionMenuClose}>Cancel</MenuItem>
-          </>
-        )}
-      </Menu>
+          <MenuItem
+            onClick={() => {
+              setRevisionDialogOpen(true);
+              handleActionMenuClose();
+            }}
+            disabled={actionLoading}
+          >
+            Request Revision
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setDisputeDialogOpen(true);
+              handleActionMenuClose();
+            }}
+            disabled={actionLoading}
+          >
+            Dispute Order
+          </MenuItem>
+        </>
+      ) : selectedOrder?.status === 'Disputed' ? (
+        <MenuItem disabled>Order is Disputed</MenuItem>
+      ) : (
+        <>
+          <MenuItem
+            onClick={() => {
+              setOrderCompletionModal(true);
+              handleActionMenuClose();
+            }}
+            disabled={actionLoading}
+          >
+            Approve & Complete
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setRevisionDialogOpen(true);
+              handleActionMenuClose();
+            }}
+            disabled={actionLoading}
+          >
+            Request Revision
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setDisputeDialogOpen(true);
+              handleActionMenuClose();
+            }}
+            disabled={actionLoading}
+          >
+            Dispute Order
+          </MenuItem>
+        </>
+      )}
+      <MenuItem onClick={handleActionMenuClose}>Cancel</MenuItem>
+    </>
+  )}
+</Menu>
 
       {/* Order Submission Modal */}
       <Dialog
