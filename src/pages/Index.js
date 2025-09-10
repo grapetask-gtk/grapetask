@@ -159,6 +159,18 @@ const Index = () => {
       </>
     );
   };
+  const LoadingSpinner = ({ message = "Loading...", size = "default" }) => {
+  const sizeClass = size === "small" ? "spinner-border-sm" : "";
+  
+  return (
+    <div className="d-flex flex-column justify-content-center align-items-center min-vh-100">
+      <div className={`spinner-border text-primary ${sizeClass}`} role="status">
+        <span className="visually-hidden">{message}</span>
+      </div>
+      <p className="mt-3 text-muted">{message}</p>
+    </div>
+  );
+};
 
   // Video Player Component without external dependencies
   const VideoPlayer = ({ src, className, style, controls = false }) => {
@@ -180,7 +192,9 @@ const Index = () => {
 
   return (
     <>
-      <Suspense fallback={<div className="loading-spinner">Loading...</div>}>
+           <Suspense fallback={
+ <LoadingSpinner message="Loading GrapeTask..." />
+}>
         <WelcomeModal />
         <Navbar SecondNav="none" />
         
@@ -314,7 +328,7 @@ const Index = () => {
             </div>
           </div>
           
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<div>Loading GrapeTask...</div>}>
             <div className="row justify-content-center mt-5 px-3 pb-lg-0 p-md-0 p-0 poppins">
               <div className="col-lg-4 col-md-4 col-sm-6 col-12">
                 <Grapetask
@@ -613,7 +627,12 @@ const Index = () => {
         </div>
         
         {/* Additional Sections */}
-        <Suspense fallback={<div>Loading...</div>}>
+             <Suspense fallback={
+  <div className="trusted-section-loading">
+    <div className="loading-spinner"></div>
+    <p>Loading  testomonials...</p>
+  </div>
+}>
           <Highest />
           <Testomonial />
         </Suspense>
@@ -662,9 +681,14 @@ const Index = () => {
         </div>
         
         {/* Trusted Section */}
-        <Suspense fallback={<div>Loading...</div>}>
-          <Treusted />
-        </Suspense>
+       <Suspense fallback={
+  <div className="trusted-section-loading">
+    <div className="loading-spinner"></div>
+    <p>Loading trusted companies...</p>
+  </div>
+}>
+  <Treusted />
+</Suspense>
         
         <Footer />
         <ToastContainer />

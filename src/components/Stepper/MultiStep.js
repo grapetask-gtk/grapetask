@@ -131,7 +131,9 @@ export default function MultiStepForm() {
   
   const [stepState, setStepState, resetStepState] = useStepState(INITIAL_STEP_STATE);
   const gigData = location.state?.gigData || null;
-
+const [showModal, setShowModal] = useState(false);
+const [question, setQuestion] = useState('');
+const [answer, setAnswer] = useState('');
   // Error states
   const [error, setError] = useState({
     overview: "",
@@ -603,14 +605,20 @@ case 1: // Pricing
       isErrorPricing: !!error.pricing,
       isErrorShowPricing: error.pricing,
     },
-    2: {
-      text: stepState.text,
-      setText: (v) => setStepState({ text: v }),
-      faqs: stepState.faqs,
-      setFaqs: (v) => setStepState({ faqs: v }),
-      isErrorDescription: !!error.description,
-      isErrorShowDescription: error.description,
-    },
+2: {
+  text: stepState.text,
+  setText: (v) => setStepState({ text: v }),
+  showModal: showModal,
+  setShowModal: setShowModal,
+  question: question,
+  setQuestion: setQuestion,
+  answer: answer,
+  setAnswer: setAnswer,
+  faqs: stepState.faqs,
+  setFaqs: (v) => setStepState({ faqs: v }),
+  isErrorDescription: !!error.description,
+  isErrorShowDescription: error.description,
+},
     3: {
       requirmentfields: stepState.requirmentfields,
       setRequirmentfields: (v) => setStepState({ requirmentfields: v }),
