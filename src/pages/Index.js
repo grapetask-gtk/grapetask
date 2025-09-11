@@ -199,118 +199,129 @@ const Index = () => {
         <Navbar SecondNav="none" />
         
         {/* Hero Section */}
-        <section className="herosection d-flex align-items-center py-lg-0 py-md-0 py-5">
-          {/* Desktop Video Background */}
-          {videosLoaded && (
-            <div className="carousel slide carousel-fade h-100 w-100 d-lg-block d-md-block d-none" 
-                 style={{ objectFit: "cover", position: "absolute", zIndex: "-1" }}>
-              <div className="carousel-inner h-100">
-                <div className="carousel-item active h-100">
-                  <VideoPlayer 
-                    src={video1}
-                    className="w-100 h-100"
-                    style={{ objectFit: "cover" }}
-                  />
-                </div>
-                <div className="carousel-item h-100">
-                  <VideoPlayer 
-                    src={video2}
-                    className="w-100 h-100"
-                    style={{ objectFit: "cover" }}
-                  />
-                </div>
-                <div className="carousel-item h-100">
-                  <VideoPlayer 
-                    src={video3}
-                    className="w-100 h-100"
-                    style={{ objectFit: "cover" }}
-                  />
-                </div>
-              </div>
+       {/* Hero Section */}
+<section className="herosection d-flex flex-column align-items-center justify-content-center py-lg-0 py-md-0 py-5">
+
+  {/* Desktop Video Background */}
+  {videosLoaded && (
+    <div
+      className="carousel slide carousel-fade h-100 w-100 d-lg-block d-md-block d-none"
+      style={{ objectFit: "cover", position: "absolute", zIndex: "-1" }}
+    >
+      <div className="carousel-inner h-100">
+        <div className="carousel-item active h-100">
+          <VideoPlayer
+            src={video1}
+            className="w-100 h-100"
+            style={{ objectFit: "cover" }}
+          />
+        </div>
+        <div className="carousel-item h-100">
+          <VideoPlayer
+            src={video2}
+            className="w-100 h-100"
+            style={{ objectFit: "cover" }}
+          />
+        </div>
+        <div className="carousel-item h-100">
+          <VideoPlayer
+            src={video3}
+            className="w-100 h-100"
+            style={{ objectFit: "cover" }}
+          />
+        </div>
+      </div>
+    </div>
+  )}
+
+  {/* Hero Content */}
+  <div className="container-fluid p-lg-5 p-md-4 p-3">
+    <div className="row justify-content-center text-center">
+      <div className="col-lg-8 col-12">
+        <h2 className="font-70 font-500 cocon text-white">
+          Find the Business,<span className="colororing"> Get Paid, </span>
+          <br />
+          Grow Your <span className="colororing">Career </span>
+        </h2>
+        <p className="font-18 text-white poppins">
+          Join a top freelance marketplace and connect with clients worldwide.
+          New job postings every day—browse, apply, and start earning.
+          Work from anytime, anywhere.
+        </p>
+
+        {/* Search Form */}
+        <div className="row justify-content-center mt-2 poppins position-relative" style={{ zIndex: "99" }}>
+          <form
+            className="col-12 border-box pt-3 align-items-center justify-content-around pb-3 hero-input"
+            onSubmit={handleSearch}
+          >
+            {/* Job Title Field */}
+            <div className="d-flex align-items-center hero_Search_Field">
+              <RiSearchLine size={20} color="#F16336" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="border-0 ms-2 w-100 font-16 poppins"
+                placeholder="Job title or keyword"
+                required
+                aria-label="Job title or keyword"
+              />
             </div>
-          )}
-          
-          <div className="container-fluid p-lg-5 p-md-4 p-3">
-            <div className="row justify-content-center text-center">
-              <div className="col-lg-8 col-12">
-                <h2 className="font-70 font-500 cocon" style={{ color: "white" }}>
-                  Find the Business,<span className="colororing"> Get Paid, </span>
-                  <br />
-                  Grow Your <span className="colororing">Career </span>
-                </h2>
-                <p className="font-18 text-white poppins">
-                  Join a top freelance marketplace and connect with clients worldwide. 
-                  New job postings every day—browse, apply, and start earning. 
-                  Work from anytime, anywhere.
-                </p>
-                
-                <div className="row justify-conten-center mt-2 poppins position-relative" style={{ zIndex: "99" }}>
-                  <form 
-                    className="col-12 border-box pt-3 align-items-center justify-content-around pb-3 hero-input"
-                    onSubmit={handleSearch}
-                  >
-                    <div className="d-flex align-items-center hero_Search_Field">
-                      <RiSearchLine size={20} color="#F16336" />
-                      <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="border-0 ms-2 w-100 font-16 poppins"
-                        placeholder="Job title or keyword"
-                        required
-                        aria-label="Job title or keyword"
-                      />
-                    </div>
-                    
-                    <OptimizedImage
-                      src={Line}
-                      width={4}
-                      height={30}
-                      className="d-lg-flex d-md-flex d-sm-flex d-none"
-                      alt="Divider line"
-                    />
-                    
-                    <div className="d-flex align-items-center hero_Search_Field mt-lg-0 mt-md-0 mt-sm-0 mt-3">
-                      <GoLocation size={20} color="#F16336" />
-                      <input
-                        type="text"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        className="border-0 ms-3 w-100 font-16"
-                        placeholder="Canada, Ontario"
-                        required
-                        aria-label="Location"
-                      />
-                    </div>
-                    
-                    <div className="mt-lg-0 mt-md-0 mt-sm-0 mt-3">
-                      <Button
-                        type="submit"
-                        className="btn-stepper rounded-5 poppins px-3 font-16"
-                      >
-                        Search
-                      </Button>
-                    </div>
-                  </form>
-                </div>
-              </div>
+
+            {/* Divider (Desktop only) */}
+            <OptimizedImage
+              src={Line}
+              width={4}
+              height={30}
+              className="d-lg-flex d-md-flex d-sm-flex d-none"
+              alt="Divider line"
+            />
+
+            {/* Location Field */}
+            <div className="d-flex align-items-center hero_Search_Field mt-lg-0 mt-md-0 mt-sm-0 mt-3">
+              <GoLocation size={20} color="#F16336" />
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="border-0 ms-3 w-100 font-16"
+                placeholder="Canada, Ontario"
+                required
+                aria-label="Location"
+              />
             </div>
-          </div>
-          
-          {/* Mobile Video Carousel */}
-          <div className="container-fluid d-lg-none d-md-none d-block">
-            <div className="row justify-content-center p-0">
-              <div className="col-sm-10 col-12 mbl-videoModal position-relative p-0">
-                <VideoPlayer 
-                  src={video1}
-                  className="w-100 h-100"
-                  controls={true}
-                />
-              </div>
+
+            {/* Submit Button */}
+            <div className="mt-lg-0 mt-md-0 mt-sm-0 mt-3">
+              <Button
+                type="submit"
+                className="btn-stepper rounded-5 poppins px-3 font-16"
+              >
+                Search
+              </Button>
             </div>
-          </div>
-        </section>
-        
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Mobile Video Section */}
+  <div className="container-fluid d-lg-none d-md-none d-block">
+    <div className="row justify-content-center p-0">
+      <div className="col-12 mbl-videoModal position-relative p-0">
+        <VideoPlayer
+          src={video1}
+          className="w-100"
+          style={{ height: "auto", objectFit: "cover" }}
+          controls={true}
+        />
+      </div>
+    </div>
+  </div>
+</section>
+
         {/* Get Work Done Section */}
         <div className="container-fluid esaysection position-relative pt-lg-5 pt-md-4 pt-3">
           <OptimizedImage 
